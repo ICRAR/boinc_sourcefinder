@@ -1,0 +1,237 @@
+Index: sample_work_generator.cpp
+===================================================================
+--- sample_work_generator.cpp	(Revision 25993)
++++ sample_work_generator.cpp	(Arbeitskopie)
+@@ -26,6 +26,8 @@
+ // - Creates a new input file for each job;
+ //   the file (and the workunit names) contain a timestamp
+ //   and sequence number, so they're unique.
++// - If \"input_dir\" is set, each file in this directory is used as
++//   an input file (appended with timestamp and sequence number.
+ 
+ #include <sys/param.h>
+ #include <unistd.h>
+@@ -33,6 +35,7 @@
+ #include <string>
+ #include <cstring>
+ 
++#include "filesys.h"
+ #include "boinc_db.h"
+ #include "error_numbers.h"
+ #include "backend_lib.h"
+@@ -52,6 +55,7 @@
+ const char* app_name = "example_app";
+ const char* in_template_file = "example_app_in";
+ const char* out_template_file = "example_app_out";
++const char* input_dir = "none";
+ 
+ char* in_template;
+ DB_APP app;
+@@ -60,48 +64,70 @@
+ 
+ // create one new job
+ //
+-int make_job() {
+-    DB_WORKUNIT wu;
+-    char name[256], path[MAXPATHLEN];
++int make_job(const char* filename = "none") {
++    DB_WORKUNIT job;
++    char name[256], path[MAXPATHLEN], dst_path[MAXPATHLEN], src_path[MAXPATHLEN];
+     const char* infiles[1];
+     int retval;
+ 
+-    // make a unique name (for the job and its input file)
+-    //
+-    sprintf(name, "%s_%d_%d", app_name, start_time, seqno++);
++    if(!strcmp(input_dir, "none")) {
++        // make a unique name (for the job and its input file)
++        //
++        sprintf(name, "%s_%d_%d", app_name, start_time, seqno++);
+ 
+-    // Create the input file.
+-    // Put it at the right place in the download dir hierarchy
+-    //
+-    retval = config.download_path(name, path);
+-    if (retval) return retval;
+-    FILE* f = fopen(path, "w");
+-    if (!f) return ERR_FOPEN;
+-    fprintf(f, "This is the input file for job %s", name);
+-    fclose(f);
++        // Create the input file.
++        // Put it at the right place in the download dir hierarchy
++        //
++        retval = config.download_path(name, path);
++        if (retval) return retval;
++        FILE* f = fopen(path, "w");
++        if (!f) return ERR_FOPEN;
++        fprintf(f, "This is the input file for job %s", name);
++        fclose(f);
++    } else {
++        // make a unique name (for the job and its input file)
++        //
++        sprintf(name, "%s_%s_%d_%d", app_name, filename, start_time, seqno++);
++        log_messages.printf(MSG_DEBUG,
++            "found input file %s and creating job %s\n", filename, name
++        );
++        retval = config.download_path(name, dst_path);
++        if (retval) return retval;
++        sprintf(src_path, "%s/%s", input_dir, filename);
++        log_messages.printf(MSG_DEBUG,
++            "move file from %s to %s\n", src_path, dst_path
++        );
++        retval = rename(src_path, dst_path);
++        if (retval) {
++            log_messages.printf(MSG_CRITICAL,
++                "rename: %d, errno is %d\n", retval, errno
++            );
++            return retval;
++        }
++    }
+ 
+     // Fill in the job parameters
+     //
+-    wu.clear();
+-    wu.appid = app.id;
+-    strcpy(wu.name, name);
+-    wu.rsc_fpops_est = 1e12;
+-    wu.rsc_fpops_bound = 1e14;
+-    wu.rsc_memory_bound = 1e8;
+-    wu.rsc_disk_bound = 1e8;
+-    wu.delay_bound = 86400;
+-    wu.min_quorum = REPLICATION_FACTOR;
+-    wu.target_nresults = REPLICATION_FACTOR;
+-    wu.max_error_results = REPLICATION_FACTOR*4;
+-    wu.max_total_results = REPLICATION_FACTOR*8;
+-    wu.max_success_results = REPLICATION_FACTOR*4;
++    job.clear();
++    job.appid = app.id;
++    strcpy(job.name, name);
++    job.rsc_fpops_est = 1e12;
++    job.rsc_fpops_bound = 1e14;
++    job.rsc_memory_bound = 1e8;
++    job.rsc_disk_bound = 1e8;
++    job.delay_bound = 86400;
++    job.min_quorum = REPLICATION_FACTOR;
++    job.target_nresults = REPLICATION_FACTOR;
++    job.max_error_results = REPLICATION_FACTOR*4;
++    job.max_total_results = REPLICATION_FACTOR*8;
++    job.max_success_results = REPLICATION_FACTOR*4;
+     infiles[0] = name;
+ 
+     // Register the job with BOINC
+     //
+     sprintf(path, "templates/%s", out_template_file);
+     return create_work(
+-        wu,
++        job,
+         in_template,
+         path,
+         config.project_path(path),
+@@ -112,6 +138,7 @@
+ }
+ 
+ void main_loop() {
++    std::string file;
+     int retval;
+ 
+     while (1) {
+@@ -127,17 +154,50 @@
+         if (n > CUSHION) {
+             daemon_sleep(10);
+         } else {
+-            int njobs = (CUSHION-n)/REPLICATION_FACTOR;
+-            log_messages.printf(MSG_DEBUG,
+-                "Making %d jobs\n", njobs
+-            );
+-            for (int i=0; i<njobs; i++) {
+-                retval = make_job();
+-                if (retval) {
+-                    log_messages.printf(MSG_CRITICAL,
+-                        "can't make job: %s\n", boincerror(retval)
++            if(!strcmp(input_dir, "none")) {
++                int njobs = (CUSHION-n)/REPLICATION_FACTOR;
++                log_messages.printf(MSG_DEBUG,
++                    "Making %d jobs\n", njobs
++                );
++                for (int i=0; i<njobs; i++) {
++                    retval = make_job();
++                    if (retval) {
++                        log_messages.printf(MSG_CRITICAL,
++                            "can't make job: %s\n", boincerror(retval)
++                        );
++                        exit(retval);
++                    }
++                }
++            } else {
++                DirScanner dirscan(input_dir);
++                // check if there are files in input_dir
++                if (dirscan.scan(file)) {
++                    // files found, now create work for them
++                    int njobs = (CUSHION-n)/REPLICATION_FACTOR;
++                    log_messages.printf(MSG_DEBUG,
++                        "Making %d jobs from files in %s\n", njobs, input_dir
+                     );
+-                    exit(retval);
++                    for (int i=0; i<njobs; i++) {
++                        retval = make_job(file.c_str());
++                        if (retval) {
++                            log_messages.printf(MSG_CRITICAL,
++                                "can't make job: %s\n", boincerror(retval)
++                            );
++                            exit(retval);
++                        }
++                        if (!dirscan.scan(file)) {
++                            log_messages.printf(MSG_DEBUG,
++                                "no more input files in: %s\n", input_dir
++                            );
++                            break; // no more files but CUSHION not yet reached
++                        }
++                    }
++                } else {
++                    // no more files found, wait some time
++                    log_messages.printf(MSG_DEBUG,
++                        "no more input files in: %s\n", input_dir
++                    );
++                    daemon_sleep(60); //increase this time if you can't supply a steady stream of input files
+                 }
+             }
+             // Now sleep for a few seconds to let the transitioner
+@@ -157,12 +217,15 @@
+         "- Creates work for the application \"example_app\".\n"
+         "- Creates a new input file for each job;\n"
+         "  the file (and the workunit names) contain a timestamp\n"
+-        "  and sequence number, so that they're unique.\n\n"
++        "  and sequence number, so that they're unique.\n"
++        "- If \"input_dir\" is set, each file in this directory is used as\n"
++        "  an input file (appended with timestamp and sequence number.\n\n"
+         "Usage: %s [OPTION]...\n\n"
+         "Options:\n"
+         "  [ --app X                Application name (default: example_app)\n"
+         "  [ --in_template_file     Input template (default: example_app_in)\n"
+         "  [ --out_template_file    Output template (default: example_app_out)\n"
++        "  [ --input_dir            Input directory (default: none)\n"
+         "  [ -d X ]                 Sets debug level to X.\n"
+         "  [ -h | --help ]          Shows this help text.\n"
+         "  [ -v | --version ]       Shows version information.\n",
+@@ -173,7 +236,7 @@
+ int main(int argc, char** argv) {
+     int i, retval;
+     char buf[256];
+-
++    
+     for (i=1; i<argc; i++) {
+         if (is_arg(argv[i], "d")) {
+             if (!argv[++i]) {
+@@ -190,6 +253,12 @@
+             in_template_file = argv[++i];
+         } else if (!strcmp(argv[i], "--out_template_file")) {
+             out_template_file = argv[++i];
++        } else if (!strcmp(argv[i], "--input_dir")) {
++            input_dir = argv[++i];
++            if(strlen(input_dir) == (strrchr(input_dir,'/')-input_dir+1)) {
++                log_messages.printf(MSG_CRITICAL, "%s must not have a trailing slash\n\n", argv[i]);
++                exit(1);
++            }
+         } else if (is_arg(argv[i], "h") || is_arg(argv[i], "help")) {
+             usage(argv[0]);
+             exit(0);
