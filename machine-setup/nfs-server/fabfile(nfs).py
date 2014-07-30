@@ -9,7 +9,6 @@ import argparse
 from fabric.api import *
 from ec2.autoscale.launchconfig import BlockDeviceMapping
 
-AMI_ID = 
 INSTANCE_TYPE ='t1.small'
 YUM_PACKAGES = 'lvm2 xfsprogs' 
 USERNAME ='ec2-user'
@@ -29,7 +28,7 @@ def setup_disks(disk_1, disk_2):
         #check we have a volume group 
     #sudo('vgdisplay')
     #want to print(?) or check what the output is 
-    sudo('vcreate-m 1 --type raid1 -l 40%VG --nosync -n lvm_raid1 data')
+    sudo('lvcreate-m 1 --type raid1 -l 40%VG --nosync -n lvm_raid1 data')
     sudo('mkfs.xfs /dev/data/lvm_raid1')
     sudo('mkdir -p /mnt/data')
     sudo('mount /dev/data/lvm_raid1 /mnt/data')    
