@@ -1,6 +1,5 @@
 <boinc>
-  <app>
-    <name>vm_test_1</name>
+  <app>    <name>vm_test_1</name>
     <user_friendly_name>VM Test BOINC</user_friendly_name>
   </app>
     <platform>

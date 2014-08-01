@@ -16,8 +16,7 @@ import socket
 APP_NAME = "vm_test_1"
 PLATFORMS = ["x86_64-apple-darwin"]
 
-
-def create_version_xml(platform, app_version, directory, exe):
+def create_version_xml(directory):
     """
     Create the version.xml file
     :param platform:
@@ -46,9 +45,6 @@ def copy_files(app_version):
     """
     for platform in PLATFORMS:
         local('mkdir -p /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
-        
-        
-        
         for file in glob('home/ec2-user/boinc_sourcefinder/client/platforms/{0}'.format(platform))
             head, tail = split(filename)
             local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(filename, APP_NAME, app_version, platform, env.project_name, tail))
@@ -68,7 +64,7 @@ def edit_files():
     file_editor.substitute('REPLACE WITH PROJECT NAME', to='vm_test_1')
     file_editor.subsitute('REPLACE WITH URL', to='vm_test_1')
     file_editor.substitute('REPLACE WITH COPYRIGHT HOLDER', to = 'The International Centre for Radio Astronomy Research')
-    file_editor.substitute
+    file_editor.substitute('')#the url base, with the public dns of the instance
     
     file_editor = FileEditor()
     file.editor.substitute('<tasks>', end='</daemons>', to='''
@@ -236,18 +232,40 @@ def create_first_version():
     
     local('cp -R /home/ec2-user/boinc_sourcefinder/server/config/templates /home/ec2-user/projects/{0}'.format(env.project_name))
     local('cp -R /home/ec2-user/boinc_sourcefinder/server/config/project.xml /home/ec2-user/projects/{0}'.format(env.project_name))
-    
-    ''' Need to commit to the github online - template files, project.xml files, virtual machine image etc '''
-    
     copy_files(1)
     
     local('cd /home/ec2-user/projects/{0}; bin/xadd'.format(env.project_name))
     local('cd /home/ec2-user/projects/{0}; yes | bin/update_versions'.format(env.project_name))
     
+def create_plan_class(project_directory):
+    "create the plan class for a Virtual Box application"
+    
+    outfile = open('plan_class_spec.xml', 'w')
+    outfile.write('''<plan_classes>
+        <plan_class>
+            <name>vbox64</name>
+            <virtualbox/>
+            <is64bit/>
+        </plan_class>
+   </plan_classes> ''')
+    outfile.out()
+
+
+def create_test_workunit(project_directory):
+    """
+    Create the test workunit that the test application uses
+    """
+    outfile = open(project_directory +'/in', 'w')
+    outfile.write('Test for the worker application on the VM')
+    outfile.close()
+    with cd(project_directory):
+        local('stage_file --gzip --copy in')
+        local('bin/create_work --appname {0} --wu_name in --wu_templates/{0}_in.xml --result_template templates/{0}_out.xml in'.format(env.project_name))
+
 
 def start_daemons():    
     """
     Start the BOINC daemons
     """
     
-    local('cd home/ec2-user/projects/')
+    local('cd home/ec2-user/projects/{0}/bin/start'.format(env.project_name))

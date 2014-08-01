@@ -65,9 +65,6 @@ def project_install():
         
         with cd('home/ec2-suer/boinc/tools'):
             run('./make_project -v --no_query --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'.format(env.hosts[0], env.db_username, env.db_host_name, env.dp_password, env.project_name)
-                
-            
-    
     
 def yum_update():
     """Update general machine packages"""
