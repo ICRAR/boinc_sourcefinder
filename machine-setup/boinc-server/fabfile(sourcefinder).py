@@ -13,7 +13,7 @@ from os.path import splitext, split
 from glob import glob
 import socket
 
-APP_NAME = "vm_test_1"
+APP_NAME = "vm_test_1" 
 PLATFORMS = ["x86_64-apple-darwin"]
 
 def create_version_xml(directory):
