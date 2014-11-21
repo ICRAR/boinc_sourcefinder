@@ -1,0 +1,47 @@
+# Results of the Duchamp source finder v.1.6.1: Tue Jul 15 11:46:32 2014
+# 
+# ---- Parameters ----
+# Image to be analysed.............................[imageFile]  =  askap_cube_1_1_14.fits
+# Intermediate Logfile...............................[logFile]  =  duchamp-Logfile.txt
+# Final Results file.................................[outFile]  =  duchamp-Results.txt
+# Saving mask cube?...........................[flagOutputMask]  =  false
+# Saving 0th moment to FITS file?........[flagOutputMomentMap]  =  false
+# Saving 0th moment mask to FITS file?..[flagOutputMomentMask]  =  false
+# Saving baseline values to FITS file?....[flagOutputBaseline]  =  false
+# ------
+# Type of searching performed.....................[searchType]  =  spatial
+# Trimming Blank Pixels?............................[flagTrim]  =  false
+# Searching for Negative features?..............[flagNegative]  =  false
+# Area of Beam................................................  =  No beam
+# Removing baselines before search?.............[flagBaseline]  =  false
+# Smoothing data prior to searching?..............[flagSmooth]  =  false
+# Using A Trous reconstruction?...................[flagATrous]  =  false
+# Using Robust statistics?...................[flagRobustStats]  =  true
+# Using FDR analysis?................................[flagFDR]  =  false
+# SNR Threshold (in sigma)............................[snrCut]  =  5
+# Minimum # Pixels in a detection.....................[minPix]  =  2
+# Minimum # Channels in a detection..............[minChannels]  =  3
+# Minimum # Voxels in a detection..................[minVoxels]  =  4
+# Growing objects after detection?................[flagGrowth]  =  false
+# Using Adjacent-pixel criterion?...............[flagAdjacent]  =  true
+# Max. velocity separation for merging........[threshVelocity]  =  7
+# Reject objects before merging?.......[flagRejectBeforeMerge]  =  false
+# Merge objects in two stages?...........[flagTwoStageMerging]  =  true
+# Method of spectral plotting.................[spectralMethod]  =  peak
+# Type of object centre used in results..........[pixelCentre]  =  centroid
+# --------------------
+# 
+# --------------------
+# Summary of statistics:
+# Detection threshold = 0.000434648 
+# Noise level = -1.36121e-06, Noise spread = 8.72018e-05
+# Full stats:
+#  Mean   = -1.36959e-06	Std.Dev. = 8.73198e-05
+#  Median = -1.36121e-06	MADFM    = 5.88166e-05 (= 8.72018e-05 as std.dev.)
+# --------------------
+# Total number of detections = 0
+# --------------------
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#  ObjID    Name     X     Y     Z         RA       DEC         RA        DEC   FREQ   MAJ   MIN     PA     w_RA    w_DEC   w_50   w_20 w_FREQ     F_int    eF_int     F_tot    eF_tot   F_peak S/Nmax  X1  X2  Y1  Y2  Z1  Z2 Nvoxel Nchan Nspatpix Flag  X_av  Y_av  Z_av X_cent Y_cent Z_cent X_peak Y_peak Z_peak
+#                                                            [deg]      [deg]   [Hz][arcmin][arcmin]  [deg] [arcmin] [arcmin]   [Hz]   [Hz]   [Hz]     [ Hz]     [ Hz]        []        []       []                                                                                                                      
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
