@@ -9,7 +9,6 @@ import argparse
 from fabric.api import *
 from ec2.autoscale.launchconfig import BlockDeviceMapping
 
-AMI_ID = 
 INSTANCE_TYPE ='t1.small'
 YUM_PACKAGES = 'lvm2 xfsprogs' 
 USERNAME ='ec2-user'
@@ -29,7 +28,7 @@ def setup_disks(disk_1, disk_2):
         #check we have a volume group 
     #sudo('vgdisplay')
     #want to print(?) or check what the output is 
-    sudo('vcreate-m 1 --type raid1 -l 40%VG --nosync -n lvm_raid1 data')
+    sudo('lvcreate-m 1 --type raid1 -l 40%VG --nosync -n lvm_raid1 data')
     sudo('mkfs.xfs /dev/data/lvm_raid1')
     sudo('mkdir -p /mnt/data')
     sudo('mount /dev/data/lvm_raid1 /mnt/data')    
@@ -58,7 +57,6 @@ def attach_new_disks(disk_name_1,disk_name_2, ebs_size, volume_group):
     """
 
     ec2_connection = boto.connect_ec2
-    
     dev_new_disk_1= blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
     dev_new_disk_1 = int(ebs_size) #size is in gigabytes
     dev_new_disk_2 = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
@@ -105,6 +103,35 @@ def create_instance(ebs_size, aws_image):
     bdm['/dev/sdc'] =dev_sdc
     reservations - ec2_connection.run_instances(AMI_ID, instance_type = INSTANCE_TYPE, key_name=KEY_NAME, security_groups = SECURTIY_GROUPS, block_device_map =bdm)
     insance = reservations.instances[0]
+    
+       instance = reservations.instances[0]
+    # Sleep so Amazon recognizes the new instance
+    for i in range(4):
+        fastprint('.')
+        time.sleep(5)
+
+    # Are we running yet?
+    while not instance.update() == 'running':
+        fastprint('.')
+        time.sleep(5)
+
+    # Sleep a bit more Amazon recognizes the new instance
+    for i in range(4):
+        fastprint('.')
+        time.sleep(5)
+    puts('.')
+
+    ec2_connection.create_tags([instance.id], {'Name': '{0}'.format(ami_name)})
+
+    # The instance is started, but not useable (yet)
+    puts('Started the instance now waiting for the SSH daemon to start.')
+    for i in range(12):
+        fastprint('.')
+        time.sleep(5)
+    puts('.')
+
+    # Return the instance
+    return instance, ec2_connection
     
     
     
