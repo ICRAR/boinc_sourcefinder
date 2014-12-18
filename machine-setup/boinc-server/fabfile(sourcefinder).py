@@ -48,11 +48,36 @@ def copy_files(app_version):
         for file in glob('home/ec2-user/boinc_sourcefinder/client/platforms/{0}'.format(platform))
             head, tail = split(filename)
             local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(filename, APP_NAME, app_version, platform, env.project_name, tail))
-            local('cp /home/ec2-user/boinc_sourcefinder/client/src/boinc-client/vm_image /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name)
-        if platform in WINDOWS_PLATFORMS:
-            create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name), '.exe')
-        else:
-            create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name), '')
+            local('cp /home/ec2-user/boinc_sourcefinder/client/src/boinc-client/vm_image.vdi /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name)
+ 
+
+def symbolic_link(app_version):
+  """
+  Setup symbolic links for every new application version within the same platform to minimise actual space on the device
+  """
+
+  for platform in PLATFORMS:
+    if(app_version == '1.0'):
+       print('application has original files, does not require symbolic link')
+    else:
+      cd('/home/ec2-user/projects/{3}/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))      
+      for filename in os.listdir(platform):
+        local('ln -s /home/ec2-user/projects/{2}/1.0/{0}/{1}/{3} {3}').format(APP_NAME, platform, filename, env.project_name)
+
+
+
+def sign_files(app_version):      
+  """
+  Sign the application files 
+  """
+
+  for platform in PLATFORMS:
+    for filename in glob('/home/ec2-user/projects/{3}/apps/{0}/{0}/{1}/{2}/*'.format(APP_NAME, app_version, platform, env.project_name)):
+      path_ext = splitext(filename)
+      if len(path_ext) == 2 and (path_ext) == '.sig' or path_ext[1] == '.xml'):
+        pass
+      else:
+        local('home/ec2-user/projects/{1}/bin/sign_executable {0} /home/ec2-user/projects/{1}/keys/code_sign_private > {0}.sig'.format(filename, env.project_name))
 
 def edit_files():
     """
@@ -61,11 +86,10 @@ def edit_files():
     
     #Edit the project.inc
     file_editor = FileEditor()
-    file_editor.substitute('REPLACE WITH PROJECT NAME', to='vm_test_1')
-    file_editor.subsitute('REPLACE WITH URL', to='vm_test_1')
+    file_editor.substitute('REPLACE WITH PROJECT NAME', to='theSkyNet {0} - Source finding with DINGO simulations'.format(env.project_name.upper()))
     file_editor.substitute('REPLACE WITH COPYRIGHT HOLDER', to = 'The International Centre for Radio Astronomy Research')
-    file_editor.substitute('')#the url base, with the public dns of the instance
-    
+    file_editor('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name))    
+
     file_editor = FileEditor()
     file.editor.substitute('<tasks>', end='</daemons>', to='''
      <task>
@@ -213,9 +237,10 @@ def edit_files():
     </daemon>
     <daemon>
       <cmd>
-        sample_assimilator -app vm_test_1
+        sample_assimilator --app vm_test_1
       </cmd>
     </daemon>''')
+    file_editor('/home/ec2-user/projects/{0}/config.xml'.format.project_name)
     
 def setup_website():
     '''

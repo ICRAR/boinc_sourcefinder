@@ -9,13 +9,13 @@ import fabric
 from fabric import fabric.*
 
 
-
-AMI_INSTANCE = 
+USERNAME = "ec2-user"
+AMI_INSTANCE = 'i-7d6d6656'
 YUM_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel '
 BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
 PIP_PACKAGES = 'boto sqlalchemy mysql'
-AWS_KEYS = 
-PUBLIC_DNS = 'ec2-user@.........compute-1.amazonaws.com'
+AWS_KEYS = os.path.expanduser('~/.ssh/icrar-skynet-private-test.pem')
+PUBLIC_DNS = 'ec2-user@54-208-207-86.compute-1.amazonaws.com'
 
 def nfs_connect(shared_directory):
     """connect the nfs server to the /projects directory of the BOINC server"""
@@ -56,6 +56,8 @@ def project_install():
     sudo('chkconfig mysqld on')
     sudo('service mysqld start')
     
+    #Copy configuration files
+
     #Files for apache need permissions
     run('chmod 711 /home/ec2-user') 
     run('chmod -R oug+r /home/ec2-user/projects/{0}'.format(env.project_name))
@@ -105,9 +107,9 @@ def create_instance(ebs_size, ami_name):
     # The instance is started, but not useable (yet)
     puts('Started the instance now waiting for the SSH daemon to start.')
     for i in range(12):
+    return instance, ec2_connection
         fastprint('.')
         time.sleep(5)
     puts('.')
 
     # Return the instance
-    return instance, ec2_connection
