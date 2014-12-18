@@ -1,6 +1,6 @@
-"""fabric file for the boinc server that is connected to the nfs-server as a backup"""
+"Fabric file for the BOINC Source Finder server. Sets up everything for given project names etc"
 
-import os 
+import os
 import sys
 import boto
 import glob
@@ -9,13 +9,14 @@ import fabric
 from fabric import fabric.*
 
 
-
-AMI_INSTANCE = 
+USERNAME = 'ec2-user'
+AMI_INSTANCE = 'i-7d6d6656'
+AWS_KEYS = os.path.expanduser('~/.ssh/icrar-skynet-private-test.pem')
+SECURITY_GROUPS = ['TheSkyNet, default']
 YUM_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel '
 BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
 PIP_PACKAGES = 'boto sqlalchemy mysql'
-AWS_KEYS = 
-PUBLIC_DNS = 'ec2-user@.........compute-1.amazonaws.com'
+
 
 def nfs_connect(shared_directory):
     """connect the nfs server to the /projects directory of the BOINC server"""
@@ -45,7 +46,7 @@ def boinc_install():
         run('./configure --disable-client --disable-manager')
         run('make')
 
-sudo('usermod -a -G ec2-user apache')
+    sudo('usermod -a -G ec2-user apache')
     
 def project_install():
     #Clone the git project
