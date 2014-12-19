@@ -1,0 +1,21 @@
+<version>
+	<file>
+		<physical_name>vboxwrapper_......</physical_name>
+		<main_program/>
+		<copy_file/>
+		<logical_name>vboxwrapper</logical_name>
+		<gzip/>
+	</file>
+	<file> 
+		<physical_name>input_physicalname</physical_name>
+		<logical_name>vm_image.vdi</logical_name>
+		<copy_file/>
+		<gzip/>
+	<file>
+		<physical_name>vbox_job+otherstuff</physical_name>
+		<logical_name>vbox_job</logical_name>
+		<copy_file/>
+	</file>
+	<dont_throttle/>
+	<api_version>7.5.0</api_version>
+</version>

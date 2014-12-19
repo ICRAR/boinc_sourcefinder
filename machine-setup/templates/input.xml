@@ -1,0 +1,14 @@
+<input_template>
+ 	<file_info>
+        <number>0</number>
+        <gzip/>
+	</file_info>
+	<workunit>
+		<file_ref>
+			<file_number>0</file_number>
+			<open_name>shared/in</open_name>
+			<copy_file/>
+		</file_ref>
+		<min_quorum>3</minquorum>
+	</workunit>
+</input_template>
