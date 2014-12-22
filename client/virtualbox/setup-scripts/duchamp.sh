@@ -13,8 +13,14 @@ cd /root/cfitsio
 make 
 make install 
 
-cd ../root/wcslib-4.25
+cd /root/wcslib-4.25
 ./configure --without-pgplot --with-cfitsioinc=/root/cfitsio --with-cfitsiolib=/root/cfitsio
 make
 mkdir /usr/local/share/man/man1
+make install
+
+export LD_LIBRARY_PATH=/usr/local/lib
+cd /root/Duchamp-1.6.1
+./configure --with-cfitsio=/root/cfitsio --without-pgplot
+make
 make install

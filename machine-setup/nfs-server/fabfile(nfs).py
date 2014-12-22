@@ -10,7 +10,7 @@ from fabric.api import *
 from ec2.autoscale.launchconfig import BlockDeviceMapping
 
 INSTANCE_TYPE ='t1.small'
-YUM_PACKAGES = 'lvm2 xfsprogs' 
+YUM_PACKAGES = 'mdadm xfsprogs' 
 USERNAME ='ec2-user'
 TEST_SECURITY_GROUPS = ['sg-dd33e0b2', 'sg-9408dbfb']
 AVAILABILITY_ZONE ='north-virginia-1c'
@@ -21,31 +21,33 @@ def setup_disks(disk_1, disk_2):
     :param disk_1: the name of the first disk on the instance
     :param disk_2: the name of the second disk on the instance 
     """
-    
-    sudo('yum install {0}'.format(YUM_PACKAGES))
-    sudo('pvcreate /dev/{0} /dev/{1}'.format(disk_1, disk_2))
-    sudo('vgvcreate data /dev/{0} /dev/{1}'.format(*disk_1, disk_2))
-        #check we have a volume group 
-    #sudo('vgdisplay')
-    #want to print(?) or check what the output is 
-    sudo('lvcreate-m 1 --type raid1 -l 40%VG --nosync -n lvm_raid1 data')
-    sudo('mkfs.xfs /dev/data/lvm_raid1')
-    sudo('mkdir -p /mnt/data')
-    sudo('mount /dev/data/lvm_raid1 /mnt/data')    
+    yum_update()
+    yum_install()
+    sudo('mdadm create --verbose /dev/md0 --level=mirror --raid-devices=2 /dev/{0} /dev/{1}').format(disk_1, disk_2)
+    sudo('-i')
+    sudo('mdadm --detail --scan >> /etc/mdadm.conf')
 
+
+
+def yum_install():
+    """Install nfs packages"""
+    sudo('yum install {0}').format(YUM_PACKAGES)
+    
 def yum_update():
     """Run Yum update to make sure software is up to date"""
     sudo('yum install update')
     
 def setup_nfs():
-    """install nfs on the server and parse client data(future)"""
+    """install nfs on the server and parse client data"""
     sudo('yum install nfs-utils')
     #open export folder 
     with cd('/etc/')
-        append('exports', '_old')
-        upload_template('exports.txt', LOCAL_EXPORTS_DIRECTORY)
-        cd('../')
-    sudo('service nfs start')    
+        sudo('vi etc/exports')  
+    sudo('chkconfig nfs on')
+    sudo('service rpcbind start')
+    sudo('service nfs start')
+    sudo('vi etc/exports')
+
     
 
 def attach_new_disks(disk_name_1,disk_name_2, ebs_size, volume_group):
@@ -65,23 +67,8 @@ def attach_new_disks(disk_name_1,disk_name_2, ebs_size, volume_group):
     bdm['/dev/{0}.'.format(disk_name_1)] = dev_new_disk_2
     bdm['/dev/{0}'.format(disk_name_2)] = dev_new_disk_2
     
-    
-def extend_lvm(disk_name_1, disk_namee_2, ebs_size, volume_group, logical_volumes):
-    """extend the current raid/lvm setup with new disks that have been attached to the instance
-    :param disk_name
-    :param ebs_size
-    :param volume_group
-    """
-    
-    attach_new_disks(disk_name_1, disk_name_2, ebs_size, volume_group)
-    sudo('umount /mnt/{0}'.format(volume_group)
-    sudo('pvcreate /dev/{0} /dev/{1}'.format(disk_name_1, disk_name_2))
-     #removes any drives from the volume group that aren't there or are missing
-    sudo('vgremove --removemissing /dev/{0}'.format(volume_group))
-    sudo('vgextend {0} /dev/{1} /dev/{2}', volume_group, disk_name_1, disk_name_2)
-    sudo('lvextend -L+{0} /dev/{1}/{2}'.format(2*ebs_size, volume_group, logical_volume))
-    sudo('resize2fs /mnt/{0} {1}'.format(2*volume_group)
-    
+#Remove and change for   
+
     
 
 def create_instance(ebs_size, aws_image):
