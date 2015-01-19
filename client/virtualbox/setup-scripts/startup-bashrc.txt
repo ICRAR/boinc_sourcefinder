@@ -32,16 +32,14 @@ fi
 echo -- Launching Application
 if [ -f /root/boinc_app ]; then
     mkdir -p /root/worker
-    cp boinc_app /root/worker/
     cp -r /root/shared/* /root/worker/
     cd root/worker/
     echo --- Application has been moved the the worker directory
     sleep 5
-    ./boinc_app |& vboxmonitor
+    python run_duchamp.py |& vboxmonitor
     echo --- Application and monitor have started
     cd /root
     cp -r /root/worker/* /root/shared/
-    cp /root/shared/boinc_app /root/
     rm -rf /root/worker
     echo --- Everything has gone according to plan
     sleep 5
