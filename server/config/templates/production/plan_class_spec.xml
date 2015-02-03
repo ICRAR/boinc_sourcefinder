@@ -1,0 +1,8 @@
+<plan_classes>
+    <plan_class>
+        <name>vbox64</name>
+        <virtualbox/>
+        <is64bit/>
+    </plan_class>
+</plan_classes>
+        

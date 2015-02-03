@@ -1,0 +1,263 @@
+<?xml version="1.0" ?>
+<boinc>
+  <config>
+    <upload_dir>
+      /home/ec2-user/projects/duchamp/upload
+    </upload_dir>
+    <send_result_abort>
+      1
+    </send_result_abort>
+    <long_name>
+      duchamp
+    </long_name>
+    <sched_debug_level>
+      3
+    </sched_debug_level>
+    <cache_md5_info>
+      1
+    </cache_md5_info>
+    <upload_url>
+      http://ec2-54-208-207-86.compute-1.amazonaws.com/duchamp_cgi/file_upload_handler
+    </upload_url>
+    <disable_account_creation>
+      0
+    </disable_account_creation>
+    <uldl_dir_fanout>
+      1024
+    </uldl_dir_fanout>
+    <download_url>
+      http://ec2-54-208-207-86.compute-1.amazonaws.com/duchamp/download
+    </download_url>
+    <db_user>
+      root
+    </db_user>
+    <log_dir>
+      /home/ec2-user/projects/duchamp/log_ip-10-0-140-192
+    </log_dir>
+    <app_dir>
+      /home/ec2-user/projects/duchamp/apps
+    </app_dir>
+    <download_dir>
+      /home/ec2-user/projects/duchamp/download
+    </download_dir>
+    <fuh_debug_level>
+      3
+    </fuh_debug_level>
+    <master_url>
+      http://ec2-54-208-207-86.compute-1.amazonaws.com/duchamp/
+    </master_url>
+    <host>
+      ip-10-0-140-192
+    </host>
+    <db_name>
+      duchamp
+    </db_name>
+    <shmem_key>
+      0x1111b404
+    </shmem_key>
+    <show_results>
+      1
+    </show_results>
+    <key_dir>
+      /home/ec2-user/projects/duchamp/keys/
+    </key_dir>
+    <dont_generate_upload_certificates>
+      1
+    </dont_generate_upload_certificates>
+    <ignore_upload_certificates>
+      1
+    </ignore_upload_certificates>
+    <db_passwd>
+      
+      
+      
+      
+      
+    </db_passwd>
+    <min_sendwork_interval>
+      6
+    </min_sendwork_interval>
+    <db_host>
+      localhost
+    </db_host>
+    <daily_result_quota>
+      500
+    </daily_result_quota>
+    <one_result_per_user_per_wu>
+      0
+    </one_result_per_user_per_wu>
+    <max_wus_to_send>
+      50
+    </max_wus_to_send>
+    <max_wus_in_progress>
+      1
+    </max_wus_in_progress>
+    <max_jobs_in_progress>
+    	<project>
+		<total_limit>
+			<jobs>1</jobs>
+		</total_limit>
+	</project>
+    </max_jobs_in_progress>
+  </config>
+  <tasks>
+    <task>
+      <cmd>
+        antique_file_deleter -d 2
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        antique_file_deleter.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        db_dump -d 2 --dump_spec ../db_dump_spec.xml
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        db_dump.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./update_uotd.php
+      </cmd>
+      <period>
+        1 days
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_uotd.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./update_forum_activities.php
+      </cmd>
+      <period>
+        1 hour
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_forum_activities.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        update_stats
+      </cmd>
+      <period>
+        1 days
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_stats.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./update_profile_pages.php
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_profile_pages.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./team_import.php
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        1
+      </disabled>
+      <output>
+        team_import.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./notify.php
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        notify.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./badge_assign.php
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        badge_assign.out
+      </output>
+    </task>
+  </tasks>
+  <daemons>
+    <daemon>
+      <cmd>
+        feeder -d 4 
+      </cmd>
+      <disabled>0</disabled>
+    </daemon>
+    <daemon>
+      <cmd>
+        transitioner -d 4 
+      </cmd>
+      <disabled>0</disabled>
+    </daemon>
+    <daemon>
+      <cmd>
+        file_deleter -d 4 
+      </cmd>
+      <disabled>1</disabled>
+    </daemon>
+    <daemon>
+	<cmd>
+	sample_bitwise_validator --app duchamp 
+	</cmd>
+        <disabled>0</disabled>
+    </daemon>
+    <daemon>
+	<cmd>
+ 	 sample_assimilator --app duchamp
+	</cmd>	
+        <disabled>0</disabled>
+    </daemon>
+  </daemons>
+</boinc>
