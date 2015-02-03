@@ -30,17 +30,30 @@ if [ $? -ne 0 ]; then
 fi
 
 echo -- Launching Application
-if [ -f /root/boinc_app ]; then
+if [ -f /root/run_duchamp.py ]; then
+    echo -- in /root directory
+    cp /root/run_duchamp.py /root/shared
+    cp -r /root/parameters /root/shared
     mkdir -p /root/worker
     cp -r /root/shared/* /root/worker/
-    cd root/worker/
     echo --- Application has been moved the the worker directory
-    sleep 5
+    sleep 2
+    cd root/worker/
+    echo -- in worker directory
+    sleep 3
+    gunzip inputs.tar.gz
+    tar -xvf inputs.tar
     python run_duchamp.py |& vboxmonitor
     echo --- Application and monitor have started
     cd /root
+    rm /root/worker/run_duchamp.py
+    rm -r /root/worker/parameters
     cp -r /root/worker/* /root/shared/
     rm -rf /root/worker
+    cd /root/shared
+    tar -cvzf outputs.tar.gz outputs
+    echo --- Everything has been zipped!
+    sleep 5
     echo --- Everything has gone according to plan
     sleep 5
     shutdown -hP 0
