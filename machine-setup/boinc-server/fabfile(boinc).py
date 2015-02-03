@@ -87,7 +87,7 @@ def yum_update():
 
 def mount_ebs(block_name): 
     """Mount the ebs volume on the server"""
-    sudo('mkfs.xfs /dev/{0}').format(block_name)
+    sudo('  .xfs /dev/{0}').format(block_name)
     sudo('mkdir /home/ec2-user/boinc')
     sudo('mount /dev/{0} /home/ec2-user/boinc').format(block_name)
     append('/etc/fstab', '/dev/md0    /dev/mnt    xfs    defaults    0    2', sudo=true)
