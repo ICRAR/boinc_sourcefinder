@@ -36,13 +36,13 @@ if [ -f /root/run_duchamp.py ]; then
     cp -r /root/parameters /root/shared
     mkdir -p /root/worker
     cp -r /root/shared/* /root/worker/
+    mkdir /root/worker/outputs
     echo --- Application has been moved the the worker directory
     sleep 2
     cd root/worker/
     echo -- in worker directory
     sleep 3
-    gunzip inputs.tar.gz
-    tar -xvf inputs.tar
+    tar -xvzf inputs.tar
     python run_duchamp.py |& vboxmonitor
     echo --- Application and monitor have started
     cd /root

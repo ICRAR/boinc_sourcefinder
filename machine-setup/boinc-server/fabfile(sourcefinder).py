@@ -35,30 +35,32 @@ def create_version_xml(platform, app_version, directory):
         <gzip/>
     </file>
     <file>
-        <physical_name>vm_image_{1}.vdi<physical_name>
+        <physical_name>DuchampTestClone.vdi<physical_name>
+        <copy_file/>
+        <file/>
+    <file> 
+        <physical_name>vbox_job_{1}</physical_name>
+        <logical_name>vbox_job</logical_name>
         <copy_file/>
         <gzip/>
-    <file/>
-    <file> 
-        <physical_name>vbox_job{0}_{1}</physical_name>
-        <logical_name>vbox_job</logical_name>
     </file> 
     <dont_throttle/>
     <api_version>7.5.0</api_version>
-</version>'''
+</version>'''.format(platform, app_version)
     outfile.close()
     
 
-def copy_files(app_version):
-    """
+"""def copy_files(app_version):
+   """"""""
     Copy the application files to their respective directories 
-    """
+    """"""
     for platform in PLATFORMS:
         local('mkdir -p /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
         for file in glob('home/ec2-user/boinc_sourcefinder/client/platforms/{0}'.format(platform))
             head, tail = split(filename)
             local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(filename, APP_NAME, app_version, platform, env.project_name, tail))
             local('cp /home/ec2-user/boinc_sourcefinder/client/src/boinc-client/vm_image.vdi /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name)
+ """
  
 def sign_files(app_version):      
   """
@@ -85,129 +87,7 @@ def edit_files():
     file_editor('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name))    
 
     file_editor = FileEditor()
-    file.editor.substitute('<tasks>', end='</daemons>', to='''
-     <task>
-      <cmd>
-        antique_file_deleter -d 2
-      </cmd>
-      <period>
-        24 hours
-      </period>
-      <disabled>
-        0
-      </disabled>
-      <output>
-        antique_file_deleter.out
-      </output>
-    </task>
-    <task>
-      <cmd>
-        db_dump -d 2 --dump_spec ../db_dump_spec.xml
-      </cmd>
-      <period>
-        24 hours
-      </period>
-      <disabled>
-        0
-      </disabled>
-      <output>
-        db_dump.out
-      </output>
-    </task>
-    <task>
-      <cmd>
-        run_in_ops ./update_uotd.php
-      </cmd>
-      <period>
-        1 days
-      </period>
-      <disabled>
-        0
-      </disabled>
-      <output>
-        update_uotd.out
-      </output>
-    </task>
-    <task>
-      <cmd>
-        run_in_ops ./update_forum_activities.php
-      </cmd>
-      <period>
-        1 hour
-      </period>
-      <disabled>
-        0
-      </disabled>
-      <output>
-        update_forum_activities.out
-      </output>
-    </task>
-    <task>
-      <cmd>
-        update_stats
-      </cmd>
-        1 days
-      </period>
-      <disabled>
-        0
-      </disabled>
-      <output>
-        update_stats.out
-      </output>
-    </task>
-    <task>
-      <cmd>
-       run_in_ops ./update_profile_pages.php
-      </cmd>
-      <period>
-        24 hours
-      </period>
-      <disabled>
-        0
-      </disabled>
-      <output>
-        update_profile_pages.out
-      </output>
-    </task>
-    <task>
-      <cmd>
-        run_in_ops ./team_import.php
-      </cmd>
-      <period>
-        24 hours
-      </period>
-      <disabled>
-        1
-      </disabled>
-      <output>
-        team_import.out
-      </output>
-    </task>
-    <task>
-      <cmd>
-        run_in_ops ./notify.php
-      </cmd>
-      <period>
-        24 hours
-      </period>
-      <disabled>
-        0
-      </disabled>
-      <output>
-        notify.out
-      </output>
-    </task>
-          <period>
-        24 hours
-      </period>
-      <disabled>
-        0
-      </disabled>
-      <output>
-        badge_assign.out
-      </output>
-    </task>
-  </tasks>
+    file.editor.substitute('<daemons>', end='</daemons>', to='''    
   <daemons>
     <daemon>
       <cmd>
@@ -271,8 +151,8 @@ def create_test_workunit(project_directory):
     outfile.write('Test for the worker application on the VM')
     outfile.close()
     with cd(project_directory):
-        local('stage_file --gzip --copy in')
-        local('bin/create_work --appname {0} --wu_name in --wu_templates/{0}_in.xml --result_template templates/{0}_out.xml in'.format(env.project_name))
+        local('stage_file --gzip --copy inputs.tar.gz')
+        local('bin/create_work --appname {0} --wu_name inputs.tar.gz --wu_templates/{0}_in.xml --result_template templates/{0}_output.xml in'.format(env.project_name))
 
 
 def start_daemons():    
