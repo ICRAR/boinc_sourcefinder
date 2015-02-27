@@ -1,0 +1,18 @@
+<boinc>
+    <platform>
+        <name>windows_x86_64</name>
+        <user_friendly_name>Microsoft Windows running on an AMD x86_64 or Intel EM64T CPU</user_friendly_name>
+    </platform>
+    <platform>
+        <name>x86_64-pc-linux-gnu</name>
+        <user_friendly_name>Linux running on an AMD x86_64 or Intel EM64T CPU</user_friendly_name>
+    </platform>
+    <platform>
+        <name>x86_64-apple-darwin</name>
+        <user_friendly_name>Intel 64-bit Mac OS 10.5 or later</user_friendly_name>
+    </platform>
+    <app>
+        <name>duchamp</name>
+        <user_friendly_name>Duchamp Source Finder on BOINC</user_friendly_name>
+    </app>
+</boinc>

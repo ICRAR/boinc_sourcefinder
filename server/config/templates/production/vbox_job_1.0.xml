@@ -1,0 +1,7 @@
+<vbox_job>
+    <os_name>Debian_64</os_name>
+    <memory_size_mb>256</memory_size_mb>
+    <enable_shared_directory/>
+    <fraction_done_filename>fraction</fraction_done_filename>
+    <trickle_trigger_file>tricklefile.txt</trickle_trigger_file>
+</vbox_job>
