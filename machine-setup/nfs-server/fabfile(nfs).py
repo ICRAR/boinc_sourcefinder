@@ -1,13 +1,13 @@
 """fabric file for the raid system that the nfs server connects to for the sourcefinder"""
 
 import boto
-from boto.
-import glob 
+import glob
 import fabric 
 import argparse
 
 from fabric.api import *
-from ec2.autoscale.launchconfig import BlockDeviceMapping
+from boto.ec2 import blockdevicemapping
+import time
 
 INSTANCE_TYPE ='t1.small'
 YUM_PACKAGES = 'mdadm xfsprogs' 
@@ -76,22 +76,23 @@ def create_instance(ebs_size, aws_image):
     :param: ebs_size, size of the block storage 
     :param: aws_image, image id of the aws instance
     """
+    ebs_size
     
     #requires the key files to be in the ~/.boto directory
-   ec2_connection = boto.connect_ec2()  
+    ec2_connection = boto.connect_ec2()
     
     dev_sdb = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
     dev_sdb.size = int(ebs_size)
     dev_sdc = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
     dev_sdc.size = int(ebs_size)
+
     
     bdm = blockdevicemapping.BlockDeviceMapping()
     bdm['/dev/sdb'] = dev_sdb
     bdm['/dev/sdc'] =dev_sdc
-    reservations - ec2_connection.run_instances(AMI_ID, instance_type = INSTANCE_TYPE, key_name=KEY_NAME, security_groups = SECURTIY_GROUPS, block_device_map =bdm)
-    insance = reservations.instances[0]
-    
-       instance = reservations.instances[0]
+    reservations = ec2_connection.run_instances(AMI_ID, instance_type = INSTANCE_TYPE, key_name=KEY_NAME, security_groups = SECURTIY_GROUPS, block_device_map =bdm)
+
+    instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
     for i in range(4):
         fastprint('.')
