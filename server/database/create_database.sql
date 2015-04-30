@@ -1,93 +1,129 @@
-CREATE SCHEMA sourcefinder;
-USE sourcefinder;
+CREATE SCHEMA IF NOT EXISTS sourcefinder DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
+USE sourcefinder ;
 
-CREATE TABLE parameters (
-  parameters_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-  threshold SMALLINT NOT NULL,
-  recon_dim SMALLINT NOT NULL,
-  snr_recon  SMALLINT NOT NULL,
-  scale_min  SMALLINT NOT NULL,
-  min_pix  SMALLINT NOT NULL ,
-  min_chan SMALLINT NOT NULL ,
-  flag_growth SMALLINT NOT NULL ,
-  growth_threshold FLOAT(7,7) NOT NULL ,
-
-  INDEX (parameters_id)
-)CHARACTER SET utf8 ENGINE = InnoDB;
-
-CREATE TABLE run(
-  run_id BIGINT UNSIGNED NOT NULL PRIMARY KEY ,
-  supercube_name VARCHAR(15),
-  completion INT NOT NULL ,
-
-  INDEX (run_id),
-  INDEX (supercube_name)
-)CHARACTER SET utf8 ENGINE = InnoDB;
-
-CREATE TABLE cube_status(
-  cube_status_id BIGINT UNSIGNED NOT NULL PRIMARY KEY ,
-  description VARCHAR(250) NOT NULL
-)CHARACTER SET utf8 ENGINE =InnoDB;
-
-INSERT INTO cube_status VALUES (0, 'REGISTERED');
-INSERT INTO cube_status VALUES (1, 'COMPUTING');
-INSERT INTO cube_status VALUES (2, 'PROCESSED');
-INSERT INTO cube_status VALUES (3, 'ARCHIVED');
-INSERT INTO cube_status VALUES (4, 'SOURCED'); /*We have done our sourcefinding checks in the data*/
-
-CREATE TABLE parameters_run(
-  parameters_run_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  parameters_id BIGINT UNSIGNED NOT NULL ,
-  run_id BIGINT UNSIGNED NOT NULL ,
-
-  FOREIGN KEY (parameters_id) REFERENCES parameters(parameters_id),
-  FOREIGN KEY (run_id) REFERENCES run(run_id) ,
-
-  INDEX  (run_id),
-  INDEX (parameters_id)
-) CHARACTER SET utf8 ENGINE=InnoDB
-
-CREATE TABLE register (
-  register_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  cube_filename VARCHAR(128) NOT NULL ,
-  register_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  create_time TIMESTAMP NULL DEFAULT NULL ,
-  run_id BIGINT UNSIGNED NOT NULL ,
-
-  INDEX (cube_filename),
-  INDEX (create_time, register_time),
-
-  FOREIGN KEY (run_id) REFERENCES run(run_id)
-) CHARACTER SET utf8 ENGINE = InnoDb;
-
-CREATE TABLE cube (
-  cube_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  cube_name VARCHAR(128) NOT NULL ,
-  ra  FLOAT NOT NULL ,
-  dec FLOAT NOT NULL ,
-  frequency FLOAT NOT NULL,
-  status_id SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-  run_id BIGINT UNSIGNED NOT NULL,
-
-  FOREIGN KEY (run_id) REFERENCES run(run_id),
-  FOREIGN KEY (status_id) REFERENCES cube_status(cube_id),
-
-  INDEX (run_id),
-  INDEX (cube_name)
-) CHARACTER SET utf8 ENGINE = InnoDB;
-
-CREATE TABLE results (
-  result_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  parameter_id BIGINT UNSIGNED NOT NULL,
-  cube_name VARCHAR(128) NOT NULL ,
-  sources_found SMALLINT NOT NULL,
-  correct_sources SMALLINT NOT NULL,
-
-  FOREIGN KEY (parameter_id) REFERENCES parameters(parameters_id),
-  FOREIGN KEY (cube_name) REFERENCES cube(cube_id),
-
-  INDEX (result_id)
-)
+CREATE TABLE IF NOT EXISTS sourcefinder.`run` (
+  `run_id` BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (`run_id`)
+) ENGINE = InnoDB;
 
 
+CREATE TABLE IF NOT EXISTS sourcefinder.`parameter` (
+  `parameter_id` BIGINT UNSIGNED NOT NULL,
+  'parameter_name' VARCHAR(45),
+  PRIMARY KEY ('run_id')
+) ENGINE = InnoDB;
 
+
+CREATE TABLE IF NOT EXISTS sourcefinder.`parameter_range` (
+  `parameter_range_id` INT UNSIGNED    NOT NULL,
+  `start`              FLOAT           NOT NULL,
+  `stop`               FLOAT           NOT NULL,
+  `increment`          FLOAT           NOT NULL,
+  `parameter_id`       BIGINT UNSIGNED NOT NULL,
+  `run_id`             INT UNSIGNED    NOT NULL,
+
+  PRIMARY KEY (`parameter_range_id`),
+  INDEX `fk_parameter_range_parameter_idx` (`parameter_id` ASC),
+  INDEX `fk_parameter_range_run1_idx` (`run_id` ASC),
+  CONSTRAINT `fk_parameter_range_parameter`
+
+  FOREIGN KEY (`parameter_id`)
+  REFERENCES sourcefinder.`parameter` (`parameter_id`),
+  CONSTRAINT `fk_parameter_range_run1`
+  FOREIGN KEY (`run_id`)
+  REFERENCES sourcefinder.`run` (`run_id`)
+) ENGINE = InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS sourcefinder.`parameter_grouping` (
+  `parameter_grouping_id` BIGINT UNSIGNED NOT NULL,
+  `run_id` BIGINT UNSIGNED NOT NULL,
+
+  PRIMARY KEY (`parameter_grouping_id`),
+  INDEX `fk_grouping_run1_idx` (`run_id` ASC),
+  CONSTRAINT `fk_grouping_run1`
+
+  FOREIGN KEY (`run_id`)
+  REFERENCES sourcefinder.`run` (`run_id`)
+) ENGINE = InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS sourcefinder.`parameter_values` (
+  `value_id`     BIGINT UNSIGNED NOT NULL,
+  `value`        FLOAT           NOT NULL,
+  `parameter_grouping_id` BIGINT UNSIGNED NOT NULL,
+  `parameter_id` BIGINT UNSIGNED NOT NULL,
+
+  PRIMARY KEY (`value_id`),
+  INDEX `fk_value_grouping1_idx` (`parameter_grouping_id` ASC),
+  INDEX `fk_value_parameter1_idx` (`parameter_id` ASC),
+  CONSTRAINT `fk_value_grouping1`
+
+  FOREIGN KEY (`parameter_grouping_id`)
+  REFERENCES sourcefinder.`parameter_grouping` (`parameter_grouping_id`),
+  CONSTRAINT `fk_value_parameter1`
+
+  FOREIGN KEY (`parameter_id`)
+  REFERENCES sourcefinder.`parameter` (`parameter_id`)
+)ENGINE = InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS sourcefinder.`cube` (
+  `cube_id` INT UNSIGNED NOT NULL,
+  `cube_name` VARCHAR(2000) NOT NULL,
+  `run_id` BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (`cube_id`),
+  INDEX `fk_cube_run1_idx` (`run_id` ASC),
+  CONSTRAINT `fk_cube_run1`
+  FOREIGN KEY (`run_id`)
+  REFERENCES sourcefinder.`run` (`run_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+  ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`result`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS sourcefinder.`result` (
+  `result_id` BIGINT UNSIGNED NOT NULL,
+  `parameter_grouping_id` BIGINT UNSIGNED NOT NULL,
+  `cube_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`result_id`),
+  INDEX `fk_result_grouping1_idx` (`parameter_grouping_id` ASC),
+  INDEX `fk_result_cube1_idx` (`cube_id` ASC),
+  CONSTRAINT `fk_result_grouping1`
+  FOREIGN KEY (`parameter_grouping_id`)
+  REFERENCES sourcefinder.`parameter_grouping` (`parameter_grouping_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_result_cube1`
+  FOREIGN KEY (`cube_id`)
+  REFERENCES sourcefinder.`cube` (`cube_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+  ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`cube_user`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS sourcefinder.`cube_user` (
+  `cube_user_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `cube_id` BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (`cube_user_id`),
+  INDEX `user_id_index` (`user_id` ASC),
+  INDEX `user_index` (`cube_id` ASC),
+  INDEX `user_cube_index` (`user_id` ASC, `cube_id` ASC),
+  CONSTRAINT `fk_cube_user_cube1`
+  FOREIGN KEY (`cube_id`)
+  REFERENCES sourcefinder.`cube` (`cube_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+  ENGINE = InnoDB;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
