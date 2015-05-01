@@ -3,7 +3,10 @@
 import argparse
 import os
 from astropy.io import fits
-from sqlalchemy import select
+from database.database_support import CUBE
+
+import sqlalchemy
+
 
 
 def get_cube_names(cube_directory):
@@ -29,9 +32,28 @@ def get_cube_data(cube_file):
     return data_list
 
 
-def update_cube_table(connection, cube_file):
+def update_cube_table(connection, cube_file, run_id):
     """Update the database for each cube
-    :param cube_file
+    :param connection:
+    :param cube_file:
+    :param run_id:
+    :return:
     """
     data = get_cube_data(cube_file)
 
+    transaction = connection.begin()
+    try:
+        connection.execute(
+            CUBE.insert(),
+            cube_name=cube_file,
+            run_id=run_id)
+
+        transaction.commit()
+
+    except Exception:
+        transaction.rollback()
+    raise
+
+
+def set_ranges(connection, parameter, paramater_range):
+    transaction

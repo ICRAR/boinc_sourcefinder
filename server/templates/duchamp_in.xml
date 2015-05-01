@@ -1,0 +1,16 @@
+<input_template>
+    <file_info>
+        <number>0</number>
+    </file_info>
+    <workunit>
+            <file_ref>
+            <file_number>0</file_number>
+                <open_name>shared/inputs.tar.gz</open_name>
+                 <copy_file/>
+            </file_ref>
+        <rsc_disk_boinc>200000000</rsc_disk_boinc>
+        <min_quorum>2</min_quorum>
+    </workunit>
+</input_template>
+
+<!--TODO Update for when we have all the paramater files sent to the client as well as the running script etc-->

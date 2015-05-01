@@ -6,7 +6,7 @@ import os
 import time
 from boto.ec2 import blockdevicemapping
 
-from fabric.api import run, sudo, put, env, require,local
+from fabric.api import run, sudo, put, env, require, local
 from fabric.context_managers import cd
 from fabric.contrib.files import append, comment
 from fabric.decorators import task, serial
@@ -18,21 +18,21 @@ AMI_ID = 'i-7d6d6656'
 INSTANCE_TYPE = 't2.small'
 YUM_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel python-pip curl-devel'
 BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
-PIP_PACKAGES = 'boto sqlalchemy mysql fabric'
+PIP_PACKAGES = 'boto sqlalchemy mysql fabric nympy scipy astropy'
 AWS_KEY = os.path.expanduser('~/.ssh/icrar_theskynet_private_test.pem')
 KEY_NAME = 'icrar_theskynet_private_test.pem'
 PUBLIC_DNS = 'ec2-user@54-208-207-86.compute-1.amazonaws.com'
-SECURITY_GROUPS=['defaults', 'theSkynet']
+SECURITY_GROUPS = ['defaults', 'theSkynet']
 
 # def nfs_connect(shared_directory):
 #   """connect the nfs server to the /projects directory of the BOINC server"""
 #   sudo('mount -t nfs {0}:/{1} /projects'.format(PUBLIC_DNS, shared_directory))
-    
-def yum_update():
 
+def yum_update():
     """Update general machine packages"""
 
     sudo('yum install update')
+
 
 def mount_ebs(block_name):
     """Mount the ebs volume on the server"""
@@ -42,6 +42,7 @@ def mount_ebs(block_name):
     append('/etc/fstab', '/dev/{0}    /dev/mnt    ext4    defaults,nofail    0    2'.format(block_name), sudo=True)
     sudo('chown -R {0}:{0} /home/{0}/storage'.format(env.user))
 
+
 # Kevin's code
 def create_instance(ebs_size, ami_name):
     """
@@ -49,13 +50,16 @@ def create_instance(ebs_size, ami_name):
     :param ebs_size:
     """
 
+    puts('Creating the instance {1} with disk size {0} GB'.format(ebs_size, ami_name))
+
     ec2_connection = boto.connect_ec2()
 
     dev_sda = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
     dev_sda.size = int(ebs_size)
     bdm = blockdevicemapping.BlockDeviceMapping()
     bdm['/dev/sda'] = dev_sda
-    reservations = ec2_connection.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, block_device_map=bdm)
+    reservations = ec2_connection.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME,
+                                                security_groups=SECURITY_GROUPS, block_device_map=bdm)
     instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
     for i in range(4):
@@ -85,6 +89,7 @@ def create_instance(ebs_size, ami_name):
 
     # Return the instance
 
+
 def start_ami_instance(ami_id, instance_name):
     """
     Start an AMI instance running
@@ -96,11 +101,12 @@ def start_ami_instance(ami_id, instance_name):
 
     ec2_connection = boto.connect_ec2()
 
-    reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
+    reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME,
+                                                security_groups=SECURITY_GROUPS)
 
     instance = reservations.instances[0]
 
-    #sleep
+    # sleep
     for i in range(4):
         fastprint('.')
         time.sleep(5)
@@ -132,22 +138,21 @@ def start_ami_instance(ami_id, instance_name):
     return instance, ec2_connection
 
 
-
 def general_install():
     yum_update()
-    
-    sudo('yum install {0}'.format(YUM_PACKAGES))    
+
+    sudo('yum install {0}'.format(YUM_PACKAGES))
     sudo('pip install {0}'.format(PIP_PACKAGES))
-    #setup pythonpath
+    # setup pythonpath
     append('/home/ec2-user/.bach_profile',
            ['',
             'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc_sourcefinder/server/src',
             'export PYTHONPATH'])
-    
-    
+
+
 def boinc_install():
     general_install()
-    
+
     sudo('yum install {0}'.format(BOINC_PACKAGES))
     run('git clone git://boinc.berkeley.edu/boinc-v2.git boinc')
     with cd('/home/ec2-users/boinc'):
@@ -156,11 +161,11 @@ def boinc_install():
         run('make')
     sudo('usermod -a -G ec2-user apache')
 
-    
+
 def project_install():
     boinc_install()
     mount_ebs()
-    #Clone the git project
+    # Clone the git project
 
     for user in env.list_of_users:
         sudo('useradd {0}.'.format(user))
@@ -173,9 +178,9 @@ def project_install():
     run('chmod -R oug+r /home/ec2-user/projects/{0}'.format(env.project_name))
     run('chmod -R oug+x /home/ec2-user/projects/{0}/html'.format(env.project_name))
     run('chmod ug+w /home/ec2-user/projects/{0}/log_*'.format(env.project_name))
-    run('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(env.project_name))    
+    run('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(env.project_name))
 
-    #Copy configuration files
+    # Copy configuration files
     sudo('mkdir /home/ec2-user/boinc/sfinder')
     run('git clone git://gitub.com/ICRAR/boinc-sourcefinder.git /home/ec2-user/storage/sfinder')
 
@@ -185,9 +190,24 @@ def project_install():
     sudo('chkconfig mysqld on')
     sudo('service mysqld start')
 
-    #Files for apache need permissions
+    # Setup the database for recording WU's
+    run(
+        'mysql --user={0} --host={1} --password={2} < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql'.format(
+            env.db_username, env.db_host_name, env.db_password))
+
     with cd('home/ec2-user/boinc/tools'):
-        run('./make_project -v --no_query --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'.format(env.hosts[0], env.db_username, env.db_host_name, env.dp_password, env.project_name))
+        run('./make_project -v --no_query --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'.format(
+            env.hosts[0], env.db_username, env.db_host_name, env.dp_password, env.project_name))
+
+    run('''echo '# DB Settings
+databaseUserid = "{0}"
+databasePassword = "{1}"
+databaseHostname = "{2}"
+databaseName = "duchamp"
+boincDatabaseName = "{3}"' > /home/ec2-user/boinc_sourcefinder/server/src/config/duchamp.settings'''.format(env.db_username,
+                                                                                                    env.db_password,
+                                                                                                    env.db_host_name,
+                                                                                                    env.project_name))
 
 def setup_website():
     """
@@ -209,12 +229,13 @@ def base_setup_env():
         prompt('AMI Name', 'ami_name', default='base-python-ami')
 
     ec2_instance, ec2_connection = create_instance(env.ebs_size, env.ami_name)
-    env.ec2_instance=ec2_instance
-    env.ec2_connection=ec2_connection
+    env.ec2_instance = ec2_instance
+    env.ec2_connection = ec2_connection
     env.hosts = [ec2_instance.ip_address]
 
     env.user = USERNAME
     env.key_filename = AWS_KEY
+
 
 def base_build_ami():
     """
@@ -228,7 +249,7 @@ def base_build_ami():
     general_install()
 
     puts("Stopping the instance")
-    env.ec2_connection.stop_instances(env.ec2_instance.id, force = True)
+    env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
     while not env.ec2_instance.update() == 'stopped':
         fastprint('.')
         time.sleep(5)
@@ -237,6 +258,7 @@ def base_build_ami():
     env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base python AMI')
 
     puts('All done.')
+
 
 def boinc_setup_env():
     """
@@ -256,14 +278,14 @@ def boinc_setup_env():
     if 'instance_name' not in env:
         prompt('AUS insance name: ', 'instance_name', default='base-boinc-ami')
 
-
-    ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env, instance_name)
+    ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
     env.hosts = [ec2_instance.ip_address]
 
     env.user = USERNAME
     env.key_filename = AWS_KEY
+
 
 def boinc_build_ami():
     """
@@ -272,7 +294,6 @@ def boinc_build_ami():
     """
     require('host', provided_by=[boinc_setup_env])
 
-    resize_file_system()
     time.sleep(5)
 
     boinc_install()

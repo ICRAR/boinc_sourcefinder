@@ -2,6 +2,6 @@
     <os_name>Debian_64</os_name>
     <memory_size_mb>256</memory_size_mb>
     <enable_shared_directory/>
-    <fraction_done_filename>fraction</fraction_done_filename>
-    <trickle_trigger_file>tricklefile.txt</trickle_trigger_file>
+    <vm_disk_controller_model>IntelAHCI</vm_disk_controller_model>
+    <vm_disk_controller_type>stata</vm_disk_controller_type>
 </vbox_job>

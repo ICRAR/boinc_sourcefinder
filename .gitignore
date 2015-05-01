@@ -5,5 +5,5 @@
 *.pyc
 *~
 *.settings
-
+/server/config/
 client/src/boinc-client/virtualbox\env

@@ -89,8 +89,8 @@ def create_first_version():
     Create the first versions of the files
     """    
     
-    local('cp -R /home/ec2-user/boinc_sourcefinder/server/config/templates /home/ec2-user/projects/{0}'.format(env.project_name))
-    local('cp -R /home/ec2-user/boinc_sourcefinder/server/config/project.xml /home/ec2-user/projects/{0}'.format(env.project_name))
+    #local('cp -R /home/ec2-user/boinc_sourcefinder/server/templates/ /home/ec2-user/projects/{0}'.format(env.project_name))
+    #local('cp -R /home/ec2-user/boinc_sourcefinder/server/ /home/ec2-user/projects/{0}'.format(env.project_name))
     copy_files(1)
     
     local('cd /home/ec2-user/projects/{0}; bin/xadd'.format(env.project_name))
