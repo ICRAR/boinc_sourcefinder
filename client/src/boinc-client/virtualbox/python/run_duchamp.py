@@ -3,6 +3,9 @@ import os
 import subprocess
 import shutil
 import time
+import logging_helper
+
+logging_helper.basicConfig(filename='run_duchamp.log')
 
 
 input_fits = os.listdir('root/shared/.')[0]
@@ -77,7 +80,7 @@ def append():
 				for line in lines:
 					outfile.write(line)
 
-# where all the business occurs
+'''WHERE ALL THE BUSINES OCCURS'''
 run_duchamp()
 move_outputs()
 append()

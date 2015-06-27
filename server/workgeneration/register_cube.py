@@ -1,26 +1,66 @@
 """Register a run of cubes for processing by populating the database"""
 
 import argparse
-import os
-from workgeneration.register_cube_mod import update_cube_table, get_cube_names
+# import os
+from register_cube_mod import get_cube_names, get_cube_data, set_ranges, update_cube_table
+# from config import DB_LOGIN (For local testing, just defining a general login instead
+from sqlalchemy.engine import create_engine
+from logging_helper import LOGGER
+
+LOGGER.info('register_cube.py')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('cube_directory', nargs=1, help='The directory that all the new workunits are stored')
+
 parser.add_argument('run_id', nargs=1, help='The run_id of the database')
-parser.add_argument('reconDim', nargs=1, help='The range of values required for reconDim parameter')
-parser.add_argument('snrRecon', nargs=1, help='The range of values required for snrRecon parameter')
-parser.add_argument('scaleMin', nargs=1, help='The range of values required for scaleMin parameter')
-parser.add_argument('minPix', nargs=1, help='The range of values required for minChan parameter')
-parser.add_argument('minChan', nargs=1, help='The range of values required for flagGrowth parameter')
-parser.add_argument('flagGrowth', nargs=1, help='The flag growth values')
-parser.add_argument('growthThreshold', nargs=1, help='The rannge of growth thresholds')
-parser.add_argument('threshold', nargs=1, help='The threshold range')
+parser.add_argument('--reconDim', default='*', help='The range of values required for reconDim parameter')
+parser.add_argument('--snrRecon', default='*', help='The range of values required for snrRecon parameter')
+parser.add_argument('--scaleMin', default='*', help='The range of values required for scaleMin parameter')
+parser.add_argument('--minPix', default='*', help='The range of values required for minChan parameter')
+parser.add_argument('--minChan', default='*', help='The range of values required for flagGrowth parameter')
+parser.add_argument('--flagGrowth', default='*', help='The flag growth values')
+parser.add_argument('--growthThreshold', default='*', help='The rannge of growth thresholds')
+parser.add_argument('--threshold', default='*', help='The threshold range')
 
 args = vars(parser.parse_args())
 WORKING_DIRECTORY = args['cube_directory'][0]
-RUN_ID = args['run_id'][0]
+RUN_ID = args['run_id']
+RECON_DIM = args['reconDim']
+SNR_DIM = args['snrRecon']
+SCALE_MIN = args['scaleMin']
+MIN_PIX = args['minPix']
+MIN_CHAN = args['minChan']
+FLAG_GROWTH = args['flagGrowth']
+GROWTH_THRESHOLD = args['growthThreshold']
+THRESHOLD = args['threshold']
+
+DB_LOGIN = 'mysql://' + 'ryan' + ':' + '@' + 'localhost' + '/' + 'sourcefinder'
+
+parameter_list = [RECON_DIM, SNR_DIM, SCALE_MIN, MIN_CHAN, FLAG_GROWTH, GROWTH_THRESHOLD,
+                  THRESHOLD]
+
+parameter_name_list = ['recon_dim', 'snr_dim', 'scale_min', 'min_chan', 'flag_growth', 'growth_threshold', 'threshold']
+
+ENGINE = create_engine(DB_LOGIN)
+connection = ENGINE.connect()
+
+# get a list of the cubes to be registered
+cubes = get_cube_names(WORKING_DIRECTORY)
+
+for cube in cubes:
+    LOGGER.debug('The file is ' + cube)
+    if "askap" in cube:
+        LOGGER.debug('Working directory is ' + WORKING_DIRECTORY + cube)
+        update_cube_table(connection, WORKING_DIRECTORY + cube, RUN_ID)
+
+i = 0
+for parameter in parameter_list:
+    print parameter_name_list[i] + ' requires input: ' + parameter
+    paramter_string = parameter.split('[]')
+    set_ranges(RUN_ID, connection, parameter_name_list[i], parameter_list)
+    i += 1
+
+# TODO implement logging for the registration
 
 
-
-
-
+connection.close()
