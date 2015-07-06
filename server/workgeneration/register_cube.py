@@ -34,33 +34,33 @@ FLAG_GROWTH = args['flagGrowth']
 GROWTH_THRESHOLD = args['growthThreshold']
 THRESHOLD = args['threshold']
 
-DB_LOGIN = 'mysql://' + 'ryan' + ':' + '@' + 'localhost' + '/' + 'sourcefinder'
+DB_LOGIN = 'mysql://' + 'root' + ':' + '@' + 'localhost' + '/' + 'sourcefinder'
 
-parameter_list = [RECON_DIM, SNR_DIM, SCALE_MIN, MIN_CHAN, FLAG_GROWTH, GROWTH_THRESHOLD,
+parameter_list = [RECON_DIM, SNR_DIM, SCALE_MIN, MIN_PIX, MIN_CHAN, FLAG_GROWTH, GROWTH_THRESHOLD,
                   THRESHOLD]
 
-parameter_name_list = ['recon_dim', 'snr_dim', 'scale_min', 'min_chan', 'flag_growth', 'growth_threshold', 'threshold']
+parameter_name_list = ['recon_dim', 'snr_dim', 'scale_min', 'min_pix', 'min_chan', 'flag_growth', 'growth_threshold', 'threshold']
 
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
 # get a list of the cubes to be registered
 cubes = get_cube_names(WORKING_DIRECTORY)
-
+#get run_id into numerical form
 for cube in cubes:
-    LOGGER.debug('The file is ' + cube)
+    LOGGER.info('The file is ' + cube)
     if "askap" in cube:
-        LOGGER.debug('Working directory is ' + WORKING_DIRECTORY + cube)
-        update_cube_table(connection, WORKING_DIRECTORY + cube, RUN_ID)
+        LOGGER.info('Working directory is ' + WORKING_DIRECTORY + cube)
+        LOGGER.info('Working directory is ' + WORKING_DIRECTORY + cube)
+        check = update_cube_table(connection, WORKING_DIRECTORY + cube, RUN_ID)
+        if check == 1:
+            LOGGER.info("Cube already exists in db for run: " + RUN_ID[0])
+
 
 i = 0
 for parameter in parameter_list:
-    print parameter_name_list[i] + ' requires input: ' + parameter
-    paramter_string = parameter.split('[]')
-    set_ranges(RUN_ID, connection, parameter_name_list[i], parameter_list)
+    parameter_string = parameter.split('[]')
+    set_ranges(RUN_ID, connection, parameter_name_list[i], parameter_string)
     i += 1
-
-# TODO implement logging for the registration
-
 
 connection.close()

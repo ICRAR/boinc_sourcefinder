@@ -3,7 +3,7 @@
 import os
 from astropy.io import fits
 from database.database_support import CUBE, PARAMATER, PARAMATER_RANGE, RUN
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, and_
 from logging_helper import LOGGER
 
 LOGGER.info('register_cube_mod.py')
@@ -34,6 +34,7 @@ def get_cube_data(cube_file):
 
 
 def update_cube_table(connection, cube_file, run_id):
+    LOGGER.debug('update_cube_table')
     """Update the database for each cube
     :param connection:
     :param cube_file:
@@ -42,68 +43,85 @@ def update_cube_table(connection, cube_file, run_id):
     """
 
     transaction = connection.begin
-    # TODO put check for run_id
     try:
-        run = connection.execute(
-            RUN.insert(),
-            run_id=run_id
+        check = connection.execute(select([RUN]).where(RUN.c.run_id == run_id))
+        result = check.fetchone()
+        # check to see if run exists in database
+        if not result:
+            LOGGER.info('Adding new run_id to the db: ' + run_id[0])
+            run = connection.execute(
+                RUN.insert(),
+                run_id=run_id
+            )
+
+        check = connection.execute(select([CUBE]).where(
+            and_(CUBE.c.cube_name == cube_file,
+                 CUBE.c.run_id == run_id)
         )
+        )
+        result = check.fetchone()
+        if not result:
+            data = get_cube_data(cube_file)
+            cube = connection.execute(
+                CUBE.insert(),
+                cube_name=cube_file,
+                ra=data[0],
+                declin=data[1],
+                freq=data[2],
+                run_id=run_id
+            )
+        else:
+            print "Cube is already included in database for current run"
+            return 1
 
     except Exception:
-        transaction.rollback()
-        raise
-
-    data = get_cube_data(cube_file)
-    transaction = connection.begin()
-    try:
-        cube = connection.execute(
-            CUBE.insert(),
-            cube_name=cube_file,
-            ra=data[0],
-            declin=data[1],
-            freq=data[2],
-            run_id=run_id
-        )
-        LOGGER.debug(cube)
-        transaction.commit()
-
-    except Exception:
-        transaction.rollback()
         raise
 
 
 def set_ranges(run_id, connection, parameter, parameter_string):
+    LOGGER.debug('set_ranges')
+    """Set the ranges for each parameter
+    :param run_id
+    :param connection
+    :param parameter
+    :param parameter_string
+    """
+
     transaction = connection.begin
     try:
-        result = connection.execute(select([PARAMATER]))
+        result = connection.execute(select([PARAMATER]).where(PARAMATER.c.parameter_name == parameter))
         row = result.fetchone()
 
-        # The initial, base case where there is nothing in the paramater table
-        if row is None:
-            connection.execute(
+        if not row:
+            LOGGER.info('Adding new parameter to the db: ' + parameter)
+            con_result = connection.execute(
                 PARAMATER.insert(),
                 parameter_name=parameter
             )
         else:
-            print row
-        # TODO work on the other cases - e.g. if it isn't the first, but doesn't exist in the table etc
+            LOGGER.info("Parameter already exists in database: " + parameter)
+            return
 
-        param_id = result.inserted_primary_key[0]
-        print param_id
+        param_id = con_result.inserted_primary_key[0]
+        LOGGER.info('Parameter: ' + parameter + 'has ID: ' + param_id)
+        run = connection.execute(select([PARAMATER_RANGE]).where(
+            and_(
+                PARAMATER_RANGE.c.run_id == run_id,
+                PARAMATER_RANGE.c.parameter_id == param_id)
+        )
+        )
 
-        # test range to determine if the run_id has been used yet
-        run = connection.execute(select([PARAMATER_RANGE]).where(PARAMATER_RANGE.c.run_id == run_id))
-        row2 = run.fetchone()
-        if row2 is None:
-            i = PARAMATER_RANGE.insert()
-            i.execute(
+        row = run.fetchone()
+        if not row:
+            con_result = connection.execute(
+                PARAMATER_RANGE.insert(),
                 parameter_id=param_id,
                 parameter_string=parameter_string,
                 run_id=run_id
             )
-
-        transaction.comit()
+        else:
+            LOGGER.info("Parameter value has already been added for this parameter: " + parameter)
+            return
 
     except Exception:
-        transaction.rollback()
         raise

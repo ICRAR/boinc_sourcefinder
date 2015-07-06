@@ -16,8 +16,8 @@ PARAMATER = Table('parameter',
 
 PARAMATER_RANGE = Table('parameter_range',
                         DUCHAMP_METADATA,
-                        Column('paramater_range_id', BigInteger, primary_key=True),
-                        Column('paramater_string', String),
+                        Column('parameter_range_id', BigInteger, primary_key=True),
+                        Column('parameter_string', String),
                         Column('parameter_id', BigInteger, ForeignKey('parameter.parameter_id')),
                         Column('run_id', BigInteger, ForeignKey('run.run_id'))
                         )

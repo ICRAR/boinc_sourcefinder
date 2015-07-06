@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS sourcefinder.`parameter` (
 
 CREATE TABLE IF NOT EXISTS sourcefinder.`parameter_range` (
   `parameter_range_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `paramater_string`   VARCHAR(20),
+  `parameter_string`   VARCHAR(20),
   `parameter_id`       BIGINT UNSIGNED NOT NULL,
   `run_id`             BIGINT UNSIGNED NOT NULL,
 
