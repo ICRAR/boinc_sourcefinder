@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS sourcefinder.`parameter_values` (
 CREATE TABLE IF NOT EXISTS sourcefinder.`cube` (
   cube_id   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   cube_name VARCHAR(2000) NOT NULL,
+  progress  INT NOT NULL, #0 for registere, 1 for Work generated, 2 for validated, 3 for assimilated
   ra FLOAT NOT NULL ,
   declin FLOAT NOT NULL ,
   freq FLOAT NOT NULL ,

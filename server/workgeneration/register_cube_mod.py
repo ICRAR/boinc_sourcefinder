@@ -6,6 +6,8 @@ from database.database_support import CUBE, PARAMATER, PARAMATER_RANGE, RUN
 from sqlalchemy import select, insert, and_
 from logging_helper import LOGGER
 
+
+
 LOGGER.info('register_cube_mod.py')
 
 
@@ -65,6 +67,7 @@ def update_cube_table(connection, cube_file, run_id):
             cube = connection.execute(
                 CUBE.insert(),
                 cube_name=cube_file,
+                progress=0,
                 ra=data[0],
                 declin=data[1],
                 freq=data[2],
@@ -103,7 +106,7 @@ def set_ranges(run_id, connection, parameter, parameter_string):
             return
 
         param_id = con_result.inserted_primary_key[0]
-        LOGGER.info('Parameter: ' + parameter + 'has ID: ' + param_id)
+        LOGGER.info('Parameter: ' + parameter + 'has ID: ' + str(param_id))
         run = connection.execute(select([PARAMATER_RANGE]).where(
             and_(
                 PARAMATER_RANGE.c.run_id == run_id,
