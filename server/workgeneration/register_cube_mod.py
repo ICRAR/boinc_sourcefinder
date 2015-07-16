@@ -4,10 +4,10 @@ import os
 from astropy.io import fits
 from database.database_support import CUBE, PARAMATER, PARAMATER_RANGE, RUN
 from sqlalchemy import select, insert, and_
-from logging_helper import LOGGER
+from logging_helper import config_logger
 
 
-
+LOGGER = config_logger(__name__)
 LOGGER.info('register_cube_mod.py')
 
 
@@ -77,7 +77,8 @@ def update_cube_table(connection, cube_file, run_id):
             print "Cube is already included in database for current run"
             return 1
 
-    except Exception:
+    except Exception, e:
+        LOGGER.error('Database issue when adding cubelets', exc_info=True)
         raise
 
 
@@ -127,4 +128,5 @@ def set_ranges(run_id, connection, parameter, parameter_string):
             return
 
     except Exception:
+        LOGGER.error('Database issue when setting range values', exc_info=True)
         raise

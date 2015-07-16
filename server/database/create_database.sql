@@ -14,16 +14,6 @@ CREATE TABLE IF NOT EXISTS sourcefinder.`parameter` (
 
 ) ENGINE = InnoDB;
 
-#INSERT INTO parameter VALUES (0, 'reconDim');
-#INSERT INTO parameter VALUES (1, 'snrRecon');
-#INSERT INTO parameter VALUES (2, 'scaleMin');
-#INSERT INTO parameter VALUES (3, 'minPix');
-#INSERT INTO parameter VALUES (4, 'minChan');
-#INSERT INTO parameter VALUES (5, 'flagGrowth');
-#INSERT INTO parameter VALUES (6, 'growthThreshold');
-#INSERT INTO parameter VALUES (7, 'threshold');
-
-
 CREATE TABLE IF NOT EXISTS sourcefinder.`parameter_range` (
   `parameter_range_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `parameter_string`   VARCHAR(20),
