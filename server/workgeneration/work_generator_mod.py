@@ -41,16 +41,44 @@ def determine_param_values(connection, run_id):
     for param in param_id:
         list_param_range.append((param, param_range[i]))
         i += 1
+    return list_param_range
 
-face
 
 def generate_parameter_set(connection, run_id):
     """
     Generate the parameter set for the given run ID and database
-    :param connection
+    :param connections
     :param run_id
     """
     list_param_range = determine_param_values(connection, run_id)
+    list_param_values = []
+
+    parameter_value_generation(list_param_range, list_param_values)
+
+
+def parameter_value_generation(param_range, param_values):
+    LOGGER.info('Param range is ' + str(param_range) + 'Param value is ' + str(param_values))
+    for params in param_range:
+        if param_range is None:
+            print 'inserting values into database'
+            # insert values into the database
+        else:
+            LOGGER.info(params)
+            p_id = params[0]
+            p_range = params[1].split()
+            LOGGER.info(p_range)
+            for value in p_range:
+                i = 1
+                # LOGGER.info('Current value is ' + value + 'for parameter_id ' + id)
+
+
+
+
+
+
+
+
+
 
 
 
