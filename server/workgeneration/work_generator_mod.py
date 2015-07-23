@@ -35,7 +35,6 @@ def determine_param_values(connection, run_id):
                 param_range.append(row3[0])
                 LOGGER.info('Range is ' + row3[0])
 
-
     i = 0
     list_param_range = []
     for param in param_id:
@@ -57,6 +56,12 @@ def generate_parameter_set(connection, run_id):
 
 
 def parameter_value_generation(param_range, param_values):
+
+    '''
+    :param param_range - this is a list of parameter_ids and corresponding parameter ranges
+    :param_values - this is a list of parameter_ids and a corresponding value for that parameter ID
+    '''
+
     LOGGER.info('Param range is ' + str(param_range) + 'Param value is ' + str(param_values))
     for params in param_range:
         if param_range is None:
@@ -65,11 +70,27 @@ def parameter_value_generation(param_range, param_values):
         else:
             LOGGER.info(params)
             p_id = params[0]
-            p_range = params[1].split()
+            p_range = str(params[1])
             LOGGER.info(p_range)
-            for value in p_range:
+            if len(p_range) == 1:
+                # this is just a single value, no need to loop
+                value = p_range[0]
+            elif len(p_range) == 2:
+                # this is a range, so we go from the first to second value in incremental steps
+                value1 = p_range[0]
+                value2 = p_range[1]
+                for value in range(value1, value2 + 1, 1):
+                    test = 1
+                    param_values
+            elif len(p_range) > 2:
+                # iterate through every value in the list
+                # this is the threshold value
                 i = 1
-                # LOGGER.info('Current value is ' + value + 'for parameter_id ' + id)
+
+                # for value in p_range:
+                # LOGGER.info('Current value is ' + value + 'for parameter_id ' + p_id)
+                # remember these are ranges, so we need to go from initial to the final
+
 
 
 
