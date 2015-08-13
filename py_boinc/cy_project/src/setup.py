@@ -35,22 +35,22 @@ PY_BOINC = "py_boinc"
 SOURCES = ['py_boinc.pyx','c_project/create_work.cpp']
 
 if os.path.exists('/home/ec2-user'):
-    INCLUDE_DIRS = ['/home/ec2-user/boinc/sched',
-                    '/home/ec2-user/boinc/api',
-                    '/home/ec2-user/boinc/lib',
-                    '/home/ec2-user/boinc/db',
-                    '/home/ec2-user/boinc/tools',
-                    '/home/ec2-user/boinc',
+    INCLUDE_DIRS = ['/home/ec2-user/storage/boinc/sched',
+                    '/home/ec2-user/storage/boinc/api',
+                    '/home/ec2-user/storage/boinc/lib',
+                    '/home/ec2-user/storage/boinc/db',
+                    '/home/ec2-user/storage/boinc/tools',
+                    '/home/ec2-user/storage/boinc',
                     '/usr/include/mysql']
     LIBRARY_DIRS = ['/usr/lib64/mysql/']
     extensions = [Extension(PY_BOINC,
                             sources=SOURCES,
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
-                            extra_objects=['/home/ec2-user/boinc/sched/libsched.a',
-                                           '/home/ec2-user/boinc/lib/libboinc.a',
-                                           '/home/ec2-user/boinc/lib/libboinc_crypt.a',
-                                           '/home/ec2-user/boinc/api/libboinc_api.a'],
+                            extra_objects=['/home/ec2-user/storage/boinc/sched/libsched.a',
+                                           '/home/ec2-user/storage/boinc/lib/libboinc.a',
+                                           '/home/ec2-user/storage/boinc/lib/libboinc_crypt.a',
+                                           '/home/ec2-user/storage/boinc/api/libboinc_api.a'],
                             libraries=['mysqlclient', 'ssl', 'crypto'],
                             )]
 else:
