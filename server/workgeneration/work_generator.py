@@ -1,18 +1,23 @@
 # Work generator used to create workunits
 
 import os
+import sys
 import argparse
-import py_boinc
-from sqlalchemy.engine import create_engine
-from sqlalchemy import select, insert, and_, func
-
-from database.boinc_database_support import RESULT
-from Boinc import database
 from logging_helper import config_logger
-from work_generator_mod import generate_parameter_set
+
 
 LOGGER = config_logger(__name__)
 LOGGER.info('Starting work generation')
+
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+
+from sqlalchemy.engine import create_engine
+from sqlalchemy import select, insert, and_, func
+import py_boinc
+from database.boinc_database_support import RESULT
+from Boinc import database, configxml
+
 
 # TODO initially hard coded, will add to fabric files later on
 BOINC_DB_LOGIN = 'mysql://root@localhost/duchamp'
@@ -46,15 +51,16 @@ else:
         os.chdir('.')
 
     # check to see if parameter files for run_id exist:
-    if not os.path.exists('parameters_' + RUN_ID):
-        LOGGER.info('Creating parameter files')
-        connection = ENGINE.connect()
-        retval = generate_parameter_set(connection, RUN_ID)
-
+    if os.path.exists('parameter_files_' + RUN_ID):
+        LOGGER.info('Parameter set for run ' + RUN_ID + ' already exists')
+        return_value = py_boinc.boinc_db_open()
+        #return_value = py_boinc.boinc_db_transaction_rollback()
+        print return_value
 
     else:
-        LOGGER.info('Parameter set for run ' + RUN_ID + 'already exists')
-        # Continue with generation (using boinc db api stuffsss)
+        LOGGER.info('No parameter_files for run_id ' + RUN_ID)
+        exit()
+
 
 # Check database for workunits that have server state of 2 - subtract
 # that number from the WU threshold to determine how many new workunits are required

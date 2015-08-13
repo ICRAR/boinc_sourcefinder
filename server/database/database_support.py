@@ -8,33 +8,13 @@ RUN = Table('run',
             DUCHAMP_METADATA,
             Column('run_id', BigInteger, primary_key=True)
             )
-PARAMATER = Table('parameter',
-                  DUCHAMP_METADATA,
-                  Column('parameter_id', BigInteger, primary_key=True),
-                  Column('parameter_name', String)
-                  )
 
-PARAMATER_RANGE = Table('parameter_range',
-                        DUCHAMP_METADATA,
-                        Column('parameter_range_id', BigInteger, primary_key=True),
-                        Column('parameter_string', String),
-                        Column('parameter_id', BigInteger, ForeignKey('parameter.parameter_id')),
-                        Column('run_id', BigInteger, ForeignKey('run.run_id'))
-                        )
-
-PARAMETER_GROUPING = Table('parameter_grouping',
-                           DUCHAMP_METADATA,
-                           Column('paramater_grouping_id', BigInteger, primary_key=Table),
-                           Column('run_id', BigInteger, ForeignKey('run.run_id'))
-                           )
-
-PARAMATER_VALUES = Table('value',
-                         DUCHAMP_METADATA,
-                         Column('value_id', BigInteger, primary_key=True),
-                         Column('value', Float),
-                         Column('parameter_grouping_id', BigInteger,
-                                ForeignKey('parameter_grouping.parameter_grouping_id'))
-                         )
+PARAMETER_FILE = Table('parameter_file',
+                       DUCHAMP_METADATA,
+                       Column('parameter_id', BigInteger, primary_key=True),
+                       Column('run_id', BigInteger, ForeignKey('run.run_id')),
+                       Column('parameter_file', String)
+                       )
 
 CUBE = Table('cube',
              DUCHAMP_METADATA,

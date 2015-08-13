@@ -2,7 +2,7 @@
 
 import os
 from astropy.io import fits
-from database.database_support import CUBE, PARAMATER, PARAMATER_RANGE, RUN
+from database.database_support import CUBE, PARAMETER_FILE, RUN
 from sqlalchemy import select, insert, and_
 from logging_helper import config_logger
 
@@ -50,7 +50,7 @@ def update_cube_table(connection, cube_file, run_id):
         result = check.fetchone()
         # check to see if run exists in database
         if not result:
-            LOGGER.info('Adding new run_id to the db: ' + run_id[0])
+            LOGGER.info('Adding new run_id to the db: ' + run_id)
             run = connection.execute(
                 RUN.insert(),
                 run_id=run_id
@@ -82,49 +82,34 @@ def update_cube_table(connection, cube_file, run_id):
         raise
 
 
-def set_ranges(run_id, connection, parameter, parameter_string):
-    LOGGER.debug('set_ranges')
-    """Set the ranges for each parameter
+def update_parameter_files(run_id, connection, parameter_file):
+    LOGGER.debug('update_parameter_files')
+    """Add parameter files to the database
     :param run_id
     :param connection
-    :param parameter
-    :param parameter_string
+    :param parameter_file
     """
-
     transaction = connection.begin
+
     try:
-        result = connection.execute(select([PARAMATER]).where(PARAMATER.c.parameter_name == parameter))
+        result = connection.execute(select([PARAMETER_FILE]).where(
+            and_(
+                PARAMETER_FILE.c.run_id == run_id,
+                PARAMETER_FILE.c.parameter_file == parameter_file)
+        )
+        )
+
         row = result.fetchone()
 
         if not row:
-            LOGGER.info('Adding new parameter to the db: ' + parameter)
+            LOGGER.info('Adding new parameter file to the db: ' + parameter_file)
             con_result = connection.execute(
-                PARAMATER.insert(),
-                parameter_name=parameter
+                PARAMETER_FILE.insert(),
+                run_id=run_id,
+                parameter_file=parameter_file
             )
         else:
-            LOGGER.info("Parameter already exists in database: " + parameter)
-            return
-
-        param_id = con_result.inserted_primary_key[0]
-        LOGGER.info('Parameter: ' + parameter + 'has ID: ' + str(param_id))
-        run = connection.execute(select([PARAMATER_RANGE]).where(
-            and_(
-                PARAMATER_RANGE.c.run_id == run_id,
-                PARAMATER_RANGE.c.parameter_id == param_id)
-        )
-        )
-
-        row = run.fetchone()
-        if not row:
-            con_result = connection.execute(
-                PARAMATER_RANGE.insert(),
-                parameter_id=param_id,
-                parameter_string=parameter_string,
-                run_id=run_id
-            )
-        else:
-            LOGGER.info("Parameter value has already been added for this parameter: " + parameter)
+            LOGGER.info("Parameter file already exists in database: " + parameter_file)
             return
 
     except Exception:
