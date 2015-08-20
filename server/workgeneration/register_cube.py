@@ -40,6 +40,7 @@ connection = ENGINE.connect()
 
 # get a list of the cubes to be registered
 cubes = get_cube_names(WORKING_DIRECTORY)
+LOGGER.info('Cube names are {0}'.format(cubes))
 # get run_id into numerical form
 for cube in cubes:
     # check if it is actually one of the cubes

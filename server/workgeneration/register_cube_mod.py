@@ -1,11 +1,14 @@
 """Generates the parameters set for as specified, given the user specified arguments"""
 
 import os
+import sys
 from astropy.io import fits
 from database.database_support import CUBE, PARAMETER_FILE, RUN
 from sqlalchemy import select, insert, and_
 from logging_helper import config_logger
 
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
 LOGGER = config_logger(__name__)
 LOGGER.info('register_cube_mod.py')
