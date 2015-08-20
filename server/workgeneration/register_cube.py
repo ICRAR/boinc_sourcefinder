@@ -21,16 +21,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument('cube_directory', nargs=1, help='The directory that all the new workunits are stored')
 parser.add_argument('run_id', nargs=1, help='The id of the current run')
 parser.add_argument('parameter_directory', nargs=1, help='The directory of the parameter files')
+parser.add_argument('--db_login', nargs='?', type=str, help='the login details for the database')
 
 args = vars(parser.parse_args())
 WORKING_DIRECTORY = args['cube_directory'][0]
 RUN_ID = args['run_id'][0]
 PARAMETER_DIRECTORY = args['parameter_directory'][0]
+DB_LOGIN = args['db_login']
 
+LOGGER.info('DB_LOGIN is: {0}'.format(DB_LOGIN))
 
 # TODO initially hard coded, will add to fabric files later on
-DB_LOGIN = 'mysql://' + 'root' + ':' + '@' + 'localhost' + '/' + 'sourcefinder'
-
+if DB_LOGIN is None:
+    DB_LOGIN = 'mysql://' + 'root' + ':' + '@' + 'localhost' + '/' + 'sourcefinder'
 
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
