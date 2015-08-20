@@ -50,10 +50,10 @@ for cube in cubes:
 
 # get a list of all the parameter files in the parameter directory
 parameter_list = os.listdir(PARAMETER_DIRECTORY)
-for file in parameter_list:
+for param_file in parameter_list:
     # check if it is actually one of the parameter files
-    if "supercube" in file:
-        LOGGER.info('The file is ' + file)
-        check = update_parameter_files(RUN_ID, connection, file)
+    if "supercube" in param_file:
+        LOGGER.info('The file is ' + param_file)
+        check = update_parameter_files(RUN_ID, connection, param_file)
 
 connection.close()
