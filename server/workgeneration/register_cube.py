@@ -2,13 +2,18 @@
 
 import argparse
 import os
+import sys
 from register_cube_mod import get_cube_names, update_cube_table, update_parameter_files
 # from config import DB_LOGIN (For local testing, just defining a general login instead
 from sqlalchemy.engine import create_engine
 from logging_helper import config_logger
 
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+
 LOGGER = config_logger(__name__)
 LOGGER.info('Starting work registration.py')
+LOGGER.info('PYTHONPATH = {0}'.format(sys.path))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('cube_directory', nargs=1, help='The directory that all the new workunits are stored')
