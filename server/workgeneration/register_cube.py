@@ -53,7 +53,9 @@ for cube in cubes:
 
 
 # get a list of all the parameter files in the parameter directory
+
 parameter_list = os.listdir(PARAMETER_DIRECTORY)
+parameter_list.sort()
 for param_file in parameter_list:
     # check if it is actually one of the parameter files
     if "supercube" in param_file:
