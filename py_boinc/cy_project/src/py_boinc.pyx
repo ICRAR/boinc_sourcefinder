@@ -58,13 +58,7 @@ cdef extern from "c_project/create_work.h":
                     float rsc_fpops_est,
                     float rsc_fpops_bound,
                     float rsc_memory_bound,
-                    float rsc_disk_bound,
-                    char* additional_xml,
-                    int opaque,
-                    int priority,
-                    int size_class,
-                    char** input_files,
-                    int number_input_files)
+                    float rsc_disk_bound)
 
 cpdef int boinc_db_transaction_start():
     return transaction_start()
