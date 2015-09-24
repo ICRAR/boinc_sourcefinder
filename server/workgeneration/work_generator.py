@@ -75,6 +75,7 @@ else:
         LOGGER.info("No files registered for work")
     else:
         for row in registered:  # get all workunits from wu directory
+	    wu_dir=row[0]
             string = row[0].rpartition('/')[-1]  # get rid of path names
             wu_file = '{0}_{1}'.format(RUN_ID, string)
             files_to_workunits.append(wu_file)
@@ -82,7 +83,7 @@ else:
 
     for work_file in files_to_workunits:
         wu_path = convert_file_to_wu(work_file, download_directory, fanout)
-        shutil.copy(work_file, wu_path)
+        shutil.copy(wu_dir, wu_path)
         # create the workunit
         file_list = [work_file]  # convert workunit to the list
         create_workunit('duchamp', work_file, file_list)
