@@ -74,7 +74,8 @@ else:
         LOGGER.info("No files registered for work")
     else:
         for row in registered:  # get all workunits from wu directory
-            wu_file = row[0].rpartition('/')[-1]  # get rid of path names
+            string = row[0].rpartition('/')[-1] # get rid of path names
+            wu_file = '{0}_{1}'.format(RUN_ID, string)
             files_to_workunits.append(wu_file)
         LOGGER.info('{0}'.format(files_to_workunits))
 
