@@ -4,8 +4,6 @@ __author__ = '21298244'
 
 import os
 import hashlib
-from sqlalchemy.engine import create_engine
-from sqlalchemy import select, insert, and_, func
 import py_boinc
 from logging_helper import config_logger
 
@@ -30,11 +28,8 @@ def convert_file_to_wu(wu_filename, download_dir, fanout):
     return "%s/%x/%s" % (download_dir, x % fanout, wu_filename)
 
 
-def copy_file_to_download(wu_filename):
-    """Copy the workunits to the downloads directory"""
-
-
-def create_worunit(appname, wu_name, input_file_list):
+def create_workunit(appname, wu_name, input_file_list):
+    py_boinc.boinc_db_transaction_start()
     LOGGER.info('Args_file for list_Input is {0}'.format(input))
     retval = py_boinc.boinc_create_work(
         app_name=appname,

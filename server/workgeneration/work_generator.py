@@ -1,6 +1,7 @@
 # Work generator used to create workunits
 
 import os
+import shutil
 import sys
 import argparse
 from logging_helper import config_logger
@@ -17,7 +18,7 @@ import py_boinc
 from database.boinc_database_support import RESULT
 from Boinc import database, configxml
 from database.database_support import CUBE
-from work_generator_mod import convert_file_to_wu
+from work_generator_mod import convert_file_to_wu, create_workunit
 
 # TODO initially hard coded, will add to fabric files later on
 BOINC_DB_LOGIN = 'mysql://root@localhost/duchamp'
@@ -74,17 +75,14 @@ else:
         LOGGER.info("No files registered for work")
     else:
         for row in registered:  # get all workunits from wu directory
-            string = row[0].rpartition('/')[-1] # get rid of path names
+            string = row[0].rpartition('/')[-1]  # get rid of path names
             wu_file = '{0}_{1}'.format(RUN_ID, string)
             files_to_workunits.append(wu_file)
         LOGGER.info('{0}'.format(files_to_workunits))
 
     for work_file in files_to_workunits:
-        wu = convert_file_to_wu(work_file, download_directory, fanout)
-        print wu
-
-    # create workunits
-    '''for work_file in input_files:
-        py_boinc.boinc_db_transaction_start()
-        # do stuff to the work file so we can use it in the create work function
-        args_file = [work_file]  # convert workunit to the'''
+        wu_path = convert_file_to_wu(work_file, download_directory, fanout)
+        shutil.copy(work_file, wu_path)
+        # create the workunit
+        file_list = [work_file]  # convert workunit to the list
+        create_workunit('duchamp', work_file, file_list)
