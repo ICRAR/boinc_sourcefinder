@@ -62,17 +62,26 @@ else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
         exit()
 
+    ret_val=py_boinc.boinc_db_open()
+    if ret_val !=0:
+	LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
     input_files = []
     # Check for registered cubes
     registered = connection.execute(select([CUBE.c.cube_name]).where(CUBE.c.progress == 0))
     if registered is None:
         LOGGER.info("No files registered for work")
     else:
-        for row in registered:
-            input_files.append(row)
+        for row in registered: #get all workunits from wu directory
+            input_files.append('{0}'.format(row[0]))
             LOGGER.info('{0}'.format(input_files))
+
+
+    #create workunits	
+
     for work_file in input_files:
-        args_file = [input_files]
+	py_boinc.boinc_db_transaction_start()
+	args_file = [work_file]
+	LOGGER.info('Args_file for list_Input is {0}'.format(args_file))
         retval = py_boinc.boinc_create_work(
             app_name="duchamp",
             min_quorom=2,
@@ -80,7 +89,7 @@ else:
             max_error_results=5,
             delay_bound=7 * 84600,
             target_nresults=2,
-            wu_name=input_file,
+            wu_name=work_file,
             wu_template="templates/duchamp_in.xml",
             result_template="templates/duchamp_out.xml",
             size_class=0,
@@ -90,11 +99,13 @@ else:
             rsc_fpops_bound=1e14,
             rsc_memory_bound=1e8,
             rsc_disk_bound=1e8,
-            additional_xml="",
+            additional_xml="<credit>1.0f</credit>",
             list_input_files=args_file)
+	LOGGER.info('completed create work request')
         if retval != 0:
             py_boinc.boinc_db_transaction_rollback()
-        LOG.error('Error writing to boinc database. boinc_create_work return value = {0}'.format(retval))
-
+	    LOGGER.info('Error writing to boinc database. boinc_create_work return value = {0}'.format(retval))
+	else:
+	    py_boinc.boinc_db_transaction_commit()    
             # its that have server state of 2 - subtract
             # that number from the WU threshold to determine how many new workunits are required
