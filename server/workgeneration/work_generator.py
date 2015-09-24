@@ -74,7 +74,7 @@ else:
     else:
         for row in registered:  # get all workunits from wu directory
             wu_file = row[0].rpartition('/')[-1] # get rid of path names
-            input_files.append('{0}'.format(row[0]))
+            input_files.append(wu_file)
         LOGGER.info('{0}'.format(input_files))
 
     # create workunits
