@@ -20,8 +20,9 @@ def get_cube_names(cube_directory):
     :param cube_directory:
     :return:
     """
-    directory = os.listdir('{0}'.format(cube_directory))  # list of cubes in the current run
-    return directory
+    local_dir = os.listdir('{0}'.format(cube_directory))  # list of cubes in the current run
+    abs_dir = os.path.abspath(local_dir)
+    return abs_dir
 
 
 def get_cube_data(cube_file):
