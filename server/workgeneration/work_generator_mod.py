@@ -13,9 +13,6 @@ LOGGER = config_logger(__name__)
 LOGGER.info("work_generator_mod.py")
 
 
-string.rpartition('/')[-1]
-
-
 def convert_file_to_wu(wu_filename, download_dir, fanout):
     # Kevins code for hashing the download directory
     s = hashlib.md5(wu_filename).hexdigest()[:8]
@@ -30,11 +27,17 @@ def convert_file_to_wu(wu_filename, download_dir, fanout):
     else:
         os.mkdir(hash_dir_name)
 
+    return "%s/%x/%s" % (download_dir, x % fanout, wu_filename)
+
+
+def copy_file_to_download(wu_filename):
+    """Copy the workunits to the downloads directory"""
+
 
 def create_worunit(appname, wu_name, input_file_list):
-    LOGGER.info('Args_file for list_Input is {0}'.format(args_file))
+    LOGGER.info('Args_file for list_Input is {0}'.format(input))
     retval = py_boinc.boinc_create_work(
-        app_name="duchamp",
+        app_name=appname,
         min_quorom=2,
         max_success_results=5,
         max_error_results=5,
@@ -51,7 +54,7 @@ def create_worunit(appname, wu_name, input_file_list):
         rsc_memory_bound=1e8,
         rsc_disk_bound=1e8,
         additional_xml="<credit>1.0f</credit>",
-        list_input_files=args_file)
+        list_input_files=input_file_list)
     LOGGER.info('completed create work request')
     if retval != 0:
         py_boinc.boinc_db_transaction_rollback()

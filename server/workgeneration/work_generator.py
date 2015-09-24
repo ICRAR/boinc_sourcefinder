@@ -17,7 +17,7 @@ import py_boinc
 from database.boinc_database_support import RESULT
 from Boinc import database, configxml
 from database.database_support import CUBE
-
+from work_generator_mod import convert_file_to_wu
 
 # TODO initially hard coded, will add to fabric files later on
 BOINC_DB_LOGIN = 'mysql://root@localhost/duchamp'
@@ -66,20 +66,24 @@ else:
     ret_val = py_boinc.boinc_db_open()
     if ret_val != 0:
         LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
-    input_files = []
+
+    files_to_workunits = []
     # Check for registered cubes
     registered = connection.execute(select([CUBE.c.cube_name]).where(CUBE.c.progress == 0))
     if registered is None:
         LOGGER.info("No files registered for work")
     else:
         for row in registered:  # get all workunits from wu directory
-            wu_file = row[0].rpartition('/')[-1] # get rid of path names
-            input_files.append(wu_file)
-        LOGGER.info('{0}'.format(input_files))
+            wu_file = row[0].rpartition('/')[-1]  # get rid of path names
+            files_to_workunits.append(wu_file)
+        LOGGER.info('{0}'.format(files_to_workunits))
+
+    for work_file in files_to_workunits:
+        wu = convert_file_to_wu(work_file, download_directory, fanout)
+        print wu
 
     # create workunits
     '''for work_file in input_files:
         py_boinc.boinc_db_transaction_start()
         # do stuff to the work file so we can use it in the create work function
         args_file = [work_file]  # convert workunit to the'''
-
