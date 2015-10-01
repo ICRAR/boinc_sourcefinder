@@ -46,11 +46,14 @@ for cube in cubes:
     # check if it is actually one of the cubes
     if "askap" in cube:
         LOGGER.info('The file is ' + cube)
+        # gzip the cube for workunit deployment
         abs_dir = os.path.abspath('{0}/{1}'.format(WORKING_DIRECTORY, cube))
         LOGGER.info('Working directory is {0}'.format(abs_dir))
         check = update_cube_table(connection, abs_dir, RUN_ID)
         if check == 1:
             LOGGER.info("Cube already exists in db for run: " + RUN_ID)
+        gzip = 'gzip {0}'.format(abs_dir)
+        os.system(gzip)
 
 
 # get a list of all the parameter files in the parameter directory
