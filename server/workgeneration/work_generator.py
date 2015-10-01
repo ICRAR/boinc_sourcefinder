@@ -60,6 +60,7 @@ else:
     # check to see if parameter files for run_id exist:
     if os.path.exists('parameter_files_' + RUN_ID):
         LOGGER.info('Parameter set for run ' + RUN_ID + 'exists')
+        # tar the parameter files
     else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
         exit()
@@ -75,7 +76,7 @@ else:
         LOGGER.info("No files registered for work")
     else:
         for row in registered:  # get all workunits from wu directory
-	    wu_dir=row[0]
+            wu_dir = row[0]
             string = row[0].rpartition('/')[-1]  # get rid of path names
             wu_file = '{0}_{1}'.format(RUN_ID, string)
             files_to_workunits.append(wu_file)
@@ -85,5 +86,7 @@ else:
         wu_path = convert_file_to_wu(work_file, download_directory, fanout)
         shutil.copy(wu_dir, wu_path)
         # create the workunit
-        file_list = [work_file]  # convert workunit to the list
+        file_list = [work_file, 'parameter_files_{0}'.format(RUN_ID)]
+        print file_list
+        #  convert workunit to the list
         create_workunit('duchamp', work_file, file_list)
