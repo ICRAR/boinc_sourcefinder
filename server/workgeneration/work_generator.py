@@ -96,7 +96,7 @@ else:
         wu_path = '{0}/{1}'.format(wu_download_dir, work_file)
         LOGGER.info('wu path is {0}'.format(wu_path))
         shutil.copy(wu_abs_path, wu_path)
-        shutil.copy(param_abs_path, wu_download_dir + 'parameter_files_{0}.tar.gz')
+        shutil.copy(param_abs_path + '.tar.gz', wu_download_dir + 'parameter_files_{0}.tar.gz')
         # create the workunit
         file_list = [work_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
         print file_list
