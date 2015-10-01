@@ -41,6 +41,7 @@ connection.close()
 
 LOGGER.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
 
+# THIS MAKES EVERYTHING RUN FROM THE BOINC PROJECT PATH REMEMBER THIS RYAN...REMEMBER THIS
 if os.path.exists(BOINC_PROJECT_PATH):
     os.chdir(BOINC_PROJECT_PATH)
 else:
