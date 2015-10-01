@@ -51,6 +51,7 @@ ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
 param_abs_path = ''
+wu_abs_path = ''
 
 if count is not None and count >= WG_THRESHOLD:
     LOGGER.info('Nothing to do')
@@ -83,7 +84,7 @@ else:
         LOGGER.info("No files registered for work")
     else:
         for row in registered:  # get all workunits from wu directory
-            wu_dir = row[0]
+            wu_abs_path = row[0]
             string = row[0].rpartition('/')[-1]  # get rid of path names
             wu_file = '{0}_{1}'.format(RUN_ID, string)
             files_to_workunits.append(wu_file)
@@ -94,7 +95,7 @@ else:
         LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
         wu_path = '{0}/{1}'.format(wu_download_dir, work_file)
         LOGGER.info('wu path is {0}'.format(wu_path))
-        shutil.copy(work_file, wu_path)
+        shutil.copy(wu_abs_path, wu_path)
         shutil.copy(param_abs_path, wu_download_dir + 'parameter_files_{0}.tar.gz')
         # create the workunit
         file_list = [work_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
