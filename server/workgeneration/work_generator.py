@@ -61,7 +61,9 @@ else:
     if os.path.exists('parameter_files_' + RUN_ID):
         LOGGER.info('Parameter set for run ' + RUN_ID + 'exists')
         # tar the parameter files
-        gzip = 'gzip parameter_files_{0}'.format(RUN_ID)
+        abs_path = os.path.abspathos('parameter_files_{0}'.format(RUN_ID))
+        LOGGER.info(abs_path)
+        gzip = 'gzip {0}'.format(abs_path)
         os.system(gzip)
     else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
@@ -89,7 +91,7 @@ else:
         LOGGER.info('wu path is {0}'.format(wu_path))
         shutil.copy(wu_dir, wu_path)
         # create the workunit
-        file_list = [work_file, 'parameter_files_{0}'.format(RUN_ID)]
+        file_list = [work_file, 'parameter_files_{0}.gz'.format(RUN_ID)]
         print file_list
         #  convert workunit to the list
         create_workunit('duchamp', work_file, file_list)
