@@ -50,6 +50,8 @@ else:
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
+param_abs_path = ''
+
 if count is not None and count >= WG_THRESHOLD:
     LOGGER.info('Nothing to do')
 else:
@@ -62,9 +64,9 @@ else:
     if os.path.exists('parameter_files_' + RUN_ID):
         LOGGER.info('Parameter set for run ' + RUN_ID + 'exists')
         # tar the parameter files
-        abs_path = os.path.abspath('parameter_files_{0}'.format(RUN_ID))
-        LOGGER.info('Absolute path is' + abs_path)
-        tar = 'tar -zcvf {0}.tar.gz {0}'.format(abs_path)
+        param_abs_path = os.path.abspath('parameter_files_{0}'.format(RUN_ID))
+        LOGGER.info('Absolute path is' + param_abs_path)
+        tar = 'tar -zcvf {0}.tar.gz {0}'.format(param_abs_path)
         os.system(tar)
     else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
@@ -88,9 +90,12 @@ else:
         LOGGER.info('{0}'.format(files_to_workunits))
 
     for work_file in files_to_workunits:
-        wu_path = convert_file_to_wu(work_file, download_directory, fanout)
+        wu_download_dir = convert_file_to_wu(work_file, download_directory, fanout)
+        LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
+        wu_path = '{0}/{1}'.format(wu_download_dir, work_file)
         LOGGER.info('wu path is {0}'.format(wu_path))
-        shutil.copy(wu_dir, wu_path)
+        shutil.copy(work_file, wu_path)
+        shutil.copy(param_abs_path, wu_download_dir + 'parameter_files_{0}.tar.gz')
         # create the workunit
         file_list = [work_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
         print file_list
