@@ -90,12 +90,11 @@ else:
             LOGGER.info('current wu is {0}'.format(wu_file))
             wu_download_dir = convert_file_to_wu(wu_file, download_directory, fanout)
             LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
-            wu_path = '{0}/{1}'.format(wu_download_dir, wu_file)
             LOGGER.info(wu_abs_path)
-            LOGGER.info('wu path is {0}'.format(wu_path))
-            shutil.copyfile(wu_abs_path, wu_path)
-            param_download_dir = wu_download_dir + '/parameter_files_{0}.tar.gz'.format(RUN_ID)
-            LOGGER.info('Param path is {0}.tar.gz and download path is {1}'.format(param_abs_path, param_download_dir))
+            LOGGER.info('wu path is {0}'.format(wu_download_dir))
+            shutil.copyfile(wu_abs_path, wu_download_dir)
+            param_download_dir = convert_file_to_wu('paramter_file_{0}'.format(RUN_ID), download_directory, fanout)
+            LOGGER('Param download dir is {0}'.format(param_download_dir))
             shutil.copyfile(param_abs_path + '.tar.gz', param_download_dir)
             # create the workunit
             file_list = [wu_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]

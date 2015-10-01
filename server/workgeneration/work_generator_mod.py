@@ -25,7 +25,7 @@ def convert_file_to_wu(wu_filename, download_dir, fanout):
     else:
         os.mkdir(hash_dir_name)
 
-    return hash_dir_name
+    return "%s/%x/%s" % (download_dir, x % fanout, wu_filename)
 
 
 def create_workunit(appname, wu_name, input_file_list):
