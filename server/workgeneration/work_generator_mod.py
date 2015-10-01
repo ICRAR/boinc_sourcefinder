@@ -30,7 +30,7 @@ def convert_file_to_wu(wu_filename, download_dir, fanout):
 
 def create_workunit(appname, wu_name, input_file_list):
     py_boinc.boinc_db_transaction_start()
-    LOGGER.info('Args_file for list_Input is {0}'.format(input))
+    LOGGER.info('Args_file for list_Input is {0}'.format(input_file_list))
     retval = py_boinc.boinc_create_work(
         app_name=appname,
         min_quorom=2,
