@@ -67,7 +67,7 @@ else:
         # tar the parameter files
         param_abs_path = os.path.abspath('parameter_files_{0}'.format(RUN_ID))
         LOGGER.info('Absolute path is' + param_abs_path)
-        tar = 'tar -zcvf {0}.tar.gz {0}'.format('parameter_files_{0}')
+        tar = 'tar -zcvf {0}.tar.gz {0}'.format('parameter_files_{0}'.format(RUN_ID))
         os.system(tar)
     else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
