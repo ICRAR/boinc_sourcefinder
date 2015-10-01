@@ -94,6 +94,7 @@ else:
         wu_download_dir = convert_file_to_wu(work_file, download_directory, fanout)
         LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
         wu_path = '{0}/{1}'.format(wu_download_dir, work_file)
+        LOGGER.info(wu_abs_path)
         LOGGER.info('wu path is {0}'.format(wu_path))
         shutil.copy(wu_abs_path, wu_path)
         param_download_dir = wu_download_dir + '/parameter_files_{0}.tar.gz'.format(RUN_ID)
