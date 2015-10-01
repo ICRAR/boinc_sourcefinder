@@ -38,6 +38,9 @@ if DB_LOGIN is None:
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
+gzip = 'gzip {0}/*'.format(WORKING_DIRECTORY)
+os.system(gzip)
+
 # get a list of the cubes to be registered
 cubes = get_cube_names(WORKING_DIRECTORY)
 LOGGER.info('Cube names are {0}'.format(cubes))
@@ -52,8 +55,6 @@ for cube in cubes:
         check = update_cube_table(connection, abs_dir, RUN_ID)
         if check == 1:
             LOGGER.info("Cube already exists in db for run: " + RUN_ID)
-        gzip = 'gzip {0}'.format(abs_dir)
-        os.system(gzip)
 
 
 
