@@ -87,21 +87,18 @@ else:
             wu_abs_path = row[0]
             string = row[0].rpartition('/')[-1]  # get rid of path names
             wu_file = '{0}_{1}'.format(RUN_ID, string)
-            files_to_workunits.append(wu_file)
-        LOGGER.info('{0}'.format(files_to_workunits))
-
-    for work_file in files_to_workunits:
-        wu_download_dir = convert_file_to_wu(work_file, download_directory, fanout)
-        LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
-        wu_path = '{0}/{1}'.format(wu_download_dir, work_file)
-        LOGGER.info(wu_abs_path)
-        LOGGER.info('wu path is {0}'.format(wu_path))
-        shutil.copy(wu_abs_path, wu_path)
-        param_download_dir = wu_download_dir + '/parameter_files_{0}.tar.gz'.format(RUN_ID)
-        LOGGER.info('Param path is {0}.tar.gz and download path is {1}'.format(param_abs_path, param_download_dir))
-        shutil.copy(param_abs_path + '.tar.gz', param_download_dir)
-        # create the workunit
-        file_list = [work_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
-        print file_list
-        #  convert workunit to the list
-        create_workunit('duchamp', work_file, file_list)
+            LOGGER.info('current wu is {0}'.format(wu_file))
+            wu_download_dir = convert_file_to_wu(wu_file, download_directory, fanout)
+            LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
+            wu_path = '{0}/{1}'.format(wu_download_dir, wu_file)
+            LOGGER.info(wu_abs_path)
+            LOGGER.info('wu path is {0}'.format(wu_path))
+            shutil.copy(wu_abs_path, wu_path)
+            param_download_dir = wu_download_dir + '/parameter_files_{0}.tar.gz'.format(RUN_ID)
+            LOGGER.info('Param path is {0}.tar.gz and download path is {1}'.format(param_abs_path, param_download_dir))
+            shutil.copy(param_abs_path + '.tar.gz', param_download_dir)
+            # create the workunit
+            file_list = [wu_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
+            print file_list
+            #  convert workunit to the list
+            create_workunit('duchamp', wu_file, file_list)
