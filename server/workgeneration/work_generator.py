@@ -93,7 +93,7 @@ else:
             LOGGER.info(wu_abs_path)
             LOGGER.info('wu path is {0}'.format(wu_download_dir))
             shutil.copyfile(wu_abs_path, wu_download_dir)
-            param_download_dir = convert_file_to_wu('paramter_file_{0}'.format(RUN_ID), download_directory, fanout)
+            param_download_dir = convert_file_to_wu('paramter_file_{0}.tar.gz'.format(RUN_ID), download_directory, fanout)
             LOGGER.info('Param download dir is {0}'.format(param_download_dir))
             shutil.copyfile(param_abs_path + '.tar.gz', param_download_dir)
             # create the workunit
