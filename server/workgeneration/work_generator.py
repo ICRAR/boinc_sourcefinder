@@ -61,7 +61,7 @@ else:
     if os.path.exists('parameter_files_' + RUN_ID):
         LOGGER.info('Parameter set for run ' + RUN_ID + 'exists')
         # tar the parameter files
-        abs_path = os.path.abspathos('parameter_files_{0}'.format(RUN_ID))
+        abs_path = os.path.abspath('parameter_files_{0}'.format(RUN_ID))
         LOGGER.info(abs_path)
         gzip = 'gzip {0}'.format(abs_path)
         os.system(gzip)
