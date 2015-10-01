@@ -63,8 +63,8 @@ else:
         # tar the parameter files
         abs_path = os.path.abspath('parameter_files_{0}'.format(RUN_ID))
         LOGGER.info(abs_path)
-        gzip = 'gzip {0}'.format(abs_path)
-        os.system(gzip)
+        tar = 'tar zcvf {0}'.format(abs_path)
+        os.system(tar)
     else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
         exit()
@@ -91,7 +91,7 @@ else:
         LOGGER.info('wu path is {0}'.format(wu_path))
         shutil.copy(wu_dir, wu_path)
         # create the workunit
-        file_list = [work_file, 'parameter_files_{0}.gz'.format(RUN_ID)]
+        file_list = [work_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
         print file_list
         #  convert workunit to the list
         create_workunit('duchamp', work_file, file_list)

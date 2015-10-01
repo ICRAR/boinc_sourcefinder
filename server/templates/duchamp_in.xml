@@ -13,7 +13,7 @@
             </file_ref>
             <file_ref>
                 <file_number>1</file_number>
-                <open_name>shared/parameters.gz</open_name>
+                <open_name>shared/parameters.tar.gz</open_name>
                 <copy_file/>
             </file_ref>
         <rsc_disk_boinc>200000000</rsc_disk_boinc>
