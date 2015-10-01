@@ -78,12 +78,13 @@ else:
         for row in registered:  # get all workunits from wu directory
             wu_dir = row[0] + '.gz'
             string = row[0].rpartition('/')[-1]  # get rid of path names
-            wu_file = '{0}_{1}'.format(RUN_ID, string)
+            wu_file = '{0}_{1}.gz'.format(RUN_ID, string)
             files_to_workunits.append(wu_file)
         LOGGER.info('{0}'.format(files_to_workunits))
 
     for work_file in files_to_workunits:
         wu_path = convert_file_to_wu(work_file, download_directory, fanout)
+        LOGGER.info('wu path is {0}'.format(wu_path))
         shutil.copy(wu_dir, wu_path)
         # create the workunit
         file_list = [work_file, 'parameter_files_{0}'.format(RUN_ID)]

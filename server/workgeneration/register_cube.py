@@ -56,6 +56,7 @@ for cube in cubes:
         os.system(gzip)
 
 
+
 # get a list of all the parameter files in the parameter directory
 
 parameter_list = os.listdir(PARAMETER_DIRECTORY)
