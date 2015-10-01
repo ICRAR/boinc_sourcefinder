@@ -41,10 +41,10 @@ connection.close()
 
 LOGGER.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
 
-if os.path.exists(BOINC_PROJECT_PATH):
-    os.chdir(BOINC_PROJECT_PATH)
-else:
-    os.chdir('.')
+# if os.path.exists(BOINC_PROJECT_PATH):
+    # os.chdir(BOINC_PROJECT_PATH)
+# else:
+    # os.chdir('.')
 
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
