@@ -15,9 +15,9 @@ input_files = os.listdir('worker/.')
 def main():
     unzip_files()
     run_duchamp()
-    output_directory = 'outputs_{0}'.format(wu_input)
+    output_directory = 'outputs'
     move_outputs(output_directory)
-    append()
+    append(output_directory)
 
 
 # This function is called in the worker directory
@@ -72,7 +72,7 @@ def run_duchamp():
 
 
 def move_outputs(directory):
-    # os.chdir('{0}'.format(wu_params))
+    # directory is the output directory
     time.sleep(5)
     # we should be in the parameter directory
     outputs = os.listdir('.')
@@ -83,15 +83,15 @@ def move_outputs(directory):
     print 'Directory {0} has been made'.format(directory)
     for output_file in outputs:
         if "output" in output_file:
-            shutil.copy(output_file, '../{0}'.format(directory))
-            os.remove(output_file)
+            shutil.copy('{0}/{1}'.format(wu_params, output_file), directory)
+            os.remove('{0}/{1}'.format(wu_params, output_file))
     print 'Copied all output files'
     time.sleep(5)
 
 
 def append(directory):
     # we should be in the worker directory
-    os.chdir('{0}'.format(directory))
+    os.chdir('{0}'.format(directory)) #moves us to output directory
     file_list = os.listdir('.')  # this will be output_askap16 or something like that
     time.sleep(5)
     print file_list

@@ -33,19 +33,19 @@ echo -- Launching Application
 if [ -f /root/run_duchamp.py ]; then
     echo -- in /root directory
     mkdir -p /root/worker
-    cp /root/run_duchamp.py /root/worker
     cp -r /root/shared/* /root/worker
     echo --- Application has been moved the the worker directory
     sleep 2
-    cd /root/worker
+    cd /root/
     echo -- in Worker directory
     sleep 2
     python run_duchamp.py
     cd /root
+    cp -r worker/* shared/
     rm -rf /root/worker
     cd /root/shared
-    cd /root/shared
     md5sum final_output.txt > md5check.txt
+    tar -cvzf outputs.tar.gz outputs
     echo --- output directory has been zipped!
     sleep  5
     echo --- Everything has gone according to plan
