@@ -32,33 +32,29 @@ fi
 echo -- Launching Application
 if [ -f /root/run_duchamp.py ]; then
     echo -- in /root directory
-    cp /root/run_duchamp.py /root/shared
-    cp -r /root/parameters /root/shared
     mkdir -p /root/worker
-    cp -r /root/shared/* /root/worker/
-    mkdir /root/worker/outputs
+    cp /root/run_duchamp.py /root/worker
+    cp -r /root/shared/* /root/worker
     echo --- Application has been moved the the worker directory
     sleep 2
-    cd root/worker/
-    echo -- in worker directory
-    sleep 3
-    tar -xvzf inputs.tar
-    python run_duchamp.py |& vboxmonitor
-    echo --- Application and monitor have started
+    cd /root/worker
+    echo -- in Worker directory
+    sleep 2
+    python run_duchamp.py
     cd /root
-    rm /root/worker/run_duchamp.py
-    rm -r /root/worker/parameters
-    cp -r /root/worker/* /root/shared/
     rm -rf /root/worker
     cd /root/shared
-    tar -cvzf outputs.tar.gz outputs
-    echo --- Everything has been zipped!
-    sleep 5
+    cd /root/shared
+    md5sum final_output.txt > md5check.txt
+    echo --- output directory has been zipped!
+    sleep  5
     echo --- Everything has gone according to plan
     sleep 5
     shutdown -hP 0
+    fi
 else
-    echo ---- Failed to launch script
-    sleep 5
+       echo ---- Failed to launch script
+       sleep 5
+       shutdown -hP 0
 fi
-shutdown -hP 0
+
