@@ -43,6 +43,8 @@ def unzip_files():
             os.remove(wu_file)  # remove the uncompressed file
             os.chdir(wu_params)
             global num_params
+            print(os.listdir('.'))
+            time.sleep(3)
             num_params = len(os.listdir('.'))
             os.chdir('../')
 
@@ -91,7 +93,7 @@ def move_outputs(directory):
 
 def append(directory):
     # we should be in the worker directory
-    os.chdir('{0}'.format(directory)) #moves us to duchamp-output directory
+    os.chdir('{0}'.format(directory))  # moves us to duchamp-output directory
     file_list = os.listdir('.')  # this will be output_askap16 or something like that
     time.sleep(5)
     print file_list

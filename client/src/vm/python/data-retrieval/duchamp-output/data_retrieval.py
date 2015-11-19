@@ -18,7 +18,7 @@ for output in directory_list:
         print output
         param_number = output.split('.')[0]
         print param_number
-        count = 0  # counts the first 4 lines, which are duchamp output formatting
+        count = 0 # counts the first 4 lines, which are duchamp output formatting
         for line in output_file.readlines():
             if count >= 4:
                 line_break = line.split()
