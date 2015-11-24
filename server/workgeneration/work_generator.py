@@ -1,10 +1,11 @@
 # Work generator used to create workunits
 
+import argparse
 import os
 import shutil
 import sys
-import argparse
-from logging_helper import config_logger
+
+from utils.logging_helper import config_logger
 
 LOGGER = config_logger(__name__)
 LOGGER.info('Starting work generation')
@@ -13,10 +14,10 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
 from sqlalchemy.engine import create_engine
-from sqlalchemy import select, insert, and_, func
+from sqlalchemy import select, func
 import py_boinc
 from database.boinc_database_support import RESULT
-from Boinc import database, configxml
+from Boinc import configxml
 from database.database_support import CUBE
 from work_generator_mod import convert_file_to_wu, create_workunit
 

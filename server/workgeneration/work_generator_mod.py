@@ -2,10 +2,11 @@ __author__ = '21298244'
 
 # Helper file for the work generator
 
-import os
 import hashlib
+import os
+
 import py_boinc
-from logging_helper import config_logger
+from utils.logging_helper import config_logger
 
 LOGGER = config_logger(__name__)
 LOGGER.info("work_generator_mod.py")
