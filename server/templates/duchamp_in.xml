@@ -20,5 +20,3 @@
         <min_quorum>2</min_quorum>
     </workunit>
 </input_template>
-
-<!--TODO Update for when we have all the paramater files sent to the client as well as the running script etc-->
