@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 # from config import DB_LOGIN (For local testing, just defining a general login instead
-from logging_helper import config_logger
+from utils.logging_helper import config_logger
 
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))

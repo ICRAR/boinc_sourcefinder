@@ -39,7 +39,7 @@ def unzip_files():
             tar.extractall()
             tar.close()
             global wu_params
-            wu_params = wu_file[:-7]
+            wu_params = wu_file[:-7]  # wu_parameter directory
             os.remove(wu_file)  # remove the uncompressed file
             os.chdir(wu_params)
             global num_params
@@ -84,7 +84,7 @@ def move_outputs(directory):
     os.mkdir(directory)
     print 'Directory {0} has been made'.format(directory)
     for output_file in outputs:
-        if "duchamp-output" in output_file:
+        if "output" in output_file:
             shutil.copy('{0}/{1}'.format(wu_params, output_file), directory)
             os.remove('{0}/{1}'.format(wu_params, output_file))
     print 'Copied all duchamp-output files'
@@ -103,7 +103,7 @@ def append(directory):
         # os.chdir('/root')
         print 'In root  directory'
         time.sleep(5)
-        print 'Incorrect number of duchamp-output files, shutting down.'
+        print 'Incorrect number of output files, shutting down.'
         time.sleep(5)
         subprocess.call(["rm", "-r", "/root/worker/*"])
         subprocess.call(["rm", "-r", "/root/shared/*"])
@@ -117,6 +117,13 @@ def append(directory):
                 f.close()
                 for line in lines:
                     outfile.write(line)
+
+            # make run file
+            run_file = open("run_file.txt".format(wu_params), 'w+')
+            wu_run = wu_input.split('_')[0]
+            run_file.write(wu_run)
+            run_file.close()
+
 
 
 '''WHERE ALL THE BUSINES OCCURS'''
