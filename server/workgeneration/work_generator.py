@@ -5,13 +5,15 @@ import os
 import shutil
 import sys
 
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+
 from utils.logging_helper import config_logger
 
 LOGGER = config_logger(__name__)
 LOGGER.info('Starting work generation')
 
-base_path = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy import select, func
