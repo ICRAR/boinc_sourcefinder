@@ -182,7 +182,7 @@ def project_install():
 
     # Copy configuration files
     sudo('mkdir /home/ec2-user/boinc/sfinder')
-    run('git clone git://gitub.com/ICRAR/boinc-sourcefinder.git /home/ec2-user/storage/sfinder')
+    run('git clone git://gitub.com/ICRAR/boinc-sourcefinder.git /home/ec2-user/boinc/sfinder')
 
     sudo('mysql_install_db')
     sudo('chown -R mysql:mysql /var/lib/mysql/*')
@@ -199,7 +199,6 @@ def project_install():
         run('./make_project -v --no_query --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'.format(
             env.hosts[0], env.db_username, env.db_host_name, env.dp_password, env.project_name))
 
-# TODO Ask Kevin where environment variables are specified
 
     run('''echo '# DB Settings
 databaseUserid = "{0}"

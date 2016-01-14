@@ -43,6 +43,9 @@ if [ -f /root/run_duchamp.py ]; then
     cd /root
     cp -r worker/* shared/
     rm -rf /root/worker
+    cp data_retrieval.py shared/outputs
+    cd shared/outputs
+    python data_retrieval.py
     cd /root/shared
     md5sum final_output.txt > md5check.txt
     tar -cvzf outputs.tar.gz outputs

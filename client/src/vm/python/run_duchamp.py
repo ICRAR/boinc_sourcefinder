@@ -38,9 +38,14 @@ def unzip_files():
             tar = tarfile.open(wu_file)
             tar.extractall()
             tar.close()
+            os.remove(wu_file)
+            # directory now consists of two files - uncompressed 'input.fits' file, and a directory that has the name 'parameter_files_(run_id)'
+    new_dir_list = os.listdir('.')
+    for new_dir_name in new_dir_list:
+        if "parameter" in new_dir_name:
             global wu_params
-            wu_params = wu_file[:-7]  # wu_parameter directory
-            os.remove(wu_file)  # remove the uncompressed file
+            wu_params = new_dir_name
+            #os.remove(wu_params)  # remove the uncompressed file
             os.chdir(wu_params)
             global num_params
             print(os.listdir('.'))
@@ -119,11 +124,10 @@ def append(directory):
                     outfile.write(line)
 
             # make run file
-            run_file = open("run_file.txt".format(wu_params), 'w+')
-            wu_run = wu_input.split('_')[0]
+            run_file = open("run_file.txt", 'w+')
+            wu_run = wu_params.split('_')[2]
             run_file.write(wu_run)
             run_file.close()
-
 
 
 '''WHERE ALL THE BUSINES OCCURS'''
