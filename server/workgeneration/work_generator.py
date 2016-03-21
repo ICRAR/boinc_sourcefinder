@@ -41,7 +41,6 @@ connection.close()
 LOGGER.info('Checking pending = {0} : threshold = {1}'.format(count, WG_THRESHOLD))
 
 # THIS MAKES EVERYTHING RUN FROM THE BOINC PROJECT PATH REMEMBER THIS RYAN...REMEMBER THIS
-# Why is this even here? - Sam
 """
 if os.path.exists(BOINC_PROJECT_PATH):
     os.chdir(BOINC_PROJECT_PATH)
@@ -73,7 +72,7 @@ else:
         LOGGER.info('Parameter set for run {0} exists'.format(RUN_ID))
         # tar the parameter files
         LOGGER.info('Absolute path is {0}'.format(param_abs_path))
-        os.system('tar -zcvf {0}.tar.gz {0}'.format(param_abs_path))
+        os.system('tar -zcvf {0}.tar.gz -C {0} .'.format(param_abs_path))
     else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
         exit()
@@ -85,26 +84,37 @@ else:
         LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
 
     files_to_workunits = []
-    # Check for registered cubes
-    registered = connection.execute(select([CUBE.c.cube_name]).where(CUBE.c.progress == 0))
+    # Check for registered cubes, ONLY ON OUR RUN ID!!
+    registered = connection.execute(select([CUBE.c.cube_name]).where(CUBE.c.progress == 0 and CUBE.c.run_id == RUN_ID))
     if registered is None:
         LOGGER.info("No files registered for work")
     else:
         for row in registered:  # get all workunits from wu directory
+
             wu_abs_path = row[0]
             string = row[0].rpartition('/')[-1]  # get rid of path names
             wu_file = '{0}_{1}'.format(RUN_ID, string)
+
             LOGGER.info('current wu is {0}'.format(wu_file))
+
+            # Get the download directory
             wu_download_dir = convert_file_to_wu(wu_file, download_directory, fanout)
             LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
-            LOGGER.info(wu_abs_path)
+
             LOGGER.info('wu path is {0}'.format(wu_abs_path))
+
+            # Copy work unit from its current path to the download dir
             shutil.copyfile(wu_abs_path, wu_download_dir)
+
+            # Don't use the param abs path here as this is making a download dir
             param_download_dir = convert_file_to_wu('parameter_files_{0}.tar.gz'.format(RUN_ID), download_directory, fanout)
             LOGGER.info('Param download dir is {0}'.format(param_download_dir))
+
+            # Copy parameter file from abs path in to download dir
             shutil.copyfile(param_abs_path + '.tar.gz', param_download_dir)
+
             # create the workunit
-            file_list = [wu_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
+            file_list = [wu_file, '{0}.tar.gz'.format('parameter_files_{0}.tar.gz'.format(RUN_ID))]
             print file_list
             #  convert workunit to the list
             create_workunit('duchamp', wu_file, file_list)
