@@ -4,11 +4,11 @@ Run this file directly to print the configuration.
 
 !!IF YOU MAKE A CHANGE HERE, MAKE SURE make_default.py IS CHANGED TOO!!
 """
-from os.path import exists
+from os.path import exists, dirname, realpath, join
 from configobj import ConfigObj
 
 config = None
-config_file_name = 'duchamp.settings'
+config_file_name = join(dirname(realpath(__file__)), 'duchamp.settings')
 if exists(config_file_name):
     config = ConfigObj(config_file_name)
     ############### Database Settings ###############
