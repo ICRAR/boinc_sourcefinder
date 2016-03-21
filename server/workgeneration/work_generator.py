@@ -78,9 +78,12 @@ else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
         exit()
 
+    print "Stupid"
     ret_val = py_boinc.boinc_db_open()
     if ret_val != 0:
         LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
+
+    print "Stupid2"
 
     files_to_workunits = []
     # Check for registered cubes
