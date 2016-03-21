@@ -7,6 +7,7 @@ Run this file directly to print the configuration.
 from os.path import exists, dirname
 from configobj import ConfigObj
 
+config = None
 config_file_name = dirname(__file__) + '/duchamp.settings'
 if exists(config_file_name):
     config = ConfigObj(config_file_name)
