@@ -27,6 +27,8 @@ if exists(config_file_name):
 
     ############### Work Generation Settings ###############
     WG_THRESHOLD = config['wgThreshold']
+else:
+    print "No log file!"
 
 if __name__ == '__main__':
     # Print the config
