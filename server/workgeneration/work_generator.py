@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
 from utils.logging_helper import config_logger
 
-from config import  BOINC_DB_LOGIN, DB_LOGIN, WG_THRESHOLD, BOINC_PROJECT_PATH, DIR_PARAM
+from config import  BOINC_DB_LOGIN, DB_LOGIN, WG_THRESHOLD, DIR_BOINC_PROJECT_PATH, DIR_PARAM
 
 LOGGER = config_logger(__name__)
 LOGGER.info('Starting work generation')
