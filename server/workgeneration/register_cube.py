@@ -56,7 +56,7 @@ for cube in cubes:
             LOGGER.info("{0} already exists in db for run: ".format(cube) + RUN_ID)
 
 # get a list of all the parameter files in the parameter directory
-parameter_list = os.listdir(PARAMETER_DIRECTORY)
+parameter_list = os.listdir('{0}/parameter_files_{1}'.format(PARAMETER_DIRECTORY, RUN_ID))
 parameter_list.sort()
 LOGGER.info('Parameter names are {0}'.format(parameter_list))
 for param_file in parameter_list:
