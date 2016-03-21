@@ -72,7 +72,7 @@ else:
         LOGGER.info('Parameter set for run {0} exists'.format(RUN_ID))
         # tar the parameter files
         LOGGER.info('Absolute path is {0}'.format(param_abs_path))
-        os.system('tar -zcvf {0}.tar.gz -C {0} .'.format(param_abs_path))
+        os.system('tar -zcvf {0}.tar.gz -C {1} ../{2}'.format(param_abs_path, DIR_PARAM, 'parameter_files_{0}'.format(RUN_ID)))
     else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
         exit()
