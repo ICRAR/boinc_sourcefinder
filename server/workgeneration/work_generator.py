@@ -66,7 +66,7 @@ else:
     boinc_config = configxml.ConfigFile(os.path.join(DIR_BOINC_PROJECT_PATH, 'config.xml')).read()
     download_directory = boinc_config.config.download_dir
     fanout = long(boinc_config.config.uldl_dir_fanout)
-    LOGGER.info('Download directory is {0} fanout is {1}'.format(download_directory, str(fanout))
+    LOGGER.info('Download directory is {0} fanout is {1}'.format(download_directory, str(fanout)))
 
     # check to see if parameter files for run_id exist:
     if os.path.exists(param_abs_path):
