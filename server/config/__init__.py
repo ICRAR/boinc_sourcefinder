@@ -4,7 +4,7 @@ Run this file directly to print the configuration.
 
 !!IF YOU MAKE A CHANGE HERE, MAKE SURE make_default.py IS CHANGED TOO!!
 """
-from os.path import exists, dirname
+from os.path import exists
 from configobj import ConfigObj
 
 config = None
