@@ -38,7 +38,7 @@ connection = ENGINE.connect()
 count = connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()[0]
 connection.close()
 
-LOGGER.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
+LOGGER.info('Checking pending = {0} : threshold = {1}'.format(count, WG_THRESHOLD))
 
 # THIS MAKES EVERYTHING RUN FROM THE BOINC PROJECT PATH REMEMBER THIS RYAN...REMEMBER THIS
 # Why is this even here? - Sam
