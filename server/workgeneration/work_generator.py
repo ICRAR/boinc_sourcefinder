@@ -66,15 +66,14 @@ else:
     boinc_config = configxml.ConfigFile(os.path.join(DIR_BOINC_PROJECT_PATH, 'config.xml')).read()
     download_directory = boinc_config.config.download_dir
     fanout = long(boinc_config.config.uldl_dir_fanout)
-    LOGGER.info('Download directory is ' + download_directory + ' fanout is ' + str(fanout))
+    LOGGER.info('Download directory is {0} fanout is {1}'.format(download_directory), str(fanout))
 
     # check to see if parameter files for run_id exist:
     if os.path.exists(param_abs_path):
-        LOGGER.info('Parameter set for run ' + RUN_ID + 'exists')
+        LOGGER.info('Parameter set for run {0} exists'.format(RUN_ID))
         # tar the parameter files
-        LOGGER.info('Absolute path is' + param_abs_path)
-        tar = 'tar -zcvf {0}.tar.gz {0}'.format('parameter_files_{0}'.format(RUN_ID))
-        os.system(tar)
+        LOGGER.info('Absolute path is {0}'.format(param_abs_path))
+        os.system('tar -zcvf {0}.tar.gz {0}'.format(param_abs_path))
     else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
         exit()
