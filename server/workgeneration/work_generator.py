@@ -79,12 +79,10 @@ else:
         exit()
 
     # This part was bitching about not being in the boinc directory. sigh
-    back = os.getcwd()
     os.chdir(DIR_BOINC_PROJECT_PATH)
     ret_val = py_boinc.boinc_db_open()
     if ret_val != 0:
         LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
-    os.chdir(back)
 
     files_to_workunits = []
     # Check for registered cubes
