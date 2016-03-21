@@ -62,7 +62,7 @@ param_abs_path = '{0}/parameter_files_'.format(DIR_PARAM) + RUN_ID
 if count is not None and count >= WG_THRESHOLD:
     LOGGER.info('Nothing to do')
 else:
-    boinc_config = configxml.ConfigFile().read()
+    boinc_config = configxml.ConfigFile(os.path.join(DIR_BOINC_PROJECT_PATH, 'config.xml')).read()
     download_directory = boinc_config.config.download_dir
     fanout = long(boinc_config.config.uldl_dir_fanout)
     LOGGER.info('Download directory is ' + download_directory + ' fanout is ' + str(fanout))
