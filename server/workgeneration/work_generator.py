@@ -78,12 +78,13 @@ else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
         exit()
 
-    print "Stupid"
+    # This part was bitching about not being in the boinc directory. sigh
+    back = os.getcwd()
+    os.chdir(DIR_BOINC_PROJECT_PATH)
     ret_val = py_boinc.boinc_db_open()
     if ret_val != 0:
         LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
-
-    print "Stupid2"
+    os.chdir(back)
 
     files_to_workunits = []
     # Check for registered cubes
