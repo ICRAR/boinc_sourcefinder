@@ -12,8 +12,6 @@ from utils.logging_helper import config_logger
 
 from config import  BOINC_DB_LOGIN, DB_LOGIN, WG_THRESHOLD, DIR_BOINC_PROJECT_PATH, DIR_PARAM
 
-LOGGER = config_logger(__name__)
-LOGGER.info('Starting work generation')
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy import select, func
@@ -22,6 +20,9 @@ from database.boinc_database_support import RESULT
 from Boinc import configxml
 from database.database_support import CUBE
 from work_generator_mod import convert_file_to_wu, create_workunit
+
+LOGGER = config_logger(__name__)
+LOGGER.info('Starting work generation')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('run_id', nargs=1, help='The run_id of paramater sets that you for which you want to generate work')
