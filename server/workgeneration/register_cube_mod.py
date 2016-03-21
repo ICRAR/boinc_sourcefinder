@@ -13,25 +13,17 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
 LOGGER = config_logger(__name__)
-LOGGER.info('register_cube_mod.py')
-
-
-def get_cube_names(cube_directory):
-    LOGGER.debug('get_cube_names')
-    """Return a list of the cubes that need registering for the current run
-    :param cube_directory:
-    :return:
-    """
-    cubes = os.listdir('{0}'.format(cube_directory))  # list of cubes in the current run
-    return cubes
+#LOGGER.info('register_cube_mod.py')
 
 
 def get_cube_data(cube_file):
-    LOGGER.debug('get_cube_data')
     """Retrieve ra,dec,freqencey data from the .fits file
     :param cube_file:
     :return data_list:
     """
+
+    # LOGGER.debug('get_cube_data')
+
     hdulist = fits.open(cube_file)
     LOGGER.debug(hdulist[0].header[20])
     LOGGER.debug(hdulist[0].header[21])
@@ -41,82 +33,88 @@ def get_cube_data(cube_file):
 
 
 def update_cube_table(connection, cube_file, run_id):
-    LOGGER.debug('update_cube_table')
-    """Update the database for each cube
-    :param connection:
+    """
+
+    Update the database for each cube
+        :param connection:
     :param cube_file:
     :param run_id:
     :return:
     """
+    #LOGGER.debug('update_cube_table')
 
-    transaction = connection.begin
+    transaction = connection.begin()
+
     try:
+        # Check to see if this run is already registered
         check = connection.execute(select([RUN]).where(RUN.c.run_id == run_id))
         result = check.fetchone()
-        # check to see if run exists in database
-        if not result:
-            LOGGER.info('Adding new run_id to the db: ' + run_id)
-            run = connection.execute(
-                RUN.insert(),
-                run_id=run_id
-            )
 
-        check = connection.execute(select([CUBE]).where(
-            and_(CUBE.c.cube_name == cube_file,
-                 CUBE.c.run_id == run_id)
-        )
-        )
-        result = check.fetchone()
         if not result:
+            # The run is not registered already, so register it
+            LOGGER.info('Adding new run_id to the db: ' + run_id)
+            connection.execute(
+                RUN.insert(),
+                run_id=run_id)
+
+        # Check to see if this cube already registered?
+        check = connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_file, CUBE.c.run_id == run_id)))
+        result = check.fetchone()
+
+        if not result:
+            # The cube is not registered already, so register it
             data = get_cube_data(cube_file)
-            cube = connection.execute(
+            connection.execute(
                 CUBE.insert(),
                 cube_name=cube_file,
                 progress=0,
                 ra=data[0],
                 declin=data[1],
                 freq=data[2],
-                run_id=run_id
-            )
+                run_id=run_id)
         else:
-            print "Cube is already included in database for current run"
+            # The cube is registered already
+            transaction.rollback()
             return 1
 
-    except Exception, e:
+    except Exception:
         LOGGER.error('Database issue when adding cubelets', exc_info=True)
+        transaction.rollback()
         raise
+
+    transaction.commit()
 
 
 def update_parameter_files(run_id, connection, parameter_file):
-    LOGGER.debug('update_parameter_files')
     """Add parameter files to the database
     :param run_id
     :param connection
     :param parameter_file
     """
-    transaction = connection.begin
+    LOGGER.debug('update_parameter_files')
+
+    transaction = connection.begin()
 
     try:
-        result = connection.execute(select([PARAMETER_FILE]).where(
-            and_(
-                PARAMETER_FILE.c.run_id == run_id,
-                PARAMETER_FILE.c.parameter_file == parameter_file)
-        )
-        )
+        check = connection.execute(select([PARAMETER_FILE]).where(
+            and_(PARAMETER_FILE.c.run_id == run_id,
+                 PARAMETER_FILE.c.parameter_file == parameter_file)))
+        result = check.fetchone()
 
-        row = result.fetchone()
-
-        if not row:
+        if not result:
             LOGGER.info('Adding new parameter file to the db: ' + parameter_file)
-            con_result = connection.execute(
+            connection.execute(
                 PARAMETER_FILE.insert(),
                 run_id=run_id,
-                parameter_file=parameter_file
-            )
+                parameter_file=parameter_file)
         else:
             LOGGER.info("Parameter file already exists in database: " + parameter_file)
+            transaction.rollback()
             return
 
     except Exception:
         LOGGER.error('Database issue when setting range values', exc_info=True)
+        transaction.rollback()
         raise
+
+    transaction.commit()

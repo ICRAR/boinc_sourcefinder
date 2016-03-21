@@ -3,6 +3,6 @@
     <memory_size_mb>256</memory_size_mb>
     <enable_shared_directory/>
     <vm_disk_controller_model>IntelAHCI</vm_disk_controller_model>
-    <vm_disk_controller_type>stat</vm_disk_controller_type>
+    <vm_disk_controller_type>sata</vm_disk_controller_type>
     <vm_minimum_checkpoint_interval>600</vm_minimum_checkpoint_interval>
 </vbox_job>

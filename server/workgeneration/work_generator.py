@@ -23,7 +23,8 @@ from Boinc import configxml
 from database.database_support import CUBE
 from work_generator_mod import convert_file_to_wu, create_workunit
 
-# TODO initially hard coded, will add to fabric files later on
+# TODO initially hard coded, will add to fabric files later onls
+
 BOINC_DB_LOGIN = 'mysql://root@localhost/duchamp'
 DB_LOGIN = 'mysql://root@localhost/sourcefinder'
 WG_THRESHOLD = 500

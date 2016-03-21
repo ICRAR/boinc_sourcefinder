@@ -3,66 +3,62 @@
 import argparse
 import os
 import sys
-# from config import DB_LOGIN (For local testing, just defining a general login instead
+
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+
 from utils.logging_helper import config_logger
 
+# Assume the config file is good
+from config import DB_LOGIN, DIR_CUBE, DIR_PARAM
+
+from register_cube_mod import update_cube_table, update_parameter_files
+from sqlalchemy.engine import create_engine
 
 
 LOGGER = config_logger(__name__)
 LOGGER.info('Starting work registration.py')
 LOGGER.info('PYTHONPATH = {0}'.format(sys.path))
 
-from register_cube_mod import get_cube_names, update_cube_table, update_parameter_files
-from sqlalchemy.engine import create_engine
-
-
+# Get command line args
 parser = argparse.ArgumentParser()
-parser.add_argument('cube_directory', nargs=1, help='The directory that all the new workunits are stored')
 parser.add_argument('run_id', nargs=1, help='The id of the current run')
-parser.add_argument('parameter_directory', nargs=1, help='The directory of the parameter files')
-parser.add_argument('--db_login', nargs='?', type=str, help='the login details for the database')
-
 args = vars(parser.parse_args())
-WORKING_DIRECTORY = args['cube_directory'][0]
+
+# Set local variables based on imported config and command line
+WORKING_DIRECTORY = DIR_CUBE
+PARAMETER_DIRECTORY = DIR_PARAM
 RUN_ID = args['run_id'][0]
-PARAMETER_DIRECTORY = args['parameter_directory'][0]
-DB_LOGIN = args['db_login']
-
-LOGGER.info('DB_LOGIN is: {0}'.format(DB_LOGIN))
-
-# TODO initially hard coded, will add to fabric files later on
-if DB_LOGIN is None:
-    DB_LOGIN = 'mysql://' + 'root' + ':' + '@' + 'localhost' + '/' + 'sourcefinder'
 
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
-gzip = 'gzip {0}/*'.format(WORKING_DIRECTORY)
-os.system(gzip)
+# Compress everything in the cubes directory
+# Note: any files already compressed are not affected
+os.system('gzip {0}/*'.format(WORKING_DIRECTORY))
 
 # get a list of the cubes to be registered
-cubes = get_cube_names(WORKING_DIRECTORY)
+cubes = os.listdir(WORKING_DIRECTORY)  # list of cubes in the current run
+cubes.sort()
 LOGGER.info('Cube names are {0}'.format(cubes))
-# get run_id into numerical form
+
 for cube in cubes:
     # check if it is actually one of the cubes
     if "askap" in cube:
         LOGGER.info('The file is ' + cube)
-        # gzip the cube for workunit deployment
+
         abs_dir = os.path.abspath('{0}/{1}'.format(WORKING_DIRECTORY, cube))
         LOGGER.info('Working directory is {0}'.format(abs_dir))
+
         check = update_cube_table(connection, abs_dir, RUN_ID)
+
         if check == 1:
-            LOGGER.info("Cube already exists in db for run: " + RUN_ID)
-
-
+            LOGGER.info("{0} already exists in db for run: ".format(cube) + RUN_ID)
 
 # get a list of all the parameter files in the parameter directory
-
 parameter_list = os.listdir(PARAMETER_DIRECTORY)
 parameter_list.sort()
+LOGGER.info('Parameter names are {0}'.format(parameter_list))
 for param_file in parameter_list:
     # check if it is actually one of the parameter files
     if "supercube" in param_file:
