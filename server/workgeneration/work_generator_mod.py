@@ -51,9 +51,10 @@ def create_workunit(appname, wu_name, input_file_list):
         rsc_disk_bound=2000000048,
         additional_xml="<credit>1.0f</credit>",
         list_input_files=input_file_list)
-    LOGGER.info('completed create work request')
+
     if retval != 0:
         py_boinc.boinc_db_transaction_rollback()
         LOGGER.info('Error writing to boinc database. boinc_create_work return value = {0}'.format(retval))
     else:
+        LOGGER.info('completed create work request')
         py_boinc.boinc_db_transaction_commit()

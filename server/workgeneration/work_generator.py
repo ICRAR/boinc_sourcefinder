@@ -106,6 +106,7 @@ else:
             # Copy work unit from its current path to the download dir
             shutil.copyfile(wu_abs_path, wu_download_dir)
 
+
             # Don't use the param abs path here as this is making a download dir
             param_download_dir = convert_file_to_wu('parameter_files_{0}.tar.gz'.format(RUN_ID), download_directory, fanout)
             LOGGER.info('Param download dir is {0}'.format(param_download_dir))
@@ -114,7 +115,7 @@ else:
             shutil.copyfile(param_abs_path + '.tar.gz', param_download_dir)
 
             # create the workunit
-            file_list = [wu_file, '{0}.tar.gz'.format('parameter_files_{0}.tar.gz'.format(RUN_ID))]
+            file_list = [wu_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
             print file_list
             #  convert workunit to the list
             create_workunit('duchamp', wu_file, file_list)
