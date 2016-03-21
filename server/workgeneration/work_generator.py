@@ -10,10 +10,10 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
 from utils.logging_helper import config_logger
 
+from config import  BOINC_DB_LOGIN, DB_LOGIN, WG_THRESHOLD, BOINC_PROJECT_PATH, DIR_PARAM
+
 LOGGER = config_logger(__name__)
 LOGGER.info('Starting work generation')
-
-
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy import select, func
@@ -23,12 +23,6 @@ from Boinc import configxml
 from database.database_support import CUBE
 from work_generator_mod import convert_file_to_wu, create_workunit
 
-# TODO initially hard coded, will add to fabric files later onls
-
-BOINC_DB_LOGIN = 'mysql://root@localhost/duchamp'
-DB_LOGIN = 'mysql://root@localhost/sourcefinder'
-WG_THRESHOLD = 500
-BOINC_PROJECT_PATH = '/home/ec2-user/projects/duchamp'
 parser = argparse.ArgumentParser()
 parser.add_argument('run_id', nargs=1, help='The run_id of paramater sets that you for which you want to generate work')
 
@@ -46,16 +40,24 @@ connection.close()
 LOGGER.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
 
 # THIS MAKES EVERYTHING RUN FROM THE BOINC PROJECT PATH REMEMBER THIS RYAN...REMEMBER THIS
+# Why is this even here? - Sam
+"""
 if os.path.exists(BOINC_PROJECT_PATH):
     os.chdir(BOINC_PROJECT_PATH)
 else:
     os.chdir('.')
+"""
+if os.path.exists(BOINC_PROJECT_PATH):
+    LOGGER.info("Boinc project path at {0} added to PYTHONPATH".format(BOINC_PROJECT_PATH))
+    sys.path.append(BOINC_PROJECT_PATH)
+else:
+    LOGGER.error("Could not find boinc project path at {0}".format(BOINC_PROJECT_PATH))
+    exit(1)
 
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
-param_abs_path = ''
-wu_abs_path = ''
+param_abs_path = '{0}/parameter_files_'.format(DIR_PARAM) + RUN_ID
 
 if count is not None and count >= WG_THRESHOLD:
     LOGGER.info('Nothing to do')
@@ -66,10 +68,9 @@ else:
     LOGGER.info('Download directory is ' + download_directory + ' fanout is ' + str(fanout))
 
     # check to see if parameter files for run_id exist:
-    if os.path.exists('parameter_files_' + RUN_ID):
+    if os.path.exists(param_abs_path):
         LOGGER.info('Parameter set for run ' + RUN_ID + 'exists')
         # tar the parameter files
-        param_abs_path = os.path.abspath('parameter_files_{0}'.format(RUN_ID))
         LOGGER.info('Absolute path is' + param_abs_path)
         tar = 'tar -zcvf {0}.tar.gz {0}'.format('parameter_files_{0}'.format(RUN_ID))
         os.system(tar)

@@ -17,7 +17,7 @@ from sqlalchemy.engine import create_engine
 
 
 LOGGER = config_logger(__name__)
-LOGGER.info('Starting work registration.py')
+LOGGER.info('Starting register_cube.py')
 LOGGER.info('PYTHONPATH = {0}'.format(sys.path))
 
 # Get command line args
