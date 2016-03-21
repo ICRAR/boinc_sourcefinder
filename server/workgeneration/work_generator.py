@@ -47,11 +47,11 @@ if os.path.exists(BOINC_PROJECT_PATH):
 else:
     os.chdir('.')
 """
-if os.path.exists(BOINC_PROJECT_PATH):
-    LOGGER.info("Boinc project path at {0} added to PYTHONPATH".format(BOINC_PROJECT_PATH))
-    sys.path.append(BOINC_PROJECT_PATH)
+if os.path.exists(DIR_BOINC_PROJECT_PATH):
+    LOGGER.info("Boinc project path at {0} added to PYTHONPATH".format(DIR_BOINC_PROJECT_PATH))
+    sys.path.append(DIR_BOINC_PROJECT_PATH)
 else:
-    LOGGER.error("Could not find boinc project path at {0}".format(BOINC_PROJECT_PATH))
+    LOGGER.error("Could not find boinc project path at {0}".format(DIR_BOINC_PROJECT_PATH))
     exit(1)
 
 ENGINE = create_engine(DB_LOGIN)
