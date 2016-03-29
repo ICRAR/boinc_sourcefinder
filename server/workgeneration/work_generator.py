@@ -130,3 +130,5 @@ else:
             create_workunit('duchamp', wu_file, file_list)
 
             connection.execute(CUBE.update().where(CUBE.c.cube_id == row[1]).values(progress=1))
+
+    py_boinc.boinc_db_close()
