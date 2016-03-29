@@ -14,7 +14,7 @@ from config import  BOINC_DB_LOGIN, DB_LOGIN, WG_THRESHOLD, DIR_BOINC_PROJECT_PA
 
 
 from sqlalchemy.engine import create_engine
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 import py_boinc
 from database.boinc_database_support import RESULT
 from Boinc import configxml
@@ -46,13 +46,14 @@ if os.path.exists(BOINC_PROJECT_PATH):
     os.chdir(BOINC_PROJECT_PATH)
 else:
     os.chdir('.')
-"""
+
 if os.path.exists(DIR_BOINC_PROJECT_PATH):
     LOGGER.info("Boinc project path at {0} added to PYTHONPATH".format(DIR_BOINC_PROJECT_PATH))
     sys.path.append(DIR_BOINC_PROJECT_PATH)
 else:
     LOGGER.error("Could not find boinc project path at {0}".format(DIR_BOINC_PROJECT_PATH))
     exit(1)
+"""
 
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
@@ -88,7 +89,7 @@ else:
 
     files_to_workunits = []
     # Check for registered cubes, ONLY ON OUR RUN ID!!
-    registered = connection.execute(select([CUBE.c.cube_name]).where(CUBE.c.progress == 0 and CUBE.c.run_id == RUN_ID))
+    registered = connection.execute(select([CUBE.c.cube_name, CUBE.c.cube_id]).where(CUBE.c.progress == 0 and CUBE.c.run_id == RUN_ID))
     if registered is None:
         LOGGER.info("No files registered for work")
     else:
@@ -122,3 +123,5 @@ else:
             print file_list
             #  convert workunit to the list
             create_workunit('duchamp', wu_file, file_list)
+
+            connection.execute(update([CUBE.c.progress]).where(CUBE.c.cube_name == row[1]).values(1))
