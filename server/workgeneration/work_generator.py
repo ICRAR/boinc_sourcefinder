@@ -92,10 +92,13 @@ else:
 
     files_to_workunits = []
     # Check for registered cubes, ONLY ON OUR RUN ID!!
-    registered = connection.execute(select([CUBE.c.cube_name, CUBE.c.cube_id]).where(CUBE.c.progress == 0 and CUBE.c.run_id == RUN_ID))
-    if registered is None or len(registered) == 0:
+
+    count = connection.execute(select([func.count(CUBE.c.cube_id)]).where(CUBE.c.progress == 0 and CUBE.c.run_id == RUN_ID)).first()[0]
+    if count == 0:
         LOGGER.info("No files registered for work")
     else:
+        registered = connection.execute(select([CUBE.c.cube_name, CUBE.c.cube_id]).where(CUBE.c.progress == 0 and CUBE.c.run_id == RUN_ID))
+
         for row in registered:  # get all workunits from wu directory
 
             wu_abs_path = row[0]
