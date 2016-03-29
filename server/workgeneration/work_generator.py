@@ -95,7 +95,7 @@ else:
 
     count = connection.execute(select([func.count(CUBE.c.cube_id)]).where(CUBE.c.progress == 0 and CUBE.c.run_id == RUN_ID)).first()[0]
     if count == 0:
-        LOGGER.info("No files registered for work")
+        LOGGER.info('All workunits for cubes registered under this run ID have already been created')
     else:
         registered = connection.execute(select([CUBE.c.cube_name, CUBE.c.cube_id]).where(CUBE.c.progress == 0 and CUBE.c.run_id == RUN_ID))
 
