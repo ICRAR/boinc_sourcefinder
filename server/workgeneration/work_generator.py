@@ -73,19 +73,22 @@ else:
         LOGGER.info('Parameter set for run {0} exists'.format(RUN_ID))
         # tar the parameter files
         LOGGER.info('Absolute path is {0}'.format(param_abs_path))
-        ret = os.system('tar -zcvf {0}.tar.gz -C {1} {2}'.format(param_abs_path, DIR_PARAM, 'parameter_files_{0}'.format(RUN_ID)))
+        ret = os.system('tar -zcvf {0}.tar.gz -C {1} {2} > /dev/null'.format(param_abs_path, DIR_PARAM, 'parameter_files_{0}'.format(RUN_ID)))
         if ret != 0:
             LOGGER.info("Could not tar properly, exiting...")
             exit(1)
+        LOGGER.info('Created tar file of parameter files found in {0}'.format(param_abs_path))
     else:
         LOGGER.info('No parameter_files for run_id ' + RUN_ID)
-        exit()
+        exit(1)
 
     # This part was bitching about not being in the boinc directory. sigh
+    LOGGER.info('Opening BOINC DB')
     os.chdir(DIR_BOINC_PROJECT_PATH)
     ret_val = py_boinc.boinc_db_open()
     if ret_val != 0:
         LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
+        exit(1)
 
     files_to_workunits = []
     # Check for registered cubes, ONLY ON OUR RUN ID!!
