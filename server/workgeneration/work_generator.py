@@ -124,4 +124,4 @@ else:
             #  convert workunit to the list
             create_workunit('duchamp', wu_file, file_list)
 
-            connection.execute(update([CUBE.c.progress]).where(CUBE.c.cube_name == row[1]).values(1))
+            connection.execute(CUBE.update().where(CUBE.c.cube_name == row[1]).values(1))
