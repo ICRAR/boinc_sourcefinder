@@ -7,7 +7,7 @@ import time
 directory_list = os.listdir('.')
 print directory_list
 write_file = open("data_collection.csv", 'a')
-write_file.write('ParameterNumber,RA,DEC,freq,w_50,w_20 w_FREQ,F_int,F_tot,F_peak,Nvoxel,Nchan,Nspatpix\n')
+write_file.write('ParameterNumber,RA,DEC,freq,w_50,w_20, w_FREQ,F_int,F_tot,F_peak,Nvoxel,Nchan,Nspatpix\n')
 for output in directory_list:
     print output
     source_files = 0
