@@ -64,9 +64,15 @@ def update_cube_table(connection, cube_file, run_id):
         if not result:
             # The cube is not registered already, so register it
             data = get_cube_data(cube_file)
+
+            # Only register the cube with the actual name of the file. No .fits.gz or path.
+            filename = os.path.basename(cube_file)
+            p = filename.find('.')
+            filename = filename[:p]
+
             connection.execute(
                 CUBE.insert(),
-                cube_name=cube_file,
+                cube_name=filename,
                 progress=0,
                 ra=data[0],
                 declin=data[1],
