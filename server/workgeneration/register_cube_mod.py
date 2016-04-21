@@ -52,7 +52,8 @@ def update_cube_table(connection, cube_file, run_id):
 
         if not result:
             # The run is not registered already, so register it
-            LOGGER.info('Adding new run_id to the db: ' + run_id)
+            # TODO should this really be here? Maybe move it to its own file?
+            LOGGER.info('Adding new run_id to the db: {0}'.format(run_id))
             connection.execute(
                 RUN.insert(),
                 run_id=run_id)
@@ -78,8 +79,11 @@ def update_cube_table(connection, cube_file, run_id):
                 declin=data[1],
                 freq=data[2],
                 run_id=run_id)
+
+            LOGGER.info('Cube successfully registered as {0}'.format(filename))
         else:
             # The cube is registered already
+            LOGGER.info('Cube already registered')
             transaction.rollback()
             return 1
 
@@ -108,7 +112,7 @@ def update_parameter_files(run_id, connection, parameter_file):
         result = check.fetchone()
 
         if not result:
-            LOGGER.info('Adding new parameter file to the db: ' + parameter_file)
+            #LOGGER.info('Adding new parameter file to the db: ' + parameter_file)
             connection.execute(
                 PARAMETER_FILE.insert(),
                 run_id=run_id,
@@ -119,7 +123,7 @@ def update_parameter_files(run_id, connection, parameter_file):
             return
 
     except Exception:
-        LOGGER.error('Database issue when setting range values', exc_info=True)
+        LOGGER.error('Database issue when registering parameter files values', exc_info=True)
         transaction.rollback()
         raise
 

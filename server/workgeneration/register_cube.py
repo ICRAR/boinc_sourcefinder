@@ -45,10 +45,10 @@ LOGGER.info('Cube names are {0}'.format(cubes))
 for cube in cubes:
     # check if it is actually one of the cubes
     if "askap" in cube:
-        LOGGER.info('The file is ' + cube)
+        LOGGER.info('Registering cube {0}'.format(cube))
 
         abs_dir = os.path.abspath('{0}/{1}'.format(WORKING_DIRECTORY, cube))
-        LOGGER.info('Working directory is {0}'.format(abs_dir))
+        #LOGGER.info('Working directory is {0}'.format(abs_dir))
 
         check = update_cube_table(connection, abs_dir, RUN_ID)
 
@@ -56,13 +56,19 @@ for cube in cubes:
             LOGGER.info("{0} already exists in db for run: ".format(cube) + RUN_ID)
 
 # get a list of all the parameter files in the parameter directory
-parameter_list = os.listdir('{0}/parameter_files_{1}'.format(PARAMETER_DIRECTORY, RUN_ID))
-parameter_list.sort()
-LOGGER.info('Parameter names are {0}'.format(parameter_list))
-for param_file in parameter_list:
-    # check if it is actually one of the parameter files
-    if "supercube" in param_file:
-        LOGGER.info('The file is ' + param_file)
-        check = update_parameter_files(RUN_ID, connection, param_file)
+try:
+    params_path = '{0}/parameter_files_{1}'.format(PARAMETER_DIRECTORY, RUN_ID)
+    parameter_list = os.listdir(params_path)
+
+    #parameter_list.sort() No reason so sort this
+    LOGGER.info('Registering parameters in {0} with the database'.format(params_path))
+    for param_file in parameter_list:
+        # check if it is actually one of the parameter files
+        if "supercube" in param_file:
+            #LOGGER.info('The file is ' + param_file)
+            check = update_parameter_files(RUN_ID, connection, param_file)
+except:
+    LOGGER.info('Parameter folder {0} does not exist'.format(params_path))
+
 
 connection.close()
