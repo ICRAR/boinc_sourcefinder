@@ -50,7 +50,11 @@ for cube in cubes:
         abs_dir = os.path.abspath('{0}/{1}'.format(WORKING_DIRECTORY, cube))
         LOGGER.info('Working directory is {0}'.format(abs_dir))
 
-        check = update_cube_table(connection, abs_dir, RUN_ID)
+        filename = os.path.basename(abs_dir)
+        p = filename.find('.')
+        filename = filename[:p]
+
+        check = update_cube_table(connection, filename, RUN_ID)
 
         if check == 1:
             LOGGER.info("{0} already exists in db for run: ".format(cube) + RUN_ID)
