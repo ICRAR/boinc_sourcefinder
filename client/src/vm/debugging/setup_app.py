@@ -19,7 +19,7 @@ filesystem = {'apps': '/home/ec2-user/projects/duchamp/apps/duchamp',
 
 def new_app(app_path):
     # Creating a new app
-    os.mkdir(app_path)
+    # os.mkdir(app_path)
 
     folders = os.listdir(filesystem['app_templates'])
 
