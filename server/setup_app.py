@@ -115,7 +115,14 @@ def update_app(app_path, vm_path):
     # If the database already contained this version, then update_versions wont copy the new VM to the download directory, so we have to copy it now.
 
     if not os.path.exists(download_vm_path):
+        print "VM is missing from download directory, copying..."
         shutil.copy(vm_path, download_vm_path)
+
+        dstatck.push()
+        os.chdir(filesystem['download'])
+
+        os.system('gzip < {0} > {0}.gz'.format(sys.argv[2]))
+        dstatck.pop()
 
 def main():
     app_version_path = os.path.join(filesystem['apps'], sys.argv[1])  # This should be the app version

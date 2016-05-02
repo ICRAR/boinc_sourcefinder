@@ -124,10 +124,10 @@ else:
             shutil.copyfile(param_abs_path + '.tar.gz', param_download_dir)
 
             # create the workunit
-            file_list = [wu_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
+            file_list = [wu_file+'tar.gz', 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
             print file_list
             #  convert workunit to the list. Strip off the .tar.gz part of the work unit name.
-            create_workunit('duchamp', wu_file[:-8], file_list)
+            create_workunit('duchamp', wu_file, file_list)
 
             connection.execute(CUBE.update().where(CUBE.c.cube_id == row[1]).values(progress=1))
 
