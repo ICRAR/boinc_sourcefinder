@@ -99,7 +99,7 @@ else:
     else:
         registered = connection.execute(select([CUBE.c.cube_name, CUBE.c.cube_id]).where(CUBE.c.progress == 0 and CUBE.c.run_id == RUN_ID))
 
-        for row in registered:  # get all workunits from wu directory
+        for row in registered:
 
             wu_abs_path = get_cube_path(row[0])
             string = row[0].rpartition('/')[-1]  # get rid of path names
@@ -108,13 +108,13 @@ else:
             LOGGER.info('current wu is {0}'.format(wu_file))
 
             # Get the download directory
-            wu_download_dir = convert_file_to_wu(wu_file, download_directory, fanout)
+            wu_download_dir = convert_file_to_wu(wu_abs_path, download_directory, fanout)
             LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
 
             LOGGER.info('wu path is {0}'.format(wu_abs_path))
 
             # Copy work unit from its current path to the download dir
-            shutil.copyfile(wu_abs_path, wu_download_dir)
+            shutil.copyfile(wu_abs_path, os.path.join(wu_download_dir, wu_file+'.tar.gz'))
 
             # Don't use the param abs path here as this is making a download dir
             param_download_dir = convert_file_to_wu('parameter_files_{0}.tar.gz'.format(RUN_ID), download_directory, fanout)
@@ -124,7 +124,7 @@ else:
             shutil.copyfile(param_abs_path + '.tar.gz', param_download_dir)
 
             # create the workunit
-            file_list = [wu_file+'.tar.gz', 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
+            file_list = [wu_abs_path, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
             print file_list
             #  convert workunit to the list. Strip off the .tar.gz part of the work unit name.
             create_workunit('duchamp', wu_file, file_list)
