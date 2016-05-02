@@ -6,6 +6,13 @@ from time import sleep
 
 
 class DirStack:
+    """
+    DitStack is a simple helper class that allows the user to push directories on to the stack then
+    pop them off later. If you want to change the working directory of the program, use stack.push() then
+    os.chdir(dir).
+    Later, to restore the previous directory, use stack.pop()
+    """
+
     def __init__(self):
         self.stack = []
 
@@ -70,9 +77,9 @@ def update_app(app_path, vm_path):
 
         folder = os.path.join(app_path, folder)
 
-        print "Making link between {0} and {1}".format(vm_path, folder)
+        print "Making link between {0} and {1}".format(vm_path, os.path.join(folder, sys.argv[2]))
 
-        if os.path.islink(os.path.join(folder, sys.argv[2])):
+        if os.path.exists(os.path.join(folder, sys.argv[2])):
             os.unlink(os.path.join(folder, sys.argv[2]))
 
         os.link(vm_path, os.path.join(folder, sys.argv[2]))
