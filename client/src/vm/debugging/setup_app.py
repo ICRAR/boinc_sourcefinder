@@ -34,11 +34,12 @@ def new_app(app_path):
         shutil.copytree(os.path.join(filesystem['app_templates'], folder), os.path.join(app_path, folder))
 
     folders = os.listdir(app_path)  # This should now contain all of the app platform folders
-    base_template_folders = os.listdir(os.path.join(filesystem['app_templates'], 'base_template'))
+    base_template = os.path.join(filesystem['app_templates'], 'base_template')
+    base_template_folders = os.listdir(base_template)
 
     for folder in folders:
         for f in base_template_folders:
-            shutil.copy(f, folder)  # Copy each of the files in the base_template in to each of the newly made platform path.
+            shutil.copy(os.path.join(base_template, f), os.path.join(app_path, folder)  # Copy each of the files in the base_template in to each of the newly made platform path.
 
 
 def update_app(app_path, vm_path):
