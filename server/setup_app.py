@@ -3,14 +3,9 @@
 import os, sys, shutil, subprocess
 from subprocess import Popen, PIPE
 from time import sleep
-from sqlalchemy import create_engine
 
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
-
-from config import BOINC_DB_LOGIN
-
-ENGINE = create_engine(BOINC_DB_LOGIN)
 
 class DirStack:
     """
