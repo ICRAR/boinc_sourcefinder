@@ -70,12 +70,12 @@ def update_app(app_path, vm_path):
 
         folder = os.path.join(app_path, folder)
 
-        print "Copying new VM from {0} to {1}".format(vm_path, folder)
+        print "Making link between {0} and {1}".format(vm_path, folder)
 
-        if os.path.exists(os.path.join(folder, sys.argv[2])):
-            os.remove(os.path.join(folder, sys.argv[2]))
+        if os.path.islink(os.path.join(folder, sys.argv[2])):
+            os.unlink(os.path.join(folder, sys.argv[2]))
 
-        shutil.copy(vm_path, folder)
+        os.link(vm_path, os.path.join(folder, sys.argv[2]))
 
         # Sign it
         sign_file = os.path.join(folder, sys.argv[2]+'.sig')
