@@ -3,14 +3,36 @@ __author__ = '21298244'
 # Helper file for the work generator
 
 import hashlib
-import os
+import os, sys
 
 import py_boinc
 from utils.logging_helper import config_logger
 
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+
+from config import  DIR_CUBE
+
+
 LOGGER = config_logger(__name__)
 LOGGER.info("work_generator_mod.py")
 
+
+def get_cube_path(cube_name):
+    """
+    Returns a path to a cube.fits.gz file from the cube's name.
+    :param cube_name: Name of the cube
+    :return: the path to the cube, or None if it couldn't be found
+    """
+
+    if not os.path.isdir(DIR_CUBE):
+        return None
+
+    for item in os.listdir(DIR_CUBE):
+        if item.startswith(cube_name):
+            return os.path.join(DIR_CUBE, item)
+
+    return None
 
 def convert_file_to_wu(wu_filename, download_dir, fanout):
     # Kevins code for hashing the download directory

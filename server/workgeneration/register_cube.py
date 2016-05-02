@@ -40,7 +40,7 @@ os.system('gzip {0}/*'.format(WORKING_DIRECTORY))
 # get a list of the cubes to be registered
 cubes = os.listdir(WORKING_DIRECTORY)  # list of cubes in the current run
 cubes.sort()
-LOGGER.info('Cube names are {0}'.format(cubes))
+#LOGGER.info('Cube names are {0}'.format(cubes))
 
 for cube in cubes:
     # check if it is actually one of the cubes
