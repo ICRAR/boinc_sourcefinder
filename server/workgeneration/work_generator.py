@@ -127,8 +127,8 @@ else:
             file_list = [wu_abs_path, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
             print file_list
             #  convert workunit to the list. Strip off the .tar.gz part of the work unit name.
-            create_workunit('duchamp', wu_file, file_list)
 
-            connection.execute(CUBE.update().where(CUBE.c.cube_id == row[1]).values(progress=1))
+            if create_workunit('duchamp', wu_file, file_list):
+                connection.execute(CUBE.update().where(CUBE.c.cube_id == row[1]).values(progress=1))
 
     py_boinc.boinc_db_close()

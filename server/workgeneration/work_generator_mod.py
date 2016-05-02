@@ -77,6 +77,8 @@ def create_workunit(appname, wu_name, input_file_list):
     if retval != 0:
         py_boinc.boinc_db_transaction_rollback()
         LOGGER.info('Error writing to boinc database. boinc_create_work return value = {0}'.format(retval))
+        return False
     else:
         LOGGER.info('completed create work request')
         py_boinc.boinc_db_transaction_commit()
+        return True
