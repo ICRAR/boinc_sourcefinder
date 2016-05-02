@@ -19,7 +19,7 @@ filesystem = {'apps': '/home/ec2-user/projects/duchamp/apps/duchamp',
 
 def new_app(app_path):
     # Creating a new app
-    # os.mkdir(app_path)
+    os.mkdir(app_path)
 
     folders = os.listdir(filesystem['app_templates'])
 
@@ -48,6 +48,7 @@ def update_app(app_path, vm_path):
     # Each of the platform paths found in the app folder
     for folder in folders:
         # Copy the vm in
+        folder = os.path.join(app_path, folder)
         if os.path.exists(os.path.join(folder, sys.argv[2])):
             os.remove(os.path.join(folder, sys.argv[2]))
 
