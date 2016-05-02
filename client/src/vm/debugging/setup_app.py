@@ -39,7 +39,7 @@ def new_app(app_path):
 
     for folder in folders:
         for f in base_template_folders:
-            shutil.copy(os.path.join(base_template, f), os.path.join(app_path, folder)  # Copy each of the files in the base_template in to each of the newly made platform path.
+            shutil.copy(os.path.join(base_template, f), os.path.join(app_path, folder))  # Copy each of the files in the base_template in to each of the newly made platform path.
 
 
 def update_app(app_path, vm_path):
