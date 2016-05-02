@@ -28,7 +28,7 @@ def new_app(app_path):
             continue  # We'll get to this later
 
         # Copy this folder in to the new app directory.
-        shutil.copytree(os.path.join(filesystem['app_templates'], folder), app_path+'/')
+        shutil.copytree(os.path.join(filesystem['app_templates'], folder), os.path.join(app_path, folder))
 
     folders = os.listdir(app_path)  # This should now contain all of the app platform folders
     base_template_folders = os.listdir(os.path.join(filesystem['app_templates'], 'base_template'))
