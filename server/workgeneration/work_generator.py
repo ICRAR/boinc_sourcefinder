@@ -108,13 +108,13 @@ else:
             LOGGER.info('current wu is {0}'.format(wu_file))
 
             # Get the download directory
-            wu_download_dir = convert_file_to_wu(wu_abs_path, download_directory, fanout)
+            wu_download_dir = convert_file_to_wu(wu_file+'.gz', download_directory, fanout)
             LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
 
             LOGGER.info('wu path is {0}'.format(wu_abs_path))
 
             # Copy work unit from its current path to the download dir
-            shutil.copyfile(wu_abs_path, os.path.join(wu_download_dir, wu_file+'.tar.gz'))
+            shutil.copyfile(wu_abs_path, os.path.join(wu_download_dir))
 
             # Don't use the param abs path here as this is making a download dir
             param_download_dir = convert_file_to_wu('parameter_files_{0}.tar.gz'.format(RUN_ID), download_directory, fanout)
