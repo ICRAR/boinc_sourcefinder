@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 # Arg1 the app version to update
 # Arg2 path to the VM to set up
 
-filesystem = {'apps': '/home/ec2-user/projects/duchamp/apps/',
+filesystem = {'apps': '/home/ec2-user/projects/duchamp/apps/duchamp',
               'app_templates': '/home/ec2-user/projects/duchamp/app_templates/',
               'vms': '/home/ec2-user/projects/duchamp/vm/',
               'sign_executable': '/home/ec2-user/projects/duchamp/bin/sign_executable',
@@ -28,7 +28,7 @@ def new_app(app_path):
             continue  # We'll get to this later
 
         # Copy this folder in to the new app directory.
-        shutil.copytree(os.path.join(filesystem['app_templates'], folder), app_path)
+        shutil.copytree(os.path.join(filesystem['app_templates'], folder), app_path+'/')
 
     folders = os.listdir(app_path)  # This should now contain all of the app platform folders
     base_template_folders = os.listdir(os.path.join(filesystem['app_templates'], 'base_template'))
