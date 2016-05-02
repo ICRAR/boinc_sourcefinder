@@ -13,7 +13,8 @@ filesystem = {'apps': '/home/ec2-user/projects/duchamp/apps/duchamp',
               'sign_executable': '/home/ec2-user/projects/duchamp/bin/sign_executable',
               'update_versions': '/home/ec2-user/projects/duchamp/bin/update_versions',
               'keys': '/home/ec2-user/projects/duchamp/keys/',
-              'download': '/home/ec2-user/projects/duchamp/download/'
+              'download': '/home/ec2-user/projects/duchamp/download/',
+              'project': '/home/ec2-user/projects/duchamp/'
 }
 
 
