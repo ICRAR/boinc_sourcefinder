@@ -1,9 +1,16 @@
 # This is for setting up the VM client app on the boinc server.
 
 import os, sys, shutil, subprocess
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE
 from time import sleep
+from sqlalchemy import create_engine
 
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+
+from config import BOINC_DB_LOGIN
+
+ENGINE = create_engine(BOINC_DB_LOGIN)
 
 class DirStack:
     """
@@ -109,6 +116,11 @@ def update_app(app_path, vm_path):
     p.communicate(input='y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n')  # Emulates the user going y enter y enter y enter for all of the 'do you want to add this version' prompts
 
     dstatck.pop()
+
+    # If the database already contained this version, then update_versions wont copy the new VM to the download directory, so we have to copy it now.
+
+    if not os.path.exists(download_vm_path):
+        shutil.copy(vm_path, download_vm_path)
 
 def main():
     app_version_path = os.path.join(filesystem['apps'], sys.argv[1])  # This should be the app version
