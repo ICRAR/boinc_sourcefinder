@@ -2,7 +2,7 @@
 
 import os, sys, shutil, subprocess
 from subprocess import Popen, PIPE, STDOUT
-from sqlalchemy import create_engine
+from time import sleep
 
 # Arg1 the app version to update
 # Arg2 path to the VM to set up
@@ -28,6 +28,9 @@ def new_app(app_path):
             continue  # We'll get to this later
 
         # Copy this folder in to the new app directory.
+        print os.path.join(filesystem['app_templates'], folder)
+        print os.path.join(app_path, folder)
+        sleep(5)
         shutil.copytree(os.path.join(filesystem['app_templates'], folder), os.path.join(app_path, folder))
 
     folders = os.listdir(app_path)  # This should now contain all of the app platform folders
