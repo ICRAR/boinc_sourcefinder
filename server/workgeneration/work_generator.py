@@ -19,7 +19,7 @@ import py_boinc
 from database.boinc_database_support import RESULT
 from Boinc import configxml
 from database.database_support import CUBE
-from work_generator_mod import convert_file_to_wu, create_workunit
+from work_generator_mod import convert_file_to_wu, create_workunit, get_cube_path
 
 LOGGER = config_logger(__name__)
 LOGGER.info('Starting work generation')
@@ -101,7 +101,7 @@ else:
 
         for row in registered:  # get all workunits from wu directory
 
-            wu_abs_path = row[0]
+            wu_abs_path = get_cube_path(row[0])
             string = row[0].rpartition('/')[-1]  # get rid of path names
             wu_file = '{0}_{1}'.format(RUN_ID, string)
 
