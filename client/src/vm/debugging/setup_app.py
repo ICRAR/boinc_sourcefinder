@@ -4,6 +4,17 @@ import os, sys, shutil, subprocess
 from subprocess import Popen, PIPE, STDOUT
 from time import sleep
 
+
+class DirStack:
+    def __init__(self):
+        self.stack = []
+
+    def push(self):
+        self.stack.append(os.getcwd())
+
+    def pop(self):
+        os.chdir(self.stack.pop())
+
 # Arg1 the app version to update
 # Arg2 path to the VM to set up
 
@@ -47,6 +58,8 @@ def new_app(app_path):
 def update_app(app_path, vm_path):
     # Updating an app
 
+    dstatck = DirStack()
+
     # We assume that the app folder has already been set up correctly
 
     folders = os.listdir(app_path)
@@ -82,9 +95,13 @@ def update_app(app_path, vm_path):
     if os.path.exists(download_vm_path + '.gz'):
         os.remove(download_vm_path + '.gz')
 
+    dstatck.push()
+    os.chdir(filesystem['project'])
+
     p = Popen([filesystem['update_versions']], stdin=PIPE)
     p.communicate(input='y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n')  # Emulates the user going y enter y enter y enter for all of the 'do you want to add this version' prompts
 
+    dstatck.pop()
 
 def main():
     app_version_path = os.path.join(filesystem['apps'], sys.argv[1])  # This should be the app version
