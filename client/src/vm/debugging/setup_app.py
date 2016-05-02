@@ -65,6 +65,7 @@ def update_app(app_path, vm_path):
 
         # Sign it
         sign_file = os.path.join(folder, sys.argv[2]+'.sig')
+        print "Signing new vm in to {0}".format(sign_file)
 
         with open(sign_file, 'w') as f:
 
