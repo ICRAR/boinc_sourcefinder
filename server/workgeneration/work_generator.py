@@ -124,7 +124,7 @@ else:
             shutil.copyfile(param_abs_path + '.tar.gz', param_download_dir)
 
             # create the workunit
-            file_list = [wu_abs_path, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
+            file_list = [wu_file+'.gz', 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
             print file_list
             #  convert workunit to the list. Strip off the .tar.gz part of the work unit name.
 
