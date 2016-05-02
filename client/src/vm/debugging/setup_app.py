@@ -53,14 +53,18 @@ def update_app(app_path, vm_path):
     # Each of the platform paths found in the app folder
     for folder in folders:
         # Copy the vm in
+
         folder = os.path.join(app_path, folder)
+
+        print "Copying new VM from {0} to {1}".format(vm_path, folder)
+
         if os.path.exists(os.path.join(folder, sys.argv[2])):
             os.remove(os.path.join(folder, sys.argv[2]))
 
         shutil.copy(vm_path, folder)
 
         # Sign it
-        sign_file = os.path.join(folder, sys.argv[2])
+        sign_file = os.path.join(folder, sys.argv[2]+'.sig')
 
         with open(sign_file, 'w') as f:
 
