@@ -92,8 +92,9 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             tar.extractall(path)
             tar.close()
 
+        outputs = path + "/outputs"
         # CSV file should exist, confirm this
-        fs = os.listdir(path)
+        fs = os.listdir(outputs)
         file_to_use = None
         hashfile = None
 
@@ -111,11 +112,14 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             return 0
 
-        # Confirm the CSV MD5 here
-        if not self.hash_filecheck(file_to_use, hashfile):
-            self.logCritical('Hash file check failed on work unit {0}\n'.format(wu.id))
-            self.logCritical('Continuing anyway...\n')
-            # exit? I'm not sure.
+        if hashfile is None:
+            self.logCritical("Wu is missing hash file\n")
+        else:
+            # Confirm the CSV MD5 here
+            if not self.hash_filecheck(file_to_use, hashfile):
+                self.logCritical('Hash file check failed on work unit {0}\n'.format(wu.id))
+                self.logCritical('Continuing anyway...\n')
+                # exit? I'm not sure.
 
         # The CSV is there, final check is that it contains the correct header (first row) that we want
 
