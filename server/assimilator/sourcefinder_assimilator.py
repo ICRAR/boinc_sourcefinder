@@ -101,8 +101,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         for f in fs:
             if f.endswith('.csv'):
                 file_to_use = f
+                os.path.join(outputs, file_to_use)
             if f.lower().endswith('.md5'):
                 hashfile = f
+                os.path.join(outputs, hashfile)
 
         if file_to_use is None:
             self.logCritical('Client uploaded a WU file, but it does not contain the required CSV file. Cannot assimilate.\n')
