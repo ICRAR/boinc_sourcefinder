@@ -211,7 +211,7 @@ class Assimilator():
         are parsed as their true types, so integers will be ints,
         not strings.
         """
-
+        self.logCritical("{0}".format(args))
         args.reverse()
         while len(args):
             arg = args.pop()
