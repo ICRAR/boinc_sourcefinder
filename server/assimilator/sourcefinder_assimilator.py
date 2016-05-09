@@ -44,7 +44,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         with open(hashfile, 'r') as f:
             hash_from_file = f.readline()
 
-        self.logNormal('Hash comparison {0} == {1}'.format(hash, hash_from_file))
+        self.logNormal('Hash comparison {0} == {1}\n'.format(hash, hash_from_file))
 
         return hash == hash_from_file
 
@@ -101,8 +101,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                 hashfile = f
 
         if file_to_use is None:
-            self.logCritical('Client uploaded a WU file, but it does not contain the required CSV file. Cannot assimilate.')
-            self.logDebug('The following files were included: ')
+            self.logCritical('Client uploaded a WU file, but it does not contain the required CSV file. Cannot assimilate.\n')
+            self.logDebug('The following files were included: \n')
             for f in fs:
                 self.logDebug('{0}'.format(f))
 
@@ -110,8 +110,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         # Confirm the CSV MD5 here
         if not self.hash_filecheck(file_to_use, hashfile):
-            self.logCritical('Hash file check failed on work unit {0}'.format(wu.id))
-            self.logCritical('Continuing anyway...')
+            self.logCritical('Hash file check failed on work unit {0}\n'.format(wu.id))
+            self.logCritical('Continuing anyway...\n')
             # exit? I'm not sure.
 
         # The CSV is there, final check is that it contains the correct header (first row) that we want
@@ -122,7 +122,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             for i in range(0, len(headers)):
                 if headers[i].strip() != csv_valid_header[i]:
-                    self.logCritical('Received CSV is in the wrong format. Field {0}: {1} does not match {2}'.format(i, headers[i], csv_valid_header[i]))
+                    self.logCritical('Received CSV is in the wrong format. Field {0}: {1} does not match {2}\n'.format(i, headers[i], csv_valid_header[i]))
                     return 0
 
             # CSV is good from here
@@ -140,7 +140,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             try:
                 run_id = int(wu.name[0])
             except ValueError:
-                self.logCritical('Malformed WU name {0}'.format(wu.name))
+                self.logCritical('Malformed WU name {0}\n'.format(wu.name))
                 return 0
 
             cube_name = wu.name[2:]
@@ -173,14 +173,14 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                             Nspatpix=row['Nspatpix']
                     )
                 except ValueError:
-                    self.logCritical('Malformed CSV. Parameter number for row {0} is invalid'.format(rowcount))
+                    self.logCritical('Malformed CSV. Parameter number for row {0} is invalid\n'.format(rowcount))
                 except csv.Error as e:
-                    self.logCritical('Malformed CSV. Error on line {0}: {1}'.format(csv_reader.line_num, e))
+                    self.logCritical('Malformed CSV. Error on line {0}: {1}\n'.format(csv_reader.line_num, e))
                 except:
-                    self.logCritical('Undefined error occurred while attempting to load CSV.')
+                    self.logCritical('Undefined error occurred while attempting to load CSV.\n')
             transaction.commit()
 
-            self.logNormal('Successfully loaded work unit {0} in to the database'.format(wu.name))
+            self.logNormal('Successfully loaded work unit {0} in to the database\n'.format(wu.name))
 
             # Here is where we'd copy the CSV in an S3 bucket
 
