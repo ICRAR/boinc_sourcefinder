@@ -153,7 +153,7 @@ class Assimilator():
 
         units = database.Workunits.find(app=app, assimilate_state=boinc_db.ASSIMILATE_READY)
 
-        self.logDebug("pass %d, units %d\n", self.pass_count, len(units))
+        self.logNormal("pass %d, units %d\n", self.pass_count, len(units))
 
         # look for workunits with correct appid and
         # assimilate_state==ASSIMILATE_READY
