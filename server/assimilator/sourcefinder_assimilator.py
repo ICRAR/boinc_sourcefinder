@@ -69,7 +69,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         if os.path.isfile(out_file):
             self.logNormal('WU file at {0}\n'.format(out_file))
         else:
-            self.logCritical('WU file does exist\n')
+            self.logCritical('WU file doesnt exist\n')
             return 0
 
         self.connection = ENGINE.connect()
@@ -101,10 +101,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         for f in fs:
             if f.endswith('.csv'):
                 file_to_use = f
-                os.path.join(outputs, file_to_use)
+                file_to_use = os.path.join(outputs, file_to_use)
             if f.lower().endswith('.md5'):
                 hashfile = f
-                os.path.join(outputs, hashfile)
+                hashfile = os.path.join(outputs, hashfile)
 
         if file_to_use is None:
             self.logCritical('Client uploaded a WU file, but it does not contain the required CSV file. Cannot assimilate.\n')
