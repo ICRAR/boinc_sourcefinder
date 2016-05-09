@@ -266,7 +266,7 @@ class Assimilator():
                 workdone = self.do_pass(app)
                 database.close()
                 if not workdone:
-                    self.logDebug("Sleeping for {0}").format(self.sleep_interval)
+                    self.logDebug("Sleeping for {0}".format(self.sleep_interval))
                     time.sleep(self.sleep_interval)
 
     def _writeLog(self, mode, *args):
