@@ -6,7 +6,7 @@ import sys
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../..')))
-sys.path.append(os.path.abspath(os.path.join('/home/ec2-user/boinc_sourcefinder/server')))
+sys.path.append('/home/ec2-user/boinc_sourcefinder/server')
 
 from utils.logging_helper import config_logger
 from config import DB_LOGIN
