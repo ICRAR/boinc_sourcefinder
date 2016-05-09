@@ -32,33 +32,36 @@ fi
 echo -- Launching Application
 if [ -f /root/run_duchamp.py ]; then
     echo -- in /root directory | vboxmonitor
-    mkdir -p /root/worker
-    cp -r /root/shared/* /root/worker
-    echo --- Application has been moved the the worker directory | vboxmonitor
+    mkdir -p /root/shared/worker # input files are copied in here and duchamp is run from worker/parameter_files_X
+    mkdir -p /root/shared/log # log file is written to in here
+    mkdir -p /root/shared/outputs # output files put here
+    #cp -r /root/shared/*.gz /root/shared/worker # move the tar.gz input files in to the worker directory
+    #echo --- Application has been moved the the worker directory | vboxmonitor
     #sleep 2
-    cd /root/
-    echo -- in Worker directory | vboxmonitor
-    #sleep 2
-    python run_duchamp.py | vboxmonitor
+    cd /root/shared/worker
+    echo -- About to execute run_duchamp.py | vboxmonitor
+    sleep 2
+    python /root/run_duchamp.py | vboxmonitor
 	# process ended, but did it actually fully complete?
     if [ -f /root/completed ]; then
         cd /root
-        cp -r worker/* shared/
-        rm -rf /root/worker
-        cp data_retrieval.py shared/outputs
-        cd shared/outputs
-        python data_retrieval.py | vboxmonitor
+        rm -rf /root/shared/worker
+        # This is done in python code now md5sum /root/shared/outputs/data_collection.csv > /root/shared/outputs/md5check.txt
+        cp /root/shared/log/Log.txt /root/shared/outputs
         cd /root/shared
-        md5sum final_output.txt > md5check.txt
-        tar -cvzf outputs.tar.gz outputs/data_collection.csv
+        tar -cvzf outputs.tar.gz outputs/data_collection.csv outputs/hash.md5 outputs/Log.txt
         echo --- output directory has been zipped! | vboxmonitor
-        #sleep  5
+        echo --- Removing everything unneeded | vboxmonitor
+        sleep 5
+        ls | grep -v outputs.tar.gz | xargs rm -rf
         echo --- Everything has gone according to plan | vboxmonitor
-        #sleep 5
+        sleep 5
         shutdown -hP 0
     else
 	# process did not fully complete, just restart at our checkpoint again later
         echo ---VM suspend or shutdown, continuing later.. | vboxmonitor
+        sleep 5
+        shutdown -hP 0
     fi
 else
        echo ---- Failed to launch script | vboxmonitor

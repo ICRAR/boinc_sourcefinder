@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
 class DirStack:
     """
-    DitStack is a simple helper class that allows the user to push directories on to the stack then
+    DirStack is a simple helper class that allows the user to push directories on to the stack then
     pop them off later. If you want to change the working directory of the program, use stack.push() then
     os.chdir(dir).
     Later, to restore the previous directory, use stack.pop()

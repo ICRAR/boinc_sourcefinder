@@ -134,6 +134,7 @@ class Assimilator():
         if wu.error_mask & boinc_db.WU_ERROR_TOO_MANY_SUCCESS_RESULTS:
             self.logCritical("[%s] Error: too many success results\n", wu.name)
             return True
+
         return False
 
     def do_pass(self, app):

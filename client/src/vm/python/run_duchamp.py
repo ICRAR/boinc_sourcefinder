@@ -1,193 +1,447 @@
 # Python script to run duchamp on a fits file with multiple parameter files
 import os
+from os.path import join
 import shutil
 import subprocess
 import tarfile
-# import time
-import cPickle as p
+import time
+import logging
+import hashlib
 
-wu_input = None
-wu_params = None
-num_params = 0
-input_files = os.listdir('worker/.')
-progress_file_name = '/root/progress'
-complete_marker = '/root/completed'
+file_system = {
+    'worker': '/root/shared/worker',
+    'shared': '/root/shared/',
+    'outputs': '/root/shared/outputs',
+    'completed_marker': '/root/completed',
+    'log_file': '/root/shared/log/Log.txt'
+}
+
+# We now write logs to a log file that is visible for the client (helps a lot with debugging)
+logging.basicConfig(filename=file_system['log_file'], level=logging.INFO)
+
+# **Some utilities here are from the server, but the client acts as a standalone file so it doesn't have access to the
+#   server's utilities file**
+
+# Utilities---------------------------------------------------
+
+class DirStack:
+    """
+    DirStack is a simple helper class that allows the user to push directories on to the stack then
+    pop them off later. If you want to change the working directory of the program, use stack.push() then
+    os.chdir(dir).
+    Later, to restore the previous directory, use stack.pop()
+    """
+
+    def __init__(self):
+        self.stack = []
+
+    def push(self):
+        self.stack.append(os.getcwd())
+
+    def pop(self):
+        os.chdir(self.stack.pop())
 
 
-def progress_file_exists():
-    return os.path.isfile(progress_file_name)
+def static_vars(**kwargs):
+    def decorate(func):
+        for k in kwargs:
+            setattr(func, k, kwargs[k])
+        return func
+    return decorate
 
 
-def read_progress_file():
+@static_vars(folder=None)
+def parameter_folder():
+    """
+    Search for the parameter folder and return the absolute path to it.
+    :return: Absolute path to the parameter folder
+    """
 
-    global wu_input, wu_params, num_params
+    if parameter_folder.folder is not None: # Our static has already been set, so return it
+        return parameter_folder.folder
 
-    with open(progress_file_name) as f:
-        progress = p.load(f)
-        wu_input = p.load(f)
-        wu_params = p.load(f)
-        num_params = p.load(f)
+    # Parameter folder should be in the worker directory
 
-    return progress
+    files = os.listdir(file_system['worker'])
+
+    for f in files:
+        if f.startswith('parameter_files'):
+            parameter_folder.folder = f
+            return f
+
+    return None
+
+@static_vars(folder=None)
+def input_file():
+    """
+    Search for the input file and return an absolute path to it
+    :return: Absolute path to the input file
+    """
+
+    # Input file should be in the worker/parameter_files directory
+
+    # First, does the parameter folder exist?
+
+    params = parameter_folder()
+
+    if not params:
+        return None
+    else:
+
+        if input_file.folder is not None: # Our static has already been set, so return it
+            return input_file.folder
+
+        files = os.listdir(params)
+
+        for f in files:
+            if f.startswith('input.fits'):
+                input_file.folder = f
+                return f
+
+        return None
 
 
-def write_progress_file(progress):
-    with open(progress_file_name, 'w') as f:
-        p.dump(progress, f, p.HIGHEST_PROTOCOL)
-        p.dump(wu_input, f, p.HIGHEST_PROTOCOL)
-        p.dump(wu_params, f, p.HIGHEST_PROTOCOL)
-        p.dump(num_params, f, p.HIGHEST_PROTOCOL)
+
+def parameter_number(f):
+    """
+    Gets the parameter number from a parameter file.
+    :param f: The file to obtain the number from
+    :return: The parameter number of that file
+    """
+
+    # File name is like supercube_run_00001.par
+
+    dot = f.find('.')
+    last_ = f.rfind('_') + 1  # Need +1 to ignore the underscore
+
+    # Substring from the last underscore in the name to the dot (this should be the number)
+
+    return int(f[last_:dot])
 
 
 def write_complete_marker():
-    with open(complete_marker, 'w') as f:
+    """
+    Creates a file to notify the external bash script running us that we've completed successfully.
+    :return: nil
+    """
+    with open(file_system['completed_marker'], 'w') as f:
         f.write('Done')
+
+# Utilities end---------------------------------------------------
+
+def check_files_unzipped():
+    """
+    Have the files we use for running duchamp already been unzipped?
+    This should include an input.fits file and a folder of parameters.
+
+    Note - this does not confirm whether all parameter files in the parameter files zip folder exist, just whether
+    the parameter files folder has been created.
+
+    :return: True,True if both are found, True,False if input is found, but not parameters, False,True if parameters
+    are found, but not input, False,False if neither are found.
+    """
+
+    # Look in worker director, is there input.fits and parameter_files_X in there?
+
+    worker_list = os.listdir(file_system['worker'])
+    input_found = False
+    parameters_found = False
+
+    for f in worker_list:
+
+        if f.endswith('input.fits'):
+            # We have the input file.
+            input_found = True
+
+        if f.startswith('parameter_files'):
+            # We have the parameter files
+            parameters_found = True
+
+    return input_found, parameters_found
+
+
+def last_completed():
+    """
+    Search through the parameter_files_(run_ID) folder and find the latest (highest number) for any duchamp output files that exist
+    :return: number of the last processed parameter file.
+    """
+
+    # Number of files that start with duchamp-output
+    return len([f for f in os.listdir(join(file_system['worker'], parameter_folder())) if f.startswith('duchamp-output')])
 
 
 def main():
-    # We do work in this directory
-    print 'Staring...'
-    os.chdir('worker')
 
-    # Don't keep unzipping
-    progress_point = 0
-    if not progress_file_exists():
-        print 'Unzipping files'
+    good = False
+
+    try:
+        logging.info('Staring...')
+
+        # Decompress all of the files needed to run duchamp.
+        # If already decompressed, does nothing.
         unzip_files()
-        write_progress_file(0)  # Write to say we've unzipped the files
-    else:
-        print 'Resuming from previous point'
-        progress_point = read_progress_file()
 
-    run_duchamp(progress_point)
+        # Runs duchamp on the decompressed files.
 
-    output_directory = 'outputs'
-    move_outputs(output_directory)
-    append(output_directory)
-    write_complete_marker()  # This tells the bash script that we actually finished and it should finish too
+        while not good:
+            run_duchamp(remaining_files())
+
+            # Moves all of the output files in to the output directory
+            move_outputs(file_system['outputs'])
+
+            # When this returns true, we're good to go past this
+            good = check_and_build_output(file_system['outputs'])
+
+        write_complete_marker()  # This tells the bash script that we actually finished and it should finish too
+
+        logging.info('All done!')
+    except:
+        logging.exception('An exception occurred when trying to run')
 
 
 # This function assumes we're in the worker directory
 def unzip_files():
-    print(os.listdir('.'))
-    for wu_file in input_files:
-        print wu_file
-        if "fits" in wu_file:  # This is a workunit file
-            output = subprocess.call(['gunzip', wu_file])
-            print output
-            print wu_file
-            global wu_input
-            wu_input = wu_file[:-3]
-            # os.system('gunzip {0}'.format(wu_file))
+    """
+    Decompresses all of the files required to run duchamp. This includes the parameters directory and the input file.
+    :return:
+    """
 
-        elif wu_file.endswith("tar.gz"):  # This is a parameter folder
+    dirstack = DirStack()
+    inputs, params = check_files_unzipped()
+
+    if inputs and params:
+        logging.info('No need to unzip anything')
+        return  # We have everything already in place.
+
+    # Input files, by default, are put in the shared directory.
+    input_files = os.listdir(file_system['shared'])
+
+    logging.info("Unzipping files...")
+    logging.info(input_files)
+
+    for wu_file in input_files:
+        if "fits" in wu_file and not inputs:  # This is a workunit file
+
+            logging.info("Decompressing input fits file...")
+            # Copy the file in to the worker directory
+            shutil.copy(join(file_system['shared'], wu_file), file_system['worker'])
+
+            dirstack.push()
+
+            os.chdir(file_system['worker'])
+            subprocess.call(['gunzip', wu_file])
+
+            dirstack.pop()
+
+            # Not needed, gunzip does this automatically
+            # Rename the file to 'input.fits'.
+            # new_filename = join(file_system['worker'], 'input.fits')
+
+            # logging.info("Renaming input fits file from {0} to {1}".format(wu_file[:-3], new_filename))
+
+            # shutil.move(wu_file[:-3], new_filename)
+
+        elif wu_file.endswith("tar.gz") and not params:  # This is a parameter folder
+
+            logging.info("Decompressing parameter files...")
+
+            # Copy the file in to the worker directory
+            shutil.copy(join(file_system['shared'], wu_file), file_system['worker'])
+
+            dirstack.push()
+
+            # Extract the tar file in to worker, creating the parameter_files_(run_id) folder
+            os.chdir(file_system['worker'])
             tar = tarfile.open(wu_file)
             tar.extractall()
             tar.close()
             os.remove(wu_file)
-            # directory now consists of two files - uncompressed 'input.fits' file, and a directory that has the name 'parameter_files_(run_id)'
-    new_dir_list = os.listdir('.')
-    for new_dir_name in new_dir_list:
-        if "parameter" in new_dir_name:
-            global wu_params
-            wu_params = new_dir_name
-            #os.remove(wu_params)  # remove the uncompressed file
-            os.chdir(wu_params)
-            global num_params
-            print(os.listdir('.'))
-            #time.sleep(3)
-            num_params = len(os.listdir('.'))
-            os.chdir('../')
+
+            dirstack.pop()
+
+    # worker directory now consists of two files - uncompressed 'input.fits' file, and a directory that has the name 'parameter_files_(run_id)'
+
+    # The params folder has just been built, so we need to move the input.fits file in there now
+    if not params:
+        logging.info("Coping input.fits over to {0}".format(parameter_folder()))
+        shutil.copy(join(file_system['worker'], 'input.fits'), parameter_folder())
 
 
-def run_duchamp(progress_point):
-    print wu_input
-    print wu_params
-    print os.getcwd()
-    shutil.copy(wu_input, "{0}/input.fits".format(wu_params))
-    os.chdir(wu_params)
-    #time.sleep(5)
-    print 'We are in parameters, about to run'
-    #time.sleep(5)
-    # test Duchamp on all the parameter files
+    # Once this function has finished, the directory structure of the program should look like this:
 
-    counter = progress_point
-    print 'Last completed {0}'.format(counter)
-    while counter <= num_params:
-        counter += 1
-        # this one is pointless
-        #if counter == 1:
-        #    filename = 'supercube_run' + '_' + str(counter) + '.par'
-        if counter < 10:
-            filename = 'supercube_run' + '_0000' + str(counter) + '.par'
-        elif counter < 100:
-            filename = 'supercube_run' + '_000' + str(counter) + '.par'
-        elif counter < 1000:
-            filename = 'supercube_run' + '_00' + str(counter) + '.par'
-        elif counter < 10000: # Added just to be complete
-            filename = 'supercube_run' + '_0' + str(counter) + '.par'
-        else:
-            filename = 'supercube_run' + '_' + str(counter) + '.par'
+    # worker -> input.fits
+    # worker -> parameter_files_(run_id)
+    # worker -> parameter_files_(run_id) -> input.fits
+    # worker -> parameter_files_(run_id) -> multiple.par files
 
-        print 'Running duchamp for {0}...'.format(counter)
-        # subprocess.call(['Duchamp', '-p', filename])
-        os.system("Duchamp -p {0} > /dev/null".format(filename))
-        # We just completed something, write the progress file
-        write_progress_file(counter)
-    print 'Duchamp is finished'
+def remaining_files():
+    """
+    Gets a list of the remaining files that duchamp has to run
+    :return: list of filenames for the remaining files that duchamp must run.
+    """
+
+    # Get a list of all of the files we can run. The ones that end in .par and start with supercube
+    files_to_run = [f for f in os.listdir(parameter_folder()) if f.endswith('.par') and f.startswith('supercube')]
+
+    # Look for complete files in the outputs and the parameters directory.
+    files_done = [f for f in os.listdir(file_system['outputs']) if f.endswith('.par') and f.startswith('duchamp')]
+    files_done.extend([f for f in os.listdir(parameter_folder()) if f.endswith('.par') and f.startswith('duchamp')])
+
+    # remove duplicates
+    files_done = set(files_done)
+    # logging.info("Files done: {0}".format(sorted(files_done)))
+
+    still_to_go = []
+    if len(files_to_run) != len(files_done):
+        # Which ones did we miss?
+
+        for input in files_to_run:
+            found = False
+            for output in files_done:
+
+                # Found a match, it's not this one.
+                if parameter_number(input) == parameter_number(output):
+                    found = True
+                    break  # Break here if we find a match
+
+            if not found: # Not found, add to the still to go list
+                still_to_go.append(input)
+
+    # logging.info("Still to go: {0}".format(still_to_go))
+
+    # Sort everything by its parameter number
+    still_to_go.sort(key=lambda param_n: parameter_number(param_n))
+
+    logging.info('Remaining files: {0}'.format(len(still_to_go)))
+
+    return still_to_go
+
+
+def run_duchamp(files_to_run):
+    """
+    Runs duchamp sequentially on the given files.
+
+    :param files_to_run: List of filenames to run on
+    :return:
+    """
+
+    dirstack = DirStack()
+    # If we called unzip_files() we can be sure that everything has been laid out for this function to work.
+    logging.info('Running duchamp...')
+
+    dirstack.push()
+    os.chdir(parameter_folder())
+
+    for run in files_to_run:
+
+        logging.info('Running duchamp for {0}...'.format(run))
+        start = time.time()
+        subprocess.call(['Duchamp', '-p', run])
+        end = time.time()
+
+        logging.info('Took {0} ms'.format((end - start) * 1000))
+
+    dirstack.pop()
+
+    logging.info('Duchamp is finished')
 
 
 def move_outputs(directory):
-    # directory is the duchamp-output directory
-    #time.sleep(5)
-    # we should be in the parameter directory
-    outputs = os.listdir('.')
-    print outputs
-    #time.sleep(5)
-    os.chdir('../')  # this means we should be in the worker directory
-    os.mkdir(directory)
-    print 'Directory {0} has been made'.format(directory)
+    """
+    This is to move all of the duchamp outputs from the parameter folder to our output directory.
+    :param directory: Where to move the outputs to.
+    :return:
+    """
+    outputs = os.listdir(parameter_folder())
+
+    # logging.info('Directory {0} has been made'.format(directory))
+
     for output_file in outputs:
         if "output" in output_file:
-            shutil.copy('{0}/{1}'.format(wu_params, output_file), directory)
-            os.remove('{0}/{1}'.format(wu_params, output_file))
-    print 'Copied all duchamp-output files'
-    #time.sleep(5)
+            shutil.copy('{0}/{1}'.format(parameter_folder(), output_file), directory)
+            os.remove('{0}/{1}'.format(parameter_folder(), output_file))
+
+    logging.info('Copied all duchamp-output files')
 
 
-def append(directory):
-    # we should be in the worker directory
-    os.chdir('{0}'.format(directory))  # moves us to duchamp-output directory
-    file_list = os.listdir('.')  # this will be output_askap16 or something like that
-    #time.sleep(5)
-    print file_list
-    print 'Checking number of files'
-    #time.sleep(5)
-    if len(file_list) != num_params:  # checks to make sure we have the correct number of duchamp-output files
-        # os.chdir('/root')
-        print 'In root  directory'
-        #time.sleep(5)
-        print 'Incorrect number of output files, shutting down.'
-        #time.sleep(5)
-        subprocess.call(["rm", "-r", "/root/worker/*"])
-        subprocess.call(["rm", "-r", "/root/shared/*"])
-        subprocess.call(["shutdown", "-hP", "0"])
-    else:
-        with open('../final_output.txt',
-                  'w') as outfile:  # final_output.txt the file we md5 hash then validate
-            for fname in file_list:
-                f = open(fname)
-                lines = f.readlines()[1:]
-                f.close()
-                for line in lines:
-                    outfile.write(line)
+def check_and_build_output(directory):
+    """
+    Checks whether there are any files remaining to be processed.
+    If there are, returns false.
+    If there aren't, builds the output CSV and returns true,
 
-            # make run file
-            run_file = open("run_file.txt", 'w+')
-            wu_run = wu_params.split('_')[2]
-            run_file.write(wu_run)
-            run_file.close()
+    :param directory: the directory to check for outputs
+    :return:
+    """
 
+    # Check to ensure the number of output files we have matches the number of input files
+    remaining = len(remaining_files())
+    if remaining > 0:
+        logging.error('Missed {0} parameter files somehow'.format(remaining))
+        return False  # Tell the rest of the program to try again.
+
+    build_output_csv(directory)
+
+    return True
+
+
+def build_output_csv(directory):
+    """
+    Builds an output CSV based on the data found in the provided directory.
+
+    :param directory: The directory to look in.
+    :return:
+    """
+    dirstack = DirStack()
+
+    dirstack.push()
+
+    os.chdir(directory)
+
+    directory_list = os.listdir(directory)
+
+    write_file = open("{0}/data_collection.csv".format(directory), 'a')
+    write_file.write('ParameterNumber,RA,DEC,freq,w_50,w_20,w_FREQ,F_int,F_tot,F_peak,Nvoxel,Nchan,Nspatpix\n')
+    for output in directory_list:
+        print output
+        source_files = 0
+        if 'output' in output:
+            source_files += 1
+            output_file = open(output)
+            output = output.split('_')[3]  # returns parameter number
+            print output
+            param_number = output.split('.')[0]
+            print param_number
+            count = 0  # counts the first 4 lines, which are duchamp output formatting
+            for line in output_file.readlines():
+                if count >= 4:
+                    line_break = line.split()
+                    print line_break
+                    write_file = open("data_collection.csv", 'a')
+                    write_file.write(param_number + ',')
+                    line = '{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11}\n'.format(line_break[7], line_break[8],
+                                                                                        line_break[9], line_break[15],
+                                                                                        line_break[16], line_break[17],
+                                                                                        line_break[18], line_break[19],
+                                                                                        line_break[20], line_break[27],
+                                                                                        line_break[28], line_break[29])
+                    write_file.write(line)
+                else:
+                    count += 1
+
+    write_file.close()
+
+    # MD5 hash
+    write_file = open("{0}/data_collection.csv".format(directory), 'r')
+    m = hashlib.md5()
+
+    m.update(write_file.read())
+    hash = m.digest()
+
+    with open("{0}/hash.md5".format(directory), 'w') as f:
+        f.write(hash)
+
+    dirstack.pop()
 
 '''WHERE ALL THE BUSINESS OCCURS''' # business has two s' on the end
 

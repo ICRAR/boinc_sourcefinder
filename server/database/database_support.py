@@ -29,9 +29,22 @@ CUBE = Table('cube',
 
 RESULT = Table('result',
                DUCHAMP_METADATA,
-               Column('result_id', BigInteger, primary_key=True),
-               Column('parameter_grouping_id', BigInteger, ForeignKey('parameter_grouping.parameter_grouping_id')),
-               Column('cube_id', BigInteger, ForeignKey('cube.cube_id'))
+               Column('result_id', BigInteger, primary_key=True, autoincrement=True),
+               Column('cube_id', BigInteger, ForeignKey('cube.cube_id')),
+               Column('parameter_id', BigInteger, ForeignKey('parameter_file.parameter_id')),
+               Column('run_id', BigInteger, ForeignKey('run.run_id')),
+               Column('RA', Float),
+               Column('DEC', Float),
+               Column('freq', Float),
+               Column('w_50', Float),
+               Column('w_20', Float),
+               Column('w_FREQ', Float),
+               Column('F_int', Float),
+               Column('F_tot', Float),
+               Column('F_peak', Float),
+               Column('Nvoxel', Float),
+               Column('Nchan', Float),
+               Column('Nspatpix', Float)
                )
 
 CUBE_USER = Table('cube_user',
