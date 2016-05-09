@@ -79,10 +79,12 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         return retval
 
     def process_result(self, wu, file):
-        # whyyyyyyyyyyyyyyyyyyyyyyy
-        os.chmod(path, 777)
+
         path = os.path.dirname(file)
         # File exists, good to start handling it.
+
+        # whyyyyyyyyyyyyyyyyyyyyyyy
+        os.chmod(path, 777)
 
         if tf.is_tarfile(file):
             # It's tar'd
