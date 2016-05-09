@@ -236,6 +236,7 @@ class Assimilator():
             elif arg == '-app':
                 arg = args.pop()
                 self.appname = arg
+                self.logNormal(arg)
             else:
                 self.logCritical("Unrecognized arg: %s\n", arg)
 
