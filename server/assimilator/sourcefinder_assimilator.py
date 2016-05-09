@@ -83,6 +83,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         path = os.path.dirname(file)
         # File exists, good to start handling it.
         os.rename(file, file + ".tar.gz")
+        file = file + ".tar.gz"
 
         if tf.is_tarfile(file):
             self.logDebug("Decompressing tar file...\n")
