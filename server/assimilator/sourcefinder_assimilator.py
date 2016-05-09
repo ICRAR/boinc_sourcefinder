@@ -58,18 +58,18 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.process_result(wu, filename)
 
     def assimilate_handler(self, wu, results, canonical_result):
-        self.logNormal('Starting assimilate handler for work unit: {0}'.format(wu.id))
+        self.logNormal('Starting assimilate handler for work unit: {0}\n'.format(wu.id))
 
         if not wu.canonical_result:
-            self.logDebug('No canonical result for wu: {0}'.format(wu.id))
+            self.logDebug('No canonical result for wu: {0}\n'.format(wu.id))
             return 0
 
         out_file = self.get_file_path(canonical_result)
 
         if os.path.isfile(out_file):
-            self.logNormal('WU file at {0}'.format(out_file))
+            self.logNormal('WU file at {0}\n'.format(out_file))
         else:
-            self.logCritical('WU file does exist')
+            self.logCritical('WU file does exist\n')
             return 0
 
         self.connection = ENGINE.connect()
@@ -82,8 +82,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         path = os.path.dirname(file)
         # File exists, good to start handling it.
+        os.rename(file, file + ".tar.gz")
 
         if tf.is_tarfile(file):
+            self.logDebug("Decompressing tar file...\n")
             # It's tar'd
             tar = tf.open(file)
             tar.extractall(path)
@@ -104,7 +106,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             self.logCritical('Client uploaded a WU file, but it does not contain the required CSV file. Cannot assimilate.\n')
             self.logDebug('The following files were included: \n')
             for f in fs:
-                self.logDebug('{0}'.format(f))
+                self.logDebug('{0}\n'.format(f))
 
             return 0
 
