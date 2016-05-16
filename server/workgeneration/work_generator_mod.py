@@ -77,9 +77,12 @@ def get_parameter_files(connection, cube_run_id):
 
     tarname = os.path.join(DIR_PARAM, 'parameters.tar.gz')
 
-    with tarfile.open(tarname, "w:gz") as tar:
-        for f in parameter_files:
-            tar.add(f)
+    tar = tarfile.open(tarname, "w:gz")
+
+    for f in parameter_files:
+        tar.add(f)
+
+    tar.close()
 
     return tarname
 
