@@ -108,12 +108,12 @@ def main():
                 LOGGER.info('Current cube is {0}'.format(wu_filename))
 
                 # Get the download directory
-                wu_download_dir = get_download_dir(wu_filename, download_directory, fanout)
+                wu_download_file = get_download_dir(wu_filename, download_directory, fanout)
 
-                LOGGER.info('WU download directory is {0}'.format(wu_download_dir))
+                LOGGER.info('WU download file is {0}'.format(wu_download_file))
 
                 # Copy the cube from its current path to the download dir
-                shutil.copyfile(cube_abs_path, os.path.join(wu_download_dir, wu_filename))
+                shutil.copyfile(cube_abs_path, wu_download_file)
 
                 #### PARAMETER FILES ####
 
@@ -127,7 +127,7 @@ def main():
                 shutil.copyfile(param_path, param_download_dir)
 
                 # create the workunit
-                file_list = [os.path.join(wu_download_dir, wu_filename), os.path.join(param_download_dir, 'parameters.tar.gz')]
+                file_list = [wu_download_file, os.path.join(param_download_dir, 'parameters.tar.gz')]
 
                 LOGGER.info(file_list)
 
