@@ -11,7 +11,10 @@ from utils.logging_helper import config_logger
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
-from config import  DIR_CUBE
+from config import  DIR_CUBE, DIR_PARAM
+from database.database_support import PARAMETER_RUN, PARAMETER_FILE
+from sqlalchemy import select
+import tarfile
 
 
 LOGGER = config_logger(__name__)
@@ -34,7 +37,8 @@ def get_cube_path(cube_name):
 
     return None
 
-def convert_file_to_wu(wu_filename, download_dir, fanout):
+
+def get_download_dir(wu_filename, download_dir, fanout):
     # Kevins code for hashing the download directory
     s = hashlib.md5(wu_filename).hexdigest()[:8]
     x = long(s, 16)
@@ -51,9 +55,44 @@ def convert_file_to_wu(wu_filename, download_dir, fanout):
     return "%s/%x/%s" % (download_dir, x % fanout, wu_filename)
 
 
+def get_parameter_files(connection, cube_run_id):
+    """
+    Gets a list of the parameter files for the specified cube, then compresses them in to a temp .tar.gz and returns
+    the name of that file.
+    :param cube_id:
+    :return:
+    """
+    parameter_files = []
+
+    # First we need to check the db for all of the parameter files associated with this cube's run id
+    params = connection.execute(select([PARAMETER_RUN]).where(PARAMETER_RUN.c.run_id == cube_run_id))
+
+    for param in params:
+        fname = connection.execute(select([PARAMETER_FILE.c.parameter_file_name]).
+                                   where(PARAMETER_FILE.parameter_file_id == param['parameter_id'])).first()[0]
+
+        parameter_files.append(os.path.join(DIR_PARAM, fname))
+
+    # parameter_files now contains a list of abs paths to our .par files. Time to compress them.
+
+    tarname = os.path.join(DIR_PARAM, 'parameters.tar.gz')
+
+    with tarfile.open(tarname, "w:gz") as tar:
+        for f in parameter_files:
+            tar.add(f)
+
+    return tarname
+
+
+
+
+
+
 def create_workunit(appname, wu_name, input_file_list):
     py_boinc.boinc_db_transaction_start()
+
     LOGGER.info('Args_file for list_Input is {0}'.format(input_file_list))
+
     retval = py_boinc.boinc_create_work(
         app_name=appname,
         min_quorom=2,
@@ -75,10 +114,11 @@ def create_workunit(appname, wu_name, input_file_list):
         list_input_files=input_file_list)
 
     if retval != 0:
-        py_boinc.boinc_db_transaction_rollback()
         LOGGER.info('Error writing to boinc database. boinc_create_work return value = {0}'.format(retval))
+        py_boinc.boinc_db_transaction_rollback()
+
         return False
     else:
-        LOGGER.info('completed create work request')
         py_boinc.boinc_db_transaction_commit()
+
         return True
