@@ -11,10 +11,15 @@ RUN = Table('run',
 
 PARAMETER_FILE = Table('parameter_file',
                        DUCHAMP_METADATA,
-                       Column('parameter_id', BigInteger, primary_key=True),
-                       Column('run_id', BigInteger, ForeignKey('run.run_id')),
-                       Column('parameter_file', String)
+                       Column('parameter_file_id', BigInteger, primary_key=True),
+                       Column('parameter_file_name', String)
                        )
+
+PARAMETER_RUN = Table('parameter_run',
+                      DUCHAMP_METADATA,
+                      Column('parameter_run', BigInteger, primary_key=True, autoincrement=True),
+                      Column('run_id', BigInteger, ForeignKey('run.run_id')),
+                      Column('parameter_id', BigInteger, ForeignKey('parameter_file.parameter_id')))
 
 CUBE = Table('cube',
              DUCHAMP_METADATA,
