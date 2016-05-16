@@ -149,7 +149,7 @@ def main():
     run_id, parameters = parse_args()
 
     if run_id < 0:
-        LOGGER.error('Invalid run ID specified, please specify a run id greater than 0')
+        LOGGER.info('Invalid run ID specified, please specify a run id greater than 0')
         exit(1)
 
     # Work out which parameter files to add to the db under this run ID.
@@ -163,10 +163,15 @@ def main():
     connection = engine.connect()
 
     # Add this run ID
+    LOGGER.info('Creating new run...')
     create_run_id(run_id)
 
     # Add each of the parameter files to this run ID in the parameter_run table
+    LOGGER.info('Registering parameters with run...')
     register_parameters_runid(run_id, params)
 
     connection.close()
+
+if __name__ == '__main__':
+    main()
 
