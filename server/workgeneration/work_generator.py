@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument('run_id', nargs='?', help='The run ID to register to', default=None)
     args = vars(parser.parse_args())
 
-    return args['run_id'][0]
+    return args['run_id']
 
 
 def check_threshold():
