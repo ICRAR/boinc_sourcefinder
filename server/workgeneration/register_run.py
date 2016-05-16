@@ -132,8 +132,14 @@ def register_parameters_runid(run_id, parameters):
 
     connection.begin()
 
-    for param in parameters:
-        connection.execute(PARAMETER_RUN.insert(), parameter_id=int(param), run_id=run_id)
+    if parameters is None:
+        # We need to make an insertion here for every single parameter that exists in the parameter_files table
+        ret = connection.execute(select([PARAMETER_FILE]))
+        for row in ret:
+            connection.execute(PARAMETER_RUN.insert(), parameter_id=int(row['parameter_file_id']), run_id=run_id)
+    else:
+        for param in parameters:
+            connection.execute(PARAMETER_RUN.insert(), parameter_id=int(param), run_id=run_id)
 
     connection.commit()
 
@@ -150,7 +156,7 @@ def main():
     if parameters is not None:
         params = parse_parameter_specifier(parameters)
     else:
-        params = True
+        params = None
 
     global connection
 
@@ -160,5 +166,7 @@ def main():
     create_run_id(run_id)
 
     # Add each of the parameter files to this run ID in the parameter_run table
-    register_parameters_runid(run_id, parameters)
+    register_parameters_runid(run_id, params)
+
+    connection.close()
 
