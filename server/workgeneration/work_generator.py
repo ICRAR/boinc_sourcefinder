@@ -120,14 +120,17 @@ def main():
                 # First we need to grab all of the local parameter files we'll need for this and shove them in a .tar.gz
                 param_path = get_parameter_files(connection, row['run_id'])
 
-                param_download_dir = get_download_dir(os.path.basename(param_path), download_directory, fanout)
-                LOGGER.info('Param download dir is {0}'.format(param_download_dir))
+                param_download_file = get_download_dir(os.path.basename(param_path), download_directory, fanout)
+                LOGGER.info('Param download file is {0}'.format(param_download_file))
 
                 # Then, we need to copy that .tar.gz to a parameter download directory
-                shutil.copyfile(param_path, param_download_dir)
+                shutil.copyfile(param_path, param_download_file)
+
+                # not needed any more
+                os.remove(param_path)
 
                 # create the workunit
-                file_list = [wu_download_file, os.path.join(param_download_dir, 'parameters.tar.gz')]
+                file_list = [wu_download_file, param_download_file]
 
                 LOGGER.info(file_list)
 
