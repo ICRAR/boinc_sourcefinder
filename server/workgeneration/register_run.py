@@ -130,7 +130,7 @@ def register_parameters_runid(run_id, parameters):
 
     # Need to make a bunch of insertions in to the parameter_run table
 
-    connection.begin()
+    trans = connection.begin()
 
     if parameters is None:
         # We need to make an insertion here for every single parameter that exists in the parameter_files table
@@ -141,7 +141,7 @@ def register_parameters_runid(run_id, parameters):
         for param in parameters:
             connection.execute(PARAMETER_RUN.insert(), parameter_id=int(param), run_id=run_id)
 
-    connection.commit()
+    trans.commit()
 
 
 def main():
