@@ -22,6 +22,7 @@ LOGGER.info('PYTHONPATH = {0}'.format(sys.path))
 engine = create_engine(DB_LOGIN)
 connection = None
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('run_id', nargs=1, help='The new run ID', default=-1, type=int)
@@ -138,6 +139,7 @@ def register_parameters_runid(run_id, parameters):
         for row in ret:
             connection.execute(PARAMETER_RUN.insert(), parameter_id=int(row['parameter_file_id']), run_id=run_id)
     else:
+        # Only do inserts for the parameters specified in the parameters file
         for param in parameters:
             connection.execute(PARAMETER_RUN.insert(), parameter_id=int(param), run_id=run_id)
 

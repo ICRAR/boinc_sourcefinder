@@ -12,7 +12,7 @@ from utils.logging_helper import config_logger
 # Assume the config file is good
 from config import DB_LOGIN, DIR_CUBE, DIR_PARAM
 
-from register_cube_mod import update_cube_table, update_parameter_files
+from register_cube_mod import create_cube, update_parameter_files
 from sqlalchemy.engine import create_engine
 
 
@@ -20,55 +20,45 @@ LOGGER = config_logger(__name__)
 LOGGER.info('Starting register_cube.py')
 LOGGER.info('PYTHONPATH = {0}'.format(sys.path))
 
-# Get command line args
-parser = argparse.ArgumentParser()
-parser.add_argument('run_id', nargs=1, help='The id of the current run')
-args = vars(parser.parse_args())
-
-# Set local variables based on imported config and command line
-WORKING_DIRECTORY = DIR_CUBE
-PARAMETER_DIRECTORY = DIR_PARAM
-RUN_ID = args['run_id'][0]
-
-ENGINE = create_engine(DB_LOGIN)
-connection = ENGINE.connect()
-
-# Compress everything in the cubes directory
-# Note: any files already compressed are not affected
-os.system('gzip {0}/*'.format(WORKING_DIRECTORY))
-
-# get a list of the cubes to be registered
-cubes = os.listdir(WORKING_DIRECTORY)  # list of cubes in the current run
-cubes.sort()
-#LOGGER.info('Cube names are {0}'.format(cubes))
-
-for cube in cubes:
-    # check if it is actually one of the cubes
-    if "askap" in cube:
-        LOGGER.info('Registering cube {0}'.format(cube))
-
-        abs_dir = os.path.abspath('{0}/{1}'.format(WORKING_DIRECTORY, cube))
-        #LOGGER.info('Working directory is {0}'.format(abs_dir))
-
-        check = update_cube_table(connection, abs_dir, RUN_ID)
-
-        if check == 1:
-            LOGGER.info("{0} already exists in db for run: ".format(cube) + RUN_ID)
-
-# get a list of all the parameter files in the parameter directory
-try:
-    params_path = '{0}/parameter_files_{1}'.format(PARAMETER_DIRECTORY, RUN_ID)
-    parameter_list = os.listdir(params_path)
-
-    #parameter_list.sort() No reason so sort this
-    LOGGER.info('Registering parameters in {0} with the database'.format(params_path))
-    for param_file in parameter_list:
-        # check if it is actually one of the parameter files
-        if "supercube" in param_file:
-            #LOGGER.info('The file is ' + param_file)
-            check = update_parameter_files(RUN_ID, connection, param_file)
-except:
-    LOGGER.info('Parameter folder {0} does not exist'.format(params_path))
+engine = create_engine(DB_LOGIN)
 
 
-connection.close()
+def parse_args():
+    # Only one argument, which is the run ID
+    parser = argparse.ArgumentParser()
+    parser.add_argument('run_id', nargs=1, help='The run ID to register to')
+    args = vars(parser.parse_args())
+
+    return args['run_id'][0]
+
+
+def main():
+
+    run_id = parse_args()
+
+    # Ensure everything is compressed in the cubes directory
+    # Note: any files already compressed are not affected
+    os.system('gzip {0}/*'.format(DIR_CUBE))
+
+    # get a list of the cubes to be registered
+    cubes = os.listdir(DIR_CUBE)  # list of cubes in the current run
+    cubes.sort()
+
+    connection = engine.connect()
+
+    for cube in cubes:
+        # check if it is actually one of the cubes
+        if "askap" in cube and cube.endswith('.fits.gz'):  # Must have askap in the filename and end with .fits.gz
+            LOGGER.info('Registering cube {0}'.format(cube))
+
+            cube_path = os.path.join(DIR_CUBE, cube)
+
+            try:
+                if create_cube(connection, cube_path, run_id):
+                    LOGGER.info('Cube successfully registered')
+                else:
+                    LOGGER.info('Cube already registered in database')
+            except Exception as e:
+                LOGGER.exception('Database exception ')
+
+    connection.close()
