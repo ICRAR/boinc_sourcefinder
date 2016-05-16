@@ -34,7 +34,7 @@ connection = ENGINE.connect()
 def parse_args():
     # Only one argument, which is the run ID
     parser = argparse.ArgumentParser()
-    parser.add_argument('run_id', nargs=1, help='The run ID to register to', default=None)
+    parser.add_argument('run_id', nargs=1, help='The run ID to register to', default=None, required=False)
     args = vars(parser.parse_args())
 
     return args['run_id'][0]
