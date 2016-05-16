@@ -71,7 +71,7 @@ def main():
         run_id = parse_args()
 
         LOGGER.info('Opening BOINC DB')
-        # os.chdir(DIR_BOINC_PROJECT_PATH)
+        os.chdir(DIR_BOINC_PROJECT_PATH)
 
         ret_val = py_boinc.boinc_db_open()
         if ret_val != 0:
