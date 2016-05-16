@@ -62,3 +62,6 @@ def main():
                 LOGGER.exception('Database exception ')
 
     connection.close()
+
+if __name__ == '__main__':
+    main()
