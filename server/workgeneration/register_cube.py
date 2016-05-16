@@ -12,7 +12,7 @@ from utils.logging_helper import config_logger
 # Assume the config file is good
 from config import DB_LOGIN, DIR_CUBE, DIR_PARAM
 
-from register_cube_mod import create_cube, update_parameter_files
+from register_cube_mod import create_cube
 from sqlalchemy.engine import create_engine
 
 
