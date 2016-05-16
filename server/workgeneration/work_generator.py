@@ -135,3 +135,6 @@ def main():
                     connection.execute(CUBE.update().where(CUBE.c.cube_id == row[1]).values(progress=1))
 
         py_boinc.boinc_db_close()
+
+if __name__ == '__main__':
+    main()
