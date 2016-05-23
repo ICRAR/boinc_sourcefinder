@@ -108,7 +108,7 @@ def main():
                 LOGGER.info('Current cube is {0}'.format(wu_filename))
 
                 # Get the download directory
-                wu_download_file = get_download_dir(wu_filename, download_directory, fanout)
+                wu_download_file = get_download_dir(wu_filename + '.fits.gz', download_directory, fanout)
 
                 LOGGER.info('WU download file is {0}'.format(wu_download_file))
 
