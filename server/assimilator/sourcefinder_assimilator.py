@@ -11,7 +11,8 @@ sys.path.append('/home/ec2-user/boinc_sourcefinder/server')
 sys.path.append('/home/ec2-user/boinc_sourcefinder/server/assimilator')
 
 from utils.logging_helper import config_logger
-from config import DB_LOGIN
+from utils.amazon_helper import S3Helper, get_file_upload_key
+from config import DB_LOGIN, S3_BUCKET_NAME
 from sqlalchemy import create_engine, select, and_
 from database.database_support import CUBE, RESULT
 import assimilator
@@ -83,17 +84,18 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         path = os.path.dirname(file)
         # File exists, good to start handling it.
         os.rename(file, file + ".tar.gz")
-        file = file + ".tar.gz"
+        file += ".tar.gz"
 
-        if tf.is_tarfile(file):
-            self.logDebug("Decompressing tar file...\n")
-            # It's tar'd
-            tar = tf.open(file)
-            tar.extractall(path)
-            tar.close()
+        #if tf.is_tarfile(file):
+
+        self.logDebug("Decompressing tar file...\n")
+        # It's tar'd
+        tar = tf.open(file)
+        tar.extractall(path)
+        tar.close()
 
         outputs = path + "/outputs"
-        # CSV file should exist, confirm this
+
         fs = os.listdir(outputs)
         file_to_use = None
         hashfile = None
@@ -179,7 +181,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                             F_peak=row['F_peak'],
                             Nvoxel=row['Nvoxel'],
                             Nchan=row['Nchan'],
-                            Nspatpix=row['Nspatpix']
+                            Nspatpix=row['Nspatpix'],
+                            workunit_name=wu.name       # Reference in to the boinc DB and in to the s3 file system.
                     )
                 except ValueError:
                     self.logCritical('Malformed CSV. Parameter number for row {0} is invalid\n'.format(rowcount))
@@ -191,7 +194,12 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             self.logNormal('Successfully loaded work unit {0} in to the database\n'.format(wu.name))
 
-            # Here is where we'd copy the CSV in an S3 bucket
+
+        # Here is where we copy the data in to an S3 bucket
+
+        for f in fs:
+            s3 = S3Helper(S3_BUCKET_NAME)
+            s3.file_upload(f, get_file_upload_key(wu.name, f))
 
             return 0
 

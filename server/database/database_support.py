@@ -49,7 +49,8 @@ RESULT = Table('result',
                Column('F_peak', Float),
                Column('Nvoxel', Float),
                Column('Nchan', Float),
-               Column('Nspatpix', Float)
+               Column('Nspatpix', Float),
+               Column('workunit_name', String)
                )
 
 CUBE_USER = Table('cube_user',

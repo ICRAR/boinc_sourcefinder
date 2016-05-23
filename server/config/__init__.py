@@ -27,6 +27,10 @@ if exists(config_file_name):
 
     ############### Work Generation Settings ###############
     WG_THRESHOLD = config['wgThreshold']
+
+    ############### AMAZON SETTINGS ###############
+    S3_BUCKET_NAME = config['bucket']
+
 else:
     print "No log file!"
 
