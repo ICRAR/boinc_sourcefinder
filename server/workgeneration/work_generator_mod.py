@@ -15,7 +15,8 @@ from config import  DIR_CUBE, DIR_PARAM
 from database.database_support import PARAMETER_RUN, PARAMETER_FILE
 from sqlalchemy import select
 import tarfile
-
+from database.database_support import CUBE
+import shutil
 
 LOGGER = config_logger(__name__)
 LOGGER.info("work_generator_mod.py")
@@ -75,7 +76,7 @@ def get_parameter_files(connection, cube_run_id):
 
     # parameter_files now contains a list of abs paths to our .par files. Time to compress them.
 
-    tarname = os.path.join(DIR_PARAM, 'parameters.tar.gz')
+    tarname = os.path.join(DIR_PARAM, 'parameters_{0}.tar.gz'.format(cube_run_id))
 
     tar = tarfile.open(tarname, "w:gz")
 
@@ -87,7 +88,43 @@ def get_parameter_files(connection, cube_run_id):
     return tarname
 
 
+def process_cube(row, download_directory, fanout, connection):
+    #### CUBE ####
+    cube_abs_path = get_cube_path(row['cube_name'])
+    wu_filename = '{0}_{1}'.format(row['run_id'], row['cube_name'])
 
+    LOGGER.info('Current cube is {0}'.format(wu_filename))
+
+    # Get the download directory
+    wu_download_file = get_download_dir(wu_filename + '.fits.gz', download_directory, fanout)
+
+    LOGGER.info('WU download file is {0}'.format(wu_download_file))
+
+    # Copy the cube from its current path to the download dir
+    shutil.copyfile(cube_abs_path, wu_download_file)
+
+    #### PARAMETER FILES ####
+
+    # First we need to grab all of the local parameter files we'll need for this and shove them in a .tar.gz
+    param_path = get_parameter_files(connection, row['run_id'])
+
+    param_download_file = get_download_dir(os.path.basename(param_path), download_directory, fanout)
+    LOGGER.info('Param download file is {0}'.format(param_download_file))
+
+    # Then, we need to copy that .tar.gz to a parameter download directory
+    shutil.copyfile(param_path, param_download_file)
+
+    # not needed any more
+    os.remove(param_path)
+
+    # create the workunit. First file is our cube, second is our parameters.
+    # these are not absolute paths, boinc hashes these file names to get the absolute paths.
+    file_list = [wu_filename + '.fits.gz', os.path.basename(param_path) + '.tar.gz']
+
+    LOGGER.info(file_list)
+
+    if create_workunit('duchamp', wu_filename, file_list):
+        connection.execute(CUBE.update().where(CUBE.c.cube_id == row[1]).values(progress=1))
 
 
 

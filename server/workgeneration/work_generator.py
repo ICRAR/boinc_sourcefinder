@@ -2,7 +2,6 @@
 
 import argparse
 import os
-import shutil
 import sys
 
 base_path = os.path.dirname(__file__)
@@ -20,7 +19,8 @@ import py_boinc
 from database.boinc_database_support import RESULT
 from Boinc import configxml
 from database.database_support import CUBE
-from work_generator_mod import get_download_dir, create_workunit, get_cube_path, get_parameter_files
+
+from work_generator_mod import process_cube
 
 LOGGER = config_logger(__name__)
 LOGGER.info('Starting work generation')
@@ -43,7 +43,7 @@ def parse_args():
 def check_threshold():
     # Checks the current number of work units that have not been processed.
 
-    t_engine = create_engine(BOINC_DB_LOGIN) # to avoid confusion with the other variables
+    t_engine = create_engine(BOINC_DB_LOGIN) # to avoid confusion with the other variables these are prefixed with t
     t_connection = t_engine.connect()
 
     count = t_connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()[0]
@@ -80,8 +80,6 @@ def main():
 
         # Check for registered cubes, ONLY ON OUR RUN ID!!
 
-        cube_count = 0
-
         if run_id is not None:
             # Check for registered cubes only for the specified run id.
             cube_count = connection.execute(select([func.count(CUBE.c.cube_id)]).where(CUBE.c.progress == 0 and CUBE.c.run_id == run_id)).first()[0]
@@ -100,42 +98,7 @@ def main():
             # We have some cubes to process
 
             for row in cubes:
-
-                #### CUBE ####
-                cube_abs_path = get_cube_path(row['cube_name'])
-                wu_filename = '{0}_{1}'.format(row['run_id'], row['cube_name'])
-
-                LOGGER.info('Current cube is {0}'.format(wu_filename))
-
-                # Get the download directory
-                wu_download_file = get_download_dir(wu_filename + '.fits.gz', download_directory, fanout)
-
-                LOGGER.info('WU download file is {0}'.format(wu_download_file))
-
-                # Copy the cube from its current path to the download dir
-                shutil.copyfile(cube_abs_path, wu_download_file)
-
-                #### PARAMETER FILES ####
-
-                # First we need to grab all of the local parameter files we'll need for this and shove them in a .tar.gz
-                param_path = get_parameter_files(connection, row['run_id'])
-
-                param_download_file = get_download_dir(os.path.basename(param_path), download_directory, fanout)
-                LOGGER.info('Param download file is {0}'.format(param_download_file))
-
-                # Then, we need to copy that .tar.gz to a parameter download directory
-                shutil.copyfile(param_path, param_download_file)
-
-                # not needed any more
-                os.remove(param_path)
-
-                # create the workunit
-                file_list = [wu_download_file, param_download_file]
-
-                LOGGER.info(file_list)
-
-                if create_workunit('duchamp', wu_filename, file_list):
-                    connection.execute(CUBE.update().where(CUBE.c.cube_id == row[1]).values(progress=1))
+                process_cube(row, download_directory, fanout, connection)
 
         py_boinc.boinc_db_close()
 
