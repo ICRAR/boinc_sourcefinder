@@ -201,7 +201,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             s3 = S3Helper(S3_BUCKET_NAME)
             s3.file_upload(f, get_file_upload_key(wu.name, f))
 
-            return 0
+        return 0
 
 # --------------------------------------------
 # Add the following to your assimilator file:

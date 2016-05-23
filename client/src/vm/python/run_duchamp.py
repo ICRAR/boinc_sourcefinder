@@ -234,11 +234,12 @@ def unzip_files():
             dirstack.pop()
 
             # Rename the file to 'input.fits'.
-            new_filename = join(file_system['worker'], 'input.fits')
+            # Not needed. Gunzip names it correctly
+            # new_filename = join(file_system['worker'], 'input.fits')
 
-            logging.info("Renaming input fits file from {0} to {1}".format(wu_file[:-3], new_filename))
+            # logging.info("Renaming input fits file from {0} to {1}".format(wu_file[:-3], new_filename))
 
-            shutil.move(wu_file[:-3], new_filename)
+            # shutil.move(wu_file[:-3], new_filename)
 
         elif wu_file.endswith("tar.gz") and not params:  # This is a parameter folder
 
