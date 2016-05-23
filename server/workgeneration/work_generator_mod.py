@@ -124,7 +124,7 @@ def process_cube(row, download_directory, fanout, connection):
     LOGGER.info(file_list)
 
     if create_workunit('duchamp', wu_filename, file_list):
-        connection.execute(CUBE.update().where(CUBE.c.cube_id == row[1]).values(progress=1))
+        connection.execute(CUBE.update().where(CUBE.c.cube_name == row[1]).values(progress=1))
 
 
 
