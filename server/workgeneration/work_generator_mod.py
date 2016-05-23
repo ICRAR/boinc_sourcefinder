@@ -81,7 +81,8 @@ def get_parameter_files(connection, cube_run_id):
     tar = tarfile.open(tarname, "w:gz")
 
     for f in parameter_files:
-        tar.add(f, os.path.basename(f))  # Added: don't compresss with paths
+        # The parameters must internally be in side a parameter_files folder. This is so the client extracts the files in to the appropriate folder.
+        tar.add(f, os.path.join('parameter_files', os.path.basename(f)))  # Added: don't compress with paths
 
     tar.close()
 
