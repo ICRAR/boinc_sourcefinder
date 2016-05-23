@@ -194,6 +194,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             self.logNormal('Successfully loaded work unit {0} in to the database\n'.format(wu.name))
 
+            # Update the cube table to reflect this completion
+            self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_id).values(progress=2))
 
         # Here is where we copy the data in to an S3 bucket
 
