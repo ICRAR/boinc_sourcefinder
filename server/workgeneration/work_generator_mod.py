@@ -119,7 +119,7 @@ def process_cube(row, download_directory, fanout, connection):
 
     # create the workunit. First file is our cube, second is our parameters.
     # these are not absolute paths, boinc hashes these file names to get the absolute paths.
-    file_list = [wu_filename + '.fits.gz', os.path.basename(param_path) + '.tar.gz']
+    file_list = [wu_filename + '.fits.gz', os.path.basename(param_path)]
 
     LOGGER.info(file_list)
 
