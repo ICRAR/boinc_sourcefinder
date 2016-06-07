@@ -78,12 +78,13 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         retval = self.process_result(wu, out_file)
 
         # Are there any other files in the directory of the out_file?
-        base = os.path.dirname(out_file)
-        fs = os.listdir(base)
+        if retval == 0: # only remove if we're not retrying later
+            base = os.path.dirname(out_file)
+            fs = os.listdir(base)
 
-        if len(fs) <= 1:
-            # Only one file (the output file we just processed) we can remove this directory
-            shutil.rmtree(base)
+            if len(fs) <= 1:
+                # Only one file (the output file we just processed) we can remove this directory
+                shutil.rmtree(base)
 
         self.connection.close()
 
@@ -175,10 +176,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
                 # Row 1 is header
                 rowcount = 1
-                transaction = self.connection.begin()
                 for row in csv_reader:
                     rowcount += 1
                     try:
+                        transaction = self.connection.begin()
                         self.connection.execute(
                                 RESULT.insert(),
                                 cube_id=cube_id,
@@ -198,13 +199,14 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                                 Nspatpix=row['Nspatpix'],
                                 workunit_name=wu.name       # Reference in to the boinc DB and in to the s3 file system.
                         )
+                        transaction.commit()
                     except ValueError:
                         self.logCritical('Malformed CSV. Parameter number for row {0} is invalid\n'.format(rowcount))
                     except csv.Error as e:
                         self.logCritical('Malformed CSV. Error on line {0}: {1}\n'.format(csv_reader.line_num, e))
                     except:
                         self.logCritical('Undefined error occurred while attempting to load CSV.\n')
-                transaction.commit()
+                        return 1 # try again later
 
                 self.logNormal('Successfully loaded work unit {0} in to the database\n'.format(wu.name))
 
