@@ -20,6 +20,7 @@ import gzip as gz
 import tarfile as tf
 import csv
 import hashlib
+import shutil
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
@@ -75,6 +76,15 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         self.connection = ENGINE.connect()
         retval = self.process_result(wu, out_file)
+
+        # Are there any other files in the directory of the out_file?
+        base = os.path.dirname(out_file)
+        fs = os.listdir(base)
+
+        if len(fs) <= 1:
+            # Only one file (the output file we just processed) we can remove this directory
+            shutil.rmtree(base)
+
         self.connection.close()
 
         return retval
@@ -83,127 +93,134 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         path = os.path.dirname(file)
         # File exists, good to start handling it.
+
+        # The file is a .tar.gz file, but it has no extention when the boinc client returns it
         os.rename(file, file + ".tar.gz")
         file += ".tar.gz"
 
         #if tf.is_tarfile(file):
 
         self.logDebug("Decompressing tar file...\n")
-        # It's tar'd
-        tar = tf.open(file)
-        tar.extractall(path)
-        tar.close()
 
-        outputs = path + "/outputs"
+        outputs = path + "/outputs"  # this will be the folder that the data is decompressed in to
 
-        fs = os.listdir(outputs)
-        file_to_use = None
-        hashfile = None
+        try:
+            # It's tar'd
+            tar = tf.open(file)
+            tar.extractall(path)
+            tar.close()
 
-        for f in fs:
-            if f.endswith('.csv'):
-                file_to_use = f
-                file_to_use = os.path.join(outputs, file_to_use)
-            if f.lower().endswith('.md5'):
-                hashfile = f
-                hashfile = os.path.join(outputs, hashfile)
+            fs = os.listdir(outputs)
+            file_to_use = None
+            hashfile = None
 
-        if file_to_use is None:
-            self.logCritical('Client uploaded a WU file, but it does not contain the required CSV file. Cannot assimilate.\n')
-            self.logDebug('The following files were included: \n')
             for f in fs:
-                self.logDebug('{0}\n'.format(f))
+                if f.endswith('.csv'):
+                    file_to_use = f
+                    file_to_use = os.path.join(outputs, file_to_use)
+                if f.lower().endswith('.md5'):
+                    hashfile = f
+                    hashfile = os.path.join(outputs, hashfile)
 
-            return 0
+            if file_to_use is None:
+                self.logCritical('Client uploaded a WU file, but it does not contain the required CSV file. Cannot assimilate.\n')
+                self.logDebug('The following files were included: \n')
+                for f in fs:
+                    self.logDebug('{0}\n'.format(f))
 
-        if hashfile is None:
-            self.logCritical("Wu is missing hash file\n")
-        else:
-            # Confirm the CSV MD5 here
-            if not self.hash_filecheck(file_to_use, hashfile):
-                self.logCritical('Hash file check failed on work unit {0}\n'.format(wu.id))
-                self.logCritical('Continuing anyway...\n')
-                # exit? I'm not sure.
-
-        # The CSV is there, final check is that it contains the correct header (first row) that we want
-
-        with open(file_to_use) as f:
-            csv_reader = csv.DictReader(f)
-            headers = csv_reader.fieldnames
-
-            for i in range(0, len(headers)):
-                if headers[i].strip() != csv_valid_header[i]:
-                    self.logCritical('Received CSV is in the wrong format. Field {0}: {1} does not match {2}\n'.format(i, headers[i], csv_valid_header[i]))
-                    return 0
-
-            # CSV is good from here
-
-            # These stay constant for all of the results:
-            # Run ID (Can be obtained from workunit name)
-            # Cube ID (Can be obtained from Run ID and workunit name)
-
-            # These change for each result:
-            # Parameter ID (Can be obtained from Run ID and first column in CSV)
-            # Each of the other rows in the CSV
-
-            # Example WU name: 6_askap_cube_1_1_19
-
-            try:
-                run_id = int(wu.name[0])
-            except ValueError:
-                self.logCritical('Malformed WU name {0}\n'.format(wu.name))
                 return 0
 
-            cube_name = wu.name[2:]
+            if hashfile is None:
+                self.logCritical("Wu is missing hash file\n")
+            else:
+                # Confirm the CSV MD5 here
+                if not self.hash_filecheck(file_to_use, hashfile):
+                    self.logCritical('Hash file check failed on work unit {0}\n'.format(wu.id))
+                    self.logCritical('Continuing anyway...\n')
+                    # exit? I'm not sure.
 
-            # First column is the cube ID
-            cube_id = self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()[0]
+            # The CSV is there, final check is that it contains the correct header (first row) that we want
 
-            # Row 1 is header
-            rowcount = 1
-            transaction = self.connection.begin()
-            for row in csv_reader:
-                rowcount += 1
+            with open(file_to_use) as f:
+                csv_reader = csv.DictReader(f)
+                headers = csv_reader.fieldnames
+
+                for i in range(0, len(headers)):
+                    if headers[i].strip() != csv_valid_header[i]:
+                        self.logCritical('Received CSV is in the wrong format. Field {0}: {1} does not match {2}\n'.format(i, headers[i], csv_valid_header[i]))
+                        return 0
+
+                # CSV is good from here
+
+                # These stay constant for all of the results:
+                # Run ID (Can be obtained from workunit name)
+                # Cube ID (Can be obtained from Run ID and workunit name)
+
+                # These change for each result:
+                # Parameter ID (Can be obtained from Run ID and first column in CSV)
+                # Each of the other rows in the CSV
+
+                # Example WU name: 6_askap_cube_1_1_19
+
                 try:
-                    self.connection.execute(
-                            RESULT.insert(),
-                            cube_id=cube_id,
-                            parameter_id=int(row['ParameterNumber']),
-                            run_id=run_id,
-                            RA=row['RA'],
-                            DEC=row['DEC'],
-                            freq=row['freq'],
-                            w_50=row['w_50'],
-                            w_20=row['w_20'],
-                            w_FREQ=row['w_FREQ'],
-                            F_int=row['F_int'],
-                            F_tot=row['F_tot'],
-                            F_peak=row['F_peak'],
-                            Nvoxel=row['Nvoxel'],
-                            Nchan=row['Nchan'],
-                            Nspatpix=row['Nspatpix'],
-                            workunit_name=wu.name       # Reference in to the boinc DB and in to the s3 file system.
-                    )
+                    run_id = int(wu.name[0])
                 except ValueError:
-                    self.logCritical('Malformed CSV. Parameter number for row {0} is invalid\n'.format(rowcount))
-                except csv.Error as e:
-                    self.logCritical('Malformed CSV. Error on line {0}: {1}\n'.format(csv_reader.line_num, e))
-                except:
-                    self.logCritical('Undefined error occurred while attempting to load CSV.\n')
-            transaction.commit()
+                    self.logCritical('Malformed WU name {0}\n'.format(wu.name))
+                    return 0
 
-            self.logNormal('Successfully loaded work unit {0} in to the database\n'.format(wu.name))
+                cube_name = wu.name[2:]
 
-            # Update the cube table to reflect this completion
-            self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_id).values(progress=2))
+                # First column is the cube ID
+                cube_id = self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()[0]
 
-        # Here is where we copy the data in to an S3 bucket
+                # Row 1 is header
+                rowcount = 1
+                transaction = self.connection.begin()
+                for row in csv_reader:
+                    rowcount += 1
+                    try:
+                        self.connection.execute(
+                                RESULT.insert(),
+                                cube_id=cube_id,
+                                parameter_id=int(row['ParameterNumber']),
+                                run_id=run_id,
+                                RA=row['RA'],
+                                DEC=row['DEC'],
+                                freq=row['freq'],
+                                w_50=row['w_50'],
+                                w_20=row['w_20'],
+                                w_FREQ=row['w_FREQ'],
+                                F_int=row['F_int'],
+                                F_tot=row['F_tot'],
+                                F_peak=row['F_peak'],
+                                Nvoxel=row['Nvoxel'],
+                                Nchan=row['Nchan'],
+                                Nspatpix=row['Nspatpix'],
+                                workunit_name=wu.name       # Reference in to the boinc DB and in to the s3 file system.
+                        )
+                    except ValueError:
+                        self.logCritical('Malformed CSV. Parameter number for row {0} is invalid\n'.format(rowcount))
+                    except csv.Error as e:
+                        self.logCritical('Malformed CSV. Error on line {0}: {1}\n'.format(csv_reader.line_num, e))
+                    except:
+                        self.logCritical('Undefined error occurred while attempting to load CSV.\n')
+                transaction.commit()
 
-        for f in fs:
-            s3 = S3Helper(S3_BUCKET_NAME)
-            s3.file_upload(f, get_file_upload_key(wu.name, f))
+                self.logNormal('Successfully loaded work unit {0} in to the database\n'.format(wu.name))
 
-        return 0
+                # Update the cube table to reflect this completion
+                self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_id).values(progress=2))
+
+            # Here is where we copy the data in to an S3 bucket
+
+            for f in fs:
+                s3 = S3Helper(S3_BUCKET_NAME)
+                s3.file_upload(f, get_file_upload_key(wu.name, f))
+            return 0
+
+        finally:
+            shutil.rmtree(outputs)
+
 
 # --------------------------------------------
 # Add the following to your assimilator file:
