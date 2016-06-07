@@ -63,6 +63,14 @@ def get_parameter_files(connection, cube_run_id):
     :param cube_id:
     :return:
     """
+
+    # Need a way of checking if parameter file tar.gz files already exist.
+    # When looking to generate parameter file tar gile, first look in the hashed directory.
+    # If the parameter file exists in the hashed directory, use that one.
+
+    # First things first, check if the parameter files already exist in the download directory.
+    # They should be in their hashed folder.
+
     parameter_files = []
 
     # First we need to check the db for all of the parameter files associated with this cube's run id
@@ -105,28 +113,40 @@ def process_cube(row, download_directory, fanout, connection):
     shutil.copyfile(cube_abs_path, wu_download_file)
 
     #### PARAMETER FILES ####
-
     # First we need to grab all of the local parameter files we'll need for this and shove them in a .tar.gz
-    param_path = get_parameter_files(connection, row['run_id'])
 
-    param_download_file = get_download_dir(os.path.basename(param_path), download_directory, fanout)
+    # Get the would-be file name of the parameter download file. This should be 'parameters_(run_id)'
+    param_file_name = "parameters_{0}.tar.gz".format(row['run_id'])
+    param_download_file = get_download_dir(os.path.basename(param_file_name), download_directory, fanout) # get the hashed dl file
+
     LOGGER.info('Param download file is {0}'.format(param_download_file))
 
-    # Then, we need to copy that .tar.gz to a parameter download directory
-    shutil.copyfile(param_path, param_download_file)
+    # Added: check for already existing parameters file and use that one.
+    if os.path.exists(param_download_file):
+        LOGGER.info('Param download file already exists')
+        # Oh look, we already have a parameters file!
+        # Don't recompress because this will cause checksum issues in the boinc client
+        param_path = param_download_file
+    else:
+        LOGGER.info('Param download file being created now...')
+        # No parameter file exists at all. Build it from scratch by compressing all of the .par files now.
+        param_path = get_parameter_files(connection, row['run_id'])
 
-    # not needed any more
-    os.remove(param_path)
+        # Then, we need to copy that .tar.gz to the parameter download directory
+        shutil.copyfile(param_path, param_download_file)
+
+        # Original is not needed any more
+        os.remove(param_path)
 
     # create the workunit. First file is our cube, second is our parameters.
-    # these are not absolute paths, boinc hashes these file names to get the absolute paths.
+    # these are not absolute paths, boinc hashes these file names to get the absolute paths out of the download directory.
+    # this means these two files exist somewhere in duchamp/downloads/some_hash/file_name
     file_list = [wu_filename + '.fits.gz', os.path.basename(param_path)]
 
     LOGGER.info(file_list)
 
     if create_workunit('duchamp', wu_filename, file_list):
         connection.execute(CUBE.update().where(CUBE.c.cube_name == row[1]).values(progress=1))
-
 
 
 def create_workunit(appname, wu_name, input_file_list):
