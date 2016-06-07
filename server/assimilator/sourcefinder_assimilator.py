@@ -217,7 +217,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             for f in fs:
                 s3 = S3Helper(S3_BUCKET_NAME)
-                s3.file_upload(f, get_file_upload_key(wu.name, f))
+                s3.file_upload(os.path.join(outputs, f), get_file_upload_key(wu.name, f))
             return 0
 
         finally:
