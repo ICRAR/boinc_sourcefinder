@@ -19,7 +19,7 @@ class S3Helper:
 
     def file_upload(self, local_file, remote_key):
         close = False
-        if type(local_file) == str:
+        if isinstance(local_file, basestring):
             close = True
             local_file = open(local_file, 'r')
 
