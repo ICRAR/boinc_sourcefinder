@@ -48,13 +48,6 @@ def main():
 
     connection = engine.connect()
 
-    # Bugfix - Now determining if the cube is already registered to this run id before trying to add it (avoid duplicates)
-    cubes = set()
-    ret = connection.execute(select([CUBE.c.cube_name]).where(CUBE.c.run_id == run_id))
-
-    for item in ret:
-        cubes.add(item['cube_name'])
-
     for cube in cubes:
         # check if it is actually one of the cubes
         if "askap" in cube and cube.endswith('.fits.gz'):  # Must have askap in the filename and end with .fits.gz
@@ -63,14 +56,13 @@ def main():
             cube_path = os.path.join(DIR_CUBE, cube)
 
             # Check if cube is already registered to this run id
-            if cube not in cubes:
-                try:
-                    if create_cube(connection, cube_path, run_id):
-                        LOGGER.info('Cube successfully registered')
-                    else:
-                        LOGGER.info('Cube already registered in database')
-                except Exception as e:
-                    LOGGER.exception('Database exception ')
+            try:
+                if create_cube(connection, cube_path, run_id):
+                    LOGGER.info('Cube successfully registered')
+                else:
+                    LOGGER.info('Cube already registered in database')
+            except Exception as e:
+                LOGGER.exception('Database exception ')
 
     connection.close()
 
