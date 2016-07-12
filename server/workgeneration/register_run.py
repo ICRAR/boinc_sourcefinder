@@ -30,7 +30,7 @@ def parse_args():
 
     args = vars(parser.parse_args())
     run_id = int(args['run_id'][0])
-    parameters = args['parameter_defs'][0]
+    parameters = args['parameter_defs']
 
     return run_id, parameters
 
