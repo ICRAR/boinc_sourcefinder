@@ -26,7 +26,7 @@ connection = None
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('run_id', nargs=1, help='The new run ID', default=-1, type=int)
-    parser.add_argument('parameter_defs', nargs=1, help='File specifying which parameter files to include in this run', default=None)
+    parser.add_argument('parameter_defs', nargs='?', help='File specifying which parameter files to include in this run', default=None)
 
     args = vars(parser.parse_args())
     run_id = int(args['run_id'][0])
@@ -137,8 +137,6 @@ def register_parameters_runid(run_id, parameters):
     for item in result:
         exists.add(int(item['parameter_id']))
 
-    print exists
-
     trans = connection.begin()
 
     if parameters is None:
@@ -146,14 +144,14 @@ def register_parameters_runid(run_id, parameters):
         ret = connection.execute(select([PARAMETER_FILE]))
         for row in ret:
 
-            print int(row['parameter_file_id'])
-
             if not int(row['parameter_file_id']) in exists:  # only add this to the DB if it does not already exist
                 connection.execute(PARAMETER_RUN.insert(), parameter_id=int(row['parameter_file_id']), run_id=run_id)
     else:
         # Only do inserts for the parameters specified in the parameters file
         for param in parameters:
-            connection.execute(PARAMETER_RUN.insert(), parameter_id=int(param), run_id=run_id)
+
+            if not int(param) in exists:  # only add this to the DB if it does not already exist
+                connection.execute(PARAMETER_RUN.insert(), parameter_id=int(param), run_id=run_id)
 
     trans.commit()
 
