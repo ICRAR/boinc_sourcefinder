@@ -137,6 +137,8 @@ def register_parameters_runid(run_id, parameters):
     for item in result:
         exists.add(item['parameter_id'])
 
+    print exists
+
     trans = connection.begin()
 
     if parameters is None:
@@ -172,11 +174,11 @@ def main():
     connection = engine.connect()
 
     # Add this run ID
-    LOGGER.info('Creating new run...')
+    # LOGGER.info('Creating new run...')
     create_run_id(run_id)
 
     # Add each of the parameter files to this run ID in the parameter_run table
-    LOGGER.info('Registering parameters with run...')
+    # LOGGER.info('Registering parameters with run...')
     register_parameters_runid(run_id, params)
 
     connection.close()
