@@ -135,7 +135,7 @@ def register_parameters_runid(run_id, parameters):
     exists = set()
     result = connection.execute(select([PARAMETER_RUN.c.parameter_id]).where(PARAMETER_RUN.c.run_id == run_id))
     for item in result:
-        exists.add(item['parameter_id'])
+        exists.add(int(item['parameter_id']))
 
     print exists
 
