@@ -145,7 +145,8 @@ def register_parameters_runid(run_id, parameters):
         # We need to make an insertion here for every single parameter that exists in the parameter_files table
         ret = connection.execute(select([PARAMETER_FILE]))
         for row in ret:
-            if not row['parameter_file_id'] in exists:  # only add this to the DB if it does not already exist
+
+            if not int(row['parameter_file_id']) in exists:  # only add this to the DB if it does not already exist
                 connection.execute(PARAMETER_RUN.insert(), parameter_id=int(row['parameter_file_id']), run_id=run_id)
     else:
         # Only do inserts for the parameters specified in the parameters file
