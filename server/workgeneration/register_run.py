@@ -155,7 +155,7 @@ def register_parameters_runid(run_id, parameters):
                 res = connection.execute(select([PARAMETER_FILE]).where(PARAMETER_FILE.c.parameter_file_id == param))
                 check = res.fetchone()
 
-                if check:
+                if check is not None:
                     connection.execute(PARAMETER_RUN.insert(), parameter_id=int(param), run_id=run_id)
 
     trans.commit()
