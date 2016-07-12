@@ -51,7 +51,7 @@ def main():
     for cube in cubes:
         # check if it is actually one of the cubes
         if "askap" in cube and cube.endswith('.fits.gz'):  # Must have askap in the filename and end with .fits.gz
-            LOGGER.info('Registering cube {0}'.format(cube))
+            #LOGGER.info('Registering cube {0}'.format(cube))
 
             cube_path = os.path.join(DIR_CUBE, cube)
 

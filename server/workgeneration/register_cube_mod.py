@@ -65,7 +65,7 @@ def create_cube(connection, cube_file, run_id):
 
             transaction.commit()
 
-            LOGGER.info('Cube successfully registered')
+            LOGGER.info('Cube {0} successfully registered'.format(filename))
             return True
 
         except Exception as e:
@@ -73,5 +73,5 @@ def create_cube(connection, cube_file, run_id):
             raise e
     else:
         # The cube is registered already
-        LOGGER.info('Cube already registered in database')
+        LOGGER.info('Cube {0} already registered in database'.format(filename))
         return False
