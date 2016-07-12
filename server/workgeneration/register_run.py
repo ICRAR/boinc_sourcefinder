@@ -147,18 +147,20 @@ def register_parameters_runid(run_id, parameters):
             if not int(row['parameter_file_id']) in exists:  # only add this to the DB if it does not already exist
                 connection.execute(PARAMETER_RUN.insert(), parameter_id=int(row['parameter_file_id']), run_id=run_id)
     else:
+
+        # Silently remove all invalids from the list.
+        size1 = len(parameters)
+        parameters = [x for x in parameters if connection.execute(select([PARAMETER_FILE]).where(PARAMETER_FILE.c.parameter_file_id == x)).fetchone() is not None]
+        size2 = len(parameters)
+
+        if size1 > size2:
+            LOGGER.info('Erased {0} invalid parameters from the provided parameter list'.format(size1 - size2))
+
         # Only do inserts for the parameters specified in the parameters file
         for param in parameters:
             param = int(param)
             if not param in exists:  # only add this to the DB if it does not already exist
-                # First, check if this corresponds to a valid param
-                res = connection.execute(select([PARAMETER_FILE]).where(PARAMETER_FILE.c.parameter_file_id == param))
-                check = res.fetchone()
-
-                if check is not None:
-                    connection.execute(PARAMETER_RUN.insert(), parameter_id=param, run_id=run_id)
-                else:
-                    LOGGER.error('Parameter value {0} does not correspond to a valid parameter file'.format(param))
+                connection.execute(PARAMETER_RUN.insert(), parameter_id=param, run_id=run_id)
 
     trans.commit()
 
