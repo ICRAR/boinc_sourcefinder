@@ -156,7 +156,9 @@ def register_parameters_runid(run_id, parameters):
                 check = res.fetchone()
 
                 if check is not None:
-                    connection.execute(PARAMETER_RUN.insert(), parameter_id=int(param), run_id=run_id)
+                    connection.execute(PARAMETER_RUN.insert(), parameter_id=param, run_id=run_id)
+                else:
+                    LOGGER.error('Parameter value {0} does not correspond to a valid parameter file'.format(param))
 
     trans.commit()
 
