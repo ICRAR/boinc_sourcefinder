@@ -41,15 +41,17 @@ def create_cube(connection, cube_file, run_id):
     """
 
     # Check to see if this cube already registered
-    check = connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_file, CUBE.c.run_id == run_id)))
+
+    filename = os.path.basename(cube_file)
+    p = filename.find('.')
+    filename = filename[:p]  # Strip off that .fits.gz
+
+
+    check = connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == filename, CUBE.c.run_id == run_id)))
     result = check.fetchone()
 
     if not result:
         data = get_cube_data(cube_file)  # Grab the cube data from the cube file.
-
-        filename = os.path.basename(cube_file)
-        p = filename.find('.')
-        filename = filename[:p]  # Strip off that .fits.gz
 
         transaction = connection.begin()
         try:
@@ -64,6 +66,7 @@ def create_cube(connection, cube_file, run_id):
 
             transaction.commit()
 
+            LOGGER.info('Cube successfully registered')
             return True
 
         except Exception as e:
@@ -71,4 +74,5 @@ def create_cube(connection, cube_file, run_id):
             raise e
     else:
         # The cube is registered already
+        LOGGER.info('Cube already registered in database')
         return False

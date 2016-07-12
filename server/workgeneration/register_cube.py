@@ -55,12 +55,8 @@ def main():
 
             cube_path = os.path.join(DIR_CUBE, cube)
 
-            # Check if cube is already registered to this run id
             try:
-                if create_cube(connection, cube_path, run_id):
-                    LOGGER.info('Cube successfully registered')
-                else:
-                    LOGGER.info('Cube already registered in database')
+                create_cube(connection, cube_path, run_id)
             except Exception as e:
                 LOGGER.exception('Database exception ')
 
