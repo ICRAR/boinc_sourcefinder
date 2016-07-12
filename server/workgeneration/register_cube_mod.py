@@ -46,7 +46,6 @@ def create_cube(connection, cube_file, run_id):
     p = filename.find('.')
     filename = filename[:p]  # Strip off that .fits.gz
 
-
     check = connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == filename, CUBE.c.run_id == run_id)))
     result = check.fetchone()
 
