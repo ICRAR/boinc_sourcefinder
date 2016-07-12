@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # Work generator used to create workunits
 
 import argparse
