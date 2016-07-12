@@ -14,6 +14,7 @@ from utils.logging_helper import config_logger
 from utils.amazon_helper import S3Helper, get_file_upload_key
 from config import DB_LOGIN, S3_BUCKET_NAME
 from sqlalchemy import create_engine, select, and_
+from sqlalchemy.exc import OperationalError
 from database.database_support import CUBE, RESULT
 import assimilator
 import gzip as gz
@@ -21,6 +22,7 @@ import tarfile as tf
 import csv
 import hashlib
 import shutil
+from utilities import retry_on_exception
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
@@ -78,7 +80,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         retval = self.process_result(wu, out_file)
 
         # Are there any other files in the directory of the out_file?
-        if retval == 0: # only remove if we're not retrying later
+        if retval == 0:  # only remove if we're not retrying later
             base = os.path.dirname(out_file)
             fs = os.listdir(base)
 
@@ -211,7 +213,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                 self.logNormal('Successfully loaded work unit {0} in to the database\n'.format(wu.name))
 
                 # Update the cube table to reflect this completion
-                self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_id).values(progress=2))
+                # Retry this on failure.
+
+                retry_on_exception(lambda: (self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_id).values(progress=2)))
+                                   , OperationalError, 1) # Retry this function once if it fails the first time.
 
             # Here is where we copy the data in to an S3 bucket
 
