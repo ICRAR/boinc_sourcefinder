@@ -8,7 +8,6 @@ sys.path.append(os.path.abspath(os.path.join(base_path, './server/')))
 import argparse
 import numpy as np
 from sqlalchemy import create_engine, select
-from sshtunnel import SSHTunnelForwarder
 from database.database_support import RESULT
 from config import DB_LOGIN
 
