@@ -89,8 +89,9 @@ def main():
                 valid.append([row[0], row2[0], row[1], row2[1]])
 
     for row in valid:
-       print 'RA {0} == {1}'.format(row[0], row[1])
-       print 'DEC {0} == {1}'.format(row[2], row[3])
+        print 'RA {0} == {1}'.format(row[0], row[1])
+        print 'DEC {0} == {1}'.format(row[2], row[3])
+        print
 
 
 if __name__ == '__main__':
