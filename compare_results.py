@@ -85,12 +85,13 @@ def main():
     # This is ugly af
     for row in array:
         for row2 in array2:
-            if in_range_RA_DEC(row[0], row2[0]) and in_range_RA_DEC(row[1], row2[1]): # and in_range_freq(row[2], row2[2], row2[3]):  # not sure if this value is correct, try anyway.
-                valid.append([row[0], row2[0], row[1], row2[1]])
+            if in_range_RA_DEC(row[0], row2[0]) and in_range_RA_DEC(row[1], row2[1]) and in_range_freq(row[2], row2[2], 1000):
+                valid.append([row[0], row2[0], row[1], row2[1], row[2], row2[2]])
 
     for row in valid:
         print 'RA {0} == {1}'.format(row[0], row[1])
         print 'DEC {0} == {1}'.format(row[2], row[3])
+        print 'FREQ {0} == {1}'.format(row[4], row[5])
         print
 
 
