@@ -220,9 +220,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             # Here is where we copy the data in to an S3 bucket
 
-            for f in fs:
-                s3 = S3Helper(S3_BUCKET_NAME)
-                s3.file_upload(os.path.join(outputs, f), get_file_upload_key(wu.name, f))
+            if rowcount > 1:  # Only save the file if there's actually results in it.
+                for f in fs:
+                    s3 = S3Helper(S3_BUCKET_NAME)
+                    s3.file_upload(os.path.join(outputs, f), get_file_upload_key(wu.name, f))
             return 0
 
         finally:
