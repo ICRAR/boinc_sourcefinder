@@ -85,7 +85,7 @@ def main():
     # This is ugly af
     for row in array:
         for row2 in array2:
-            if in_range_RA_DEC(row[0], row2[0]) and in_range_RA_DEC(row[1], row2[1]) and in_range_freq(row[2], row2[2], row2[3]):  # not sure if this value is correct, try anyway.
+            if in_range_RA_DEC(row[0], row2[0]) and in_range_RA_DEC(row[1], row2[1]): # and in_range_freq(row[2], row2[2], row2[3]):  # not sure if this value is correct, try anyway.
                 valid.append(row2)
 
     print valid
