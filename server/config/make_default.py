@@ -26,4 +26,6 @@ if __name__ == "__main__":
 
     config['wgThreshold'] = 500
 
+    config['bucket'] = 'icrar.sourcefinder.files'
+
     config.write()
