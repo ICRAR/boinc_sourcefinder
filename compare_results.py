@@ -57,10 +57,19 @@ def get_db_sources():
     engine = create_engine(DB_LOGIN)
     connection = engine.connect()
 
-    table = connection.execute(select([RESULT])).fetchall()
+    table = connection.execute(select([RESULT]).where(RESULT.c.run_id == 1)).fetchall()
+
+    row = []
 
     for line in table:
-        print line
+        col = [0,0,0]
+        col[0] = float(line['RA'])
+        col[1] = float(line['DEC'])
+        col[2] = float(line['freq'])
+        row.append(col)
+
+    print row
+
 
 def main():
     f = parse_args()
