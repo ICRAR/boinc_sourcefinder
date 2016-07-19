@@ -22,7 +22,7 @@ import tarfile as tf
 import csv
 import hashlib
 import shutil
-from utilities import retry_on_exception
+from utils.utilities import retry_on_exception
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
