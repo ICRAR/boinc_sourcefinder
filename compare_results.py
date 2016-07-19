@@ -52,8 +52,6 @@ def parse_file(f):
 
 def get_db_sources():
 
-    # SSH tunnel to the server to access the db properly
-
     engine = create_engine(DB_LOGIN)
     connection = engine.connect()
 
@@ -62,19 +60,35 @@ def get_db_sources():
     row = []
 
     for line in table:
-        col = [0,0,0]
+        col = [0,0,0,3]
         col[0] = float(line['RA'])
         col[1] = float(line['DEC'])
         col[2] = float(line['freq'])
+        col[3] = float(line['w_FREQ'])
         row.append(col)
 
-    print row
+    return np.array(row)
 
+def in_range_RA_DEC(a, b):
+    return abs(b - a) <= 0.00833333333
+
+def in_range_freq(a, b, fwidth):
+    return abs(b - a) <= (fwidth * 0.5)
 
 def main():
     f = parse_args()
     array = parse_file(f)
-    get_db_sources()
+    array2 = get_db_sources()
+
+    valid = []
+
+    # This is ugly af
+    for row in array:
+        for row2 in array2:
+            if in_range_RA_DEC(row[0], row2[0]) and in_range_RA_DEC(row[1], row2[1]) and in_range_freq(row[2], row2[2], row2[3]):  # not sure if this value is correct, try anyway.
+                valid.append(row2)
+
+    print valid
 
 
 if __name__ == '__main__':
