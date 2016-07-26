@@ -46,7 +46,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             hash = m.digest()
 
         with open(hashfile, 'r') as f:
-            hash_from_file = f.readline()
+            hash_from_file = f.read()
 
         self.logNormal('Hash comparison {0} == {1}\n'.format(hash, hash_from_file))
 
@@ -62,6 +62,9 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.process_result(wu, filename)
 
     def assimilate_handler(self, wu, results, canonical_result):
+        if not self.poke_database():
+            return 1  # Couldn't restore db connection. Try again later.
+
         self.logNormal('Starting assimilate handler for work unit: {0}\n'.format(wu.id))
 
         if not wu.canonical_result:
@@ -91,6 +94,29 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.connection.close()
 
         return retval
+
+    def poke_database(self):
+        """
+        Pokes the database to ensure any 'mysql server has gone away' issues disappear
+        :return:
+        """
+        # Try to just generally reconnect
+
+        for i in range(0, 200):
+            try:
+                global ENGINE
+                ENGINE = create_engine(DB_LOGIN)
+                self.connection = ENGINE.connect()
+
+                cube_id = self.connection.execute(select([CUBE])).first()[0]
+
+                self.logDebug("Database connection restored after {0} pokes".format(i))
+                return True
+            except OperationalError:
+                pass
+
+        self.logDebug("Database connection could not be restored")
+        return False
 
     def process_result(self, wu, file):
 
