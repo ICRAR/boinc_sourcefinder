@@ -27,8 +27,6 @@ from utils.utilities import retry_on_exception
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-ENGINE = create_engine(DB_LOGIN)
-
 # This represents the valid first row of the csv.
 csv_valid_header = ['ParameterNumber','RA','DEC','freq','w_50','w_20','w_FREQ','F_int','F_tot','F_peak','Nvoxel','Nchan','Nspatpix']
 
@@ -38,6 +36,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
     def __init__(self):
         assimilator.Assimilator.__init__(self)
         self.connection = None
+        self.engine = None
 
     def hash_filecheck(self, file, hashfile):
         with open(file, 'r') as f:
@@ -62,8 +61,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.process_result(wu, filename)
 
     def assimilate_handler(self, wu, results, canonical_result):
-        if not self.poke_database():
-            return 1  # Couldn't restore db connection. Try again later.
+        self.engine = create_engine(DB_LOGIN)
+        self.connection = self.engine.connect()
 
         self.logNormal('Starting assimilate handler for work unit: {0}\n'.format(wu.id))
 
@@ -79,7 +78,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             self.logCritical('WU file doesnt exist\n')
             return 0
 
-        self.connection = ENGINE.connect()
         retval = self.process_result(wu, out_file)
 
         # Are there any other files in the directory of the out_file?
@@ -94,29 +92,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.connection.close()
 
         return retval
-
-    def poke_database(self):
-        """
-        Pokes the database to ensure any 'mysql server has gone away' issues disappear
-        :return:
-        """
-        # Try to just generally reconnect
-
-        for i in range(0, 200):
-            try:
-                global ENGINE
-                ENGINE = create_engine(DB_LOGIN)
-                self.connection = ENGINE.connect()
-
-                cube_id = self.connection.execute(select([CUBE])).first()[0]
-
-                self.logDebug("Database connection restored after {0} pokes".format(i))
-                return True
-            except:
-                pass
-
-        self.logDebug("Database connection could not be restored")
-        return False
 
     def process_result(self, wu, file):
 
