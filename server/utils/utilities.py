@@ -5,7 +5,6 @@ def retry_on_exception(function, exception, num_retries):
 
     while num_retries > 0:
         try:
-            function()
-            num_retries = 0
+            return function()
         except exception:
             num_retries -= 1

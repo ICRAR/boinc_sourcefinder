@@ -64,7 +64,7 @@ def attach_new_disks(disk_name_1,disk_name_2, ebs_size, volume_group):
     dev_new_disk_2 = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
     dev_new_disk_2 = int(ebs_size) 
     bdm = blockdevicemapping.BlockDeviceMapping()
-    bdm['/dev/{0}.'.format(disk_name_1)] = dev_new_disk_2
+    bdm['/dev/{0}.'.format(disk_name_1)] = dev_new_disk_1
     bdm['/dev/{0}'.format(disk_name_2)] = dev_new_disk_2
     
 #Remove and change for   

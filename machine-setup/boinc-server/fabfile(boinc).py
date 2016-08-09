@@ -8,21 +8,25 @@ from boto.ec2 import blockdevicemapping
 
 from fabric.api import run, sudo, put, env, require, local
 from fabric.context_managers import cd
-from fabric.contrib.files import append, comment
+from fabric.contrib.files import append, comment, exists
 from fabric.decorators import task, serial
 from fabric.operations import prompt
 from fabric.utils import puts, abort, fastprint
 
 USERNAME = 'ec2-user'
-AMI_ID = 'i-7d6d6656'
+AMI_ID = 'ami-6869aa05' #'ami-7d6d6656'. This is the default amazon ami.
 INSTANCE_TYPE = 't2.small'
-YUM_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel python-pip curl-devel'
+
+YUM_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel python-pip curl-devel gfortran blas-devel lapack-devel'
 BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
-PIP_PACKAGES = 'boto sqlalchemy mysql fabric nympy scipy astropy'
+PIP_PACKAGES = 'boto sqlalchemy mysql fabric numpy scipy astropy'
+
 AWS_KEY = os.path.expanduser('~/.ssh/icrar_theskynet_private_test.pem')
-KEY_NAME = 'icrar_theskynet_private_test.pem'
-PUBLIC_DNS = 'ec2-user@54-208-207-86.compute-1.amazonaws.com'
-SECURITY_GROUPS = ['defaults', 'theSkynet']
+KEY_NAME = 'icrar_theskynet_private_test' # the key name to use to connect to the server
+# PUBLIC_DNS = 'ec2-user@54-208-207-86.compute-1.amazonaws.com' unused
+SECURITY_GROUPS = ['sg-dd33e0b2'] # TheSkyNet security group
+SUBNET_ID = 'subnet-794e7d16' # production = subnet-5390a03c
+# NETWORK = 'vpc=b493a3db' # production = vpc-53af9f3c unused
 
 # def nfs_connect(shared_directory):
 #   """connect the nfs server to the /projects directory of the BOINC server"""
@@ -31,20 +35,20 @@ SECURITY_GROUPS = ['defaults', 'theSkynet']
 def yum_update():
     """Update general machine packages"""
 
-    sudo('yum install update')
+    sudo('yum update')
 
 
 def mount_ebs(block_name):
     """Mount the ebs volume on the server"""
-    sudo('mkfs -t ext4 /dev/{0}').format(block_name)
-    sudo('mkdir /home/{0}/storage').format(env.user)
-    sudo('mount /dev/{0} /home/{1}/storage').format(block_name, env.user)
+    sudo('mkfs -t ext4 /dev/{0}'.format(block_name))
+    sudo('mkdir /home/{0}/storage'.format(env.user))
+    sudo('mount /dev/{0} /home/{1}/storage'.format(block_name, env.user))
     append('/etc/fstab', '/dev/{0}    /dev/mnt    ext4    defaults,nofail    0    2'.format(block_name), sudo=True)
     sudo('chown -R {0}:{0} /home/{0}/storage'.format(env.user))
 
 
 # Kevin's code
-def create_instance(ebs_size, ami_name):
+def create_instance(ebs_size, ami_name, ec2_connection):
     """
     Create the AWS instance
     :param ebs_size:
@@ -52,14 +56,27 @@ def create_instance(ebs_size, ami_name):
 
     puts('Creating the instance {1} with disk size {0} GB'.format(ebs_size, ami_name))
 
-    ec2_connection = boto.connect_ec2()
+    # ec2_connection = boto.connect_ec2()
 
     dev_sda = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
     dev_sda.size = int(ebs_size)
     bdm = blockdevicemapping.BlockDeviceMapping()
-    bdm['/dev/sda'] = dev_sda
-    reservations = ec2_connection.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME,
-                                                security_groups=SECURITY_GROUPS, block_device_map=bdm)
+    bdm['/dev/xvda'] = dev_sda # bdm['/dev/sda'] = dev_sda
+
+    # Now we need to specify a network interface like this to get a public IP.
+    interface = boto.ec2.networkinterface.NetworkInterfaceSpecification(subnet_id=SUBNET_ID,
+                                                                        groups=SECURITY_GROUPS,
+                                                                        associate_public_ip_address=True)
+    interfaces = boto.ec2.networkinterface.NetworkInterfaceCollection(interface)
+
+    reservations = ec2_connection.run_instances(AMI_ID,
+                                                instance_type=INSTANCE_TYPE,
+                                                key_name=KEY_NAME,
+                                                block_device_map=bdm,
+                                                network_interfaces=interfaces,
+                                                # security_group_ids=SECURITY_GROUPS,
+                                                # subnet_id=SUBNET_ID
+                                                )
     instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
     for i in range(4):
@@ -85,7 +102,7 @@ def create_instance(ebs_size, ami_name):
         fastprint('.')
         time.sleep(5)
     puts('.')
-    return instance, ec2_connection
+    return instance
 
     # Return the instance
 
@@ -97,12 +114,18 @@ def start_ami_instance(ami_id, instance_name):
     :param instance_name:
     """
 
-    puts('Starting the instance{0} from id {1}'.format(instance_name, ami_id))
+    puts('Starting the instance {0} from id {1}'.format(instance_name, ami_id))
 
     ec2_connection = boto.connect_ec2()
 
+    interface = boto.ec2.networkinterface.NetworkInterfaceSpecification(subnet_id=SUBNET_ID,
+                                                                        groups=SECURITY_GROUPS,
+                                                                        associate_public_ip_address=True)
+
+    interfaces = boto.ec2.networkinterface.NetworkInterfaceCollection(interface)
+
     reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME,
-                                                security_groups=SECURITY_GROUPS)
+                                                network_interfaces=interfaces)
 
     instance = reservations.instances[0]
 
@@ -139,23 +162,27 @@ def start_ami_instance(ami_id, instance_name):
 
 
 def general_install():
+    puts("updating yum...")
     yum_update()
 
+    puts("installing yum packages...")
     sudo('yum install {0}'.format(YUM_PACKAGES))
+
+    puts("installing pip packages...")
     sudo('pip install {0}'.format(PIP_PACKAGES))
     # setup pythonpath
-    append('/home/ec2-user/.bach_profile',
+    append('/home/ec2-user/.bash_profile',
            ['',
             'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc_sourcefinder/server/src',
             'export PYTHONPATH'])
 
 
 def boinc_install():
-    general_install()
 
     sudo('yum install {0}'.format(BOINC_PACKAGES))
-    run('git clone git://boinc.berkeley.edu/boinc-v2.git boinc')
-    with cd('/home/ec2-users/boinc'):
+    if not exists('boinc'):
+        run('git clone https://github.com/BOINC/boinc.git')
+    with cd('/home/ec2-user/boinc'):
         run('./_autosetup')
         run('./configure --disable-client --disable-manager')
         run('make')
@@ -163,13 +190,13 @@ def boinc_install():
 
 
 def project_install():
-    boinc_install()
-    mount_ebs()
+    # boinc_install() done before this anyway
     # Clone the git project
-
-    for user in env.list_of_users:
+    users = ['ec2-user', 'apache']
+    ## YOU WERE HERE!!
+    for user in users:
         sudo('useradd {0}.'.format(user))
-        sudo('chmod 700 /home/{0}'.ssh.format(user))
+        sudo('chmod 700 /home/{0}'.format(user))
         sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
         sudo('chmod 700 /home/{}/.ssh/authorized_keys'.format(user))
         sudo('chmod {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
@@ -221,7 +248,7 @@ def setup_website():
 
 def base_setup_env():
     """
-
+    Sets up a server to run boinc on.
     """
 
     if 'ebs_size' not in env:
@@ -229,7 +256,20 @@ def base_setup_env():
     if 'ami_name' not in env:
         prompt('AMI Name', 'ami_name', default='base-python-ami')
 
-    ec2_instance, ec2_connection = create_instance(env.ebs_size, env.ami_name)
+    ec2_connection = boto.connect_ec2()
+
+    instances = [i for r in ec2_connection.get_all_reservations() for i in r.instances]
+
+    ec2_instance = None
+    for i in instances:
+        if 'Name' in i.tags:
+            if i.tags['Name'] == env.ami_name:
+                ec2_instance = i
+                break
+
+    if ec2_instance is None:  # boot up an instance if one doesn't exist.
+        ec2_instance = create_instance(env.ebs_size, env.ami_name, ec2_connection)
+
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
     env.hosts = [ec2_instance.ip_address]
@@ -237,16 +277,21 @@ def base_setup_env():
     env.user = USERNAME
     env.key_filename = AWS_KEY
 
+    puts("Provide this as part of the command line for the next part: -H {0} ".format(ec2_instance.ip_address))
+
 
 def base_build_ami():
     """
     Build the base AMI
     """
+    puts('Building the amazon instance for server use...')
 
     require('hosts', provided_by=[base_setup_env])
 
+    puts('Updating yum')
     yum_update()
 
+    puts('Performing general install')
     general_install()
 
     puts("Stopping the instance")
@@ -272,13 +317,14 @@ def boinc_setup_env():
         images = ec2_connection.get_all_images(owners=['self'])
         puts('Available images')
         for image in images:
-            puts('Image: {0: , 15} {1: ,35} {2}'.format(image.id, image.name, image.description))
+            puts('Image: {0} {1} {2}'.format(image.id, image.name, image.description))
         prompt('AMI id to build from: ', 'ami_id')
     if 'ami_name' not in env:
         prompt('AMI Name: ', 'ami_name', default='base-boinc-ami')
     if 'instance_name' not in env:
         prompt('AUS insance name: ', 'instance_name', default='base-boinc-ami')
 
+    puts('attempting to start ami instance')
     ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
@@ -293,11 +339,25 @@ def boinc_build_ami():
     Deploy the single server environment
     Deploy the single server system in the AWS cloud 
     """
-    require('host', provided_by=[boinc_setup_env])
+    puts('env = ')
+    print env
+
+    puts('boinc_setup_env')
+    require('hosts', provided_by=[base_setup_env])
+    puts('boinc_setup_env done')
 
     time.sleep(5)
 
+    puts('general setup...')
+    general_install()
+
+    puts('installing boinc...')
     boinc_install()
+
+    # puts('setting up ebs') doesnt appear to be needed?
+    # mount_ebs("xvda") # testing with SDA3
+
+    puts('installing sourcefinder project...')
     project_install()
 
     puts("stopping the instance")
