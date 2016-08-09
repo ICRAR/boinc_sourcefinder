@@ -25,7 +25,7 @@ CUBE = Table('cube',
              DUCHAMP_METADATA,
              Column('cube_id', BigInteger, primary_key=True, autoincrement=True),
              Column('cube_name', String),
-             Column('progress', Integer),
+             Column('progress', Integer, ForeignKey('cube_status.cube_status_id')),
              Column('ra', Float),
              Column('declin', Float),
              Column('freq', Float),
@@ -53,8 +53,8 @@ RESULT = Table('result',
                Column('workunit_name', String)
                )
 
-CUBE_USER = Table('cube_user',
-                  DUCHAMP_METADATA,
-                  Column('cube_user_id', BigInteger, primary_key=True),
-                  Column('cube_id', Integer, ForeignKey('cube.cube_id'))
-                  )
+CUBE_STATUS = Table('cube_status',
+                    DUCHAMP_METADATA,
+                    Column('cube_status_id', BigInteger, primary_key=True, autoincrement=True),
+                    Column('status', String)
+                    )
