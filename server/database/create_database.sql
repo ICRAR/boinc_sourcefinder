@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS sourcefinder.`parameter_file` (
 # Link parameters to runs
 CREATE TABLE IF NOT EXISTS sourcefinder.`parameter_run` (
   parameter_run BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  run_id BIGINT NOT NULL,
-  parameter_id BIGINT NOT NULL,
+  run_id BIGINT UNSIGNED NOT NULL,
+  parameter_id BIGINT UNSIGNED NOT NULL,
 
   PRIMARY KEY (parameter_run),
 
