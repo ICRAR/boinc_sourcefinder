@@ -39,9 +39,9 @@ CREATE TABLE IF NOT EXISTS sourcefinder.`cube_status` (
 
 ) ENGINE = InnoDB;
 
-INSERT INTO sourcefinder.`cube_status` (status) VALUES ('Started');
-INSERT INTO sourcefinder.`cube_status` (status) VALUES ('WorkunitCreated');
-INSERT INTO sourcefinder.`cube_status` (status) VALUES ('ResultReceived');
+INSERT INTO sourcefinder.`cube_status` (cube_status_id, status) VALUES (0, 'Started');
+INSERT INTO sourcefinder.`cube_status` (cube_status_id, status) VALUES (1, 'WorkunitCreated');
+INSERT INTO sourcefinder.`cube_status` (cube_status_id, status) VALUES (2, 'ResultReceived');
 
 # Cubes
 CREATE TABLE IF NOT EXISTS sourcefinder.`cube` (
