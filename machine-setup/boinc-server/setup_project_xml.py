@@ -1,3 +1,8 @@
+import sys
+
+PROJECT_NAME = sys.argv[1]
+PROJECT_NICE_NAME = sys.argv[2]
+
 def fix_project_xml(filename):
 
     good = False
@@ -30,8 +35,8 @@ def fix_project_xml(filename):
             out_data.append(line)
 
         out_data.append("<app>\n")
-        out_data.append("<name>duchamp</name>\n")
-        out_data.append("<user_friendly_name>Duchamp SourceFinder</user_friendly_name>\n")
+        out_data.append("<name>{0}</name>\n".format(PROJECT_NAME))
+        out_data.append("<user_friendly_name>{0}</user_friendly_name>\n".format(PROJECT_NICE_NAME))
         out_data.append("</app>\n")
 
         for line in file_data[edit_line:]:
@@ -40,4 +45,4 @@ def fix_project_xml(filename):
     with open(filename, 'w') as f:
         f.writelines(out_data)
 
-fix_project_xml("/home/ec2-user/projects/duchamp/project.xml")
+fix_project_xml("/home/ec2-user/projects/{0}/project.xml".format(PROJECT_NAME))
