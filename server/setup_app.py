@@ -63,6 +63,19 @@ def new_app(app_path):
             print "Coping {0} to {1}".format(f, os.path.join(app_path, folder))
             shutil.copy(os.path.join(base_template, f), os.path.join(app_path, folder))  # Copy each of the files in the base_template in to each of the newly made platform path.
 
+        for f in os.listdir(folder):
+            # Sign each file within the app folder
+            sign_file(f)
+
+
+def sign_file(filename):
+    with open(filename + ".sig", 'w') as f:
+        subprocess.call([filesystem['sign_executable'],
+                         filename,
+                         os.path.join(filesystem['keys'], 'code_sign_private')]
+                        ,
+                        stdout=f)
+
 
 def update_app(app_path, vm_path):
     # Updating an app
@@ -72,6 +85,11 @@ def update_app(app_path, vm_path):
     # We assume that the app folder has already been set up correctly
 
     folders = os.listdir(app_path)
+
+    # Sign the vm
+    sign_file(os.path.join(filesystem['vms'], sys.argv[2]))
+
+    sign_filename = os.path.join(filesystem['vms'], sys.argv[2]) + ".sig"
 
     # Each of the platform paths found in the app folder
     for folder in folders:
@@ -87,16 +105,8 @@ def update_app(app_path, vm_path):
         os.link(vm_path, os.path.join(folder, sys.argv[2]))
 
         # Sign it
-        sign_file = os.path.join(folder, sys.argv[2]+'.sig')
-        print "Signing new vm in to {0}".format(sign_file)
-
-        with open(sign_file, 'w') as f:
-
-            subprocess.call([filesystem['sign_executable'],
-                             os.path.join(folder, sys.argv[2]),
-                             os.path.join(filesystem['keys'], 'code_sign_private')]
-                            ,
-                            stdout=f)
+        print "Copying vm signature in to {0}".format(sign_file)
+        shutil.copy(sign_filename, folder)
 
     download_vm_path = os.path.join(filesystem['download'], sys.argv[2])
     if os.path.exists(download_vm_path):

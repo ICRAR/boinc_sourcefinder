@@ -220,6 +220,9 @@ def project_install():
     except:
         pass
 
+    with cd("/home/ec2-user/boinc_sourcefinder"):
+        sudo("git pull")
+
     try:
         sudo('mysql_install_db')
         sudo('chown -R mysql:mysql /var/lib/mysql/*')
@@ -305,12 +308,14 @@ def create_vm():
 
     sudo("cp /home/ec2-user/DuchampVM.vdi.gz /home/ec2-user/projects/{0}/vm/DuchampVM.vdi.gz".format(PROJECT_NAME))
 
-    sudo('gunzip /home/ec2-user/projects/{0}/vm/DuchampVM.vdi.gz'.format(PROJECT_NAME))
+    with cd("/home/ec2-user/projects/{0}/vm/".format(PROJECT_NAME)):
+        sudo('gunzip DuchampVM.vdi.gz'.format(PROJECT_NAME))
 
     sudo("cp /home/ec2-user/boinc_sourcefinder/machine-setup/app_templates /home/ec2-user/projects/{0}/ -r".format(PROJECT_NAME))
 
     # Run the setup_app.py script to set up the VM correctly
-    sudo("python /home/ec2-user/boinc_sourcefinder/server/setup_app.py 1.0 /home/ec2-user/projects/{0}/vm/DuchampVM.vdi".format(PROJECT_NAME))
+    sudo('mkdir /home/ec2-user/projects/{0}/apps/duchamp'.format(PROJECT_NAME))
+    sudo("python /home/ec2-user/boinc_sourcefinder/server/setup_app.py 1.0 DuchampVM.vdi".format(PROJECT_NAME))
 
 
 def base_setup_env():
