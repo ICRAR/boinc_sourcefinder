@@ -202,10 +202,11 @@ def project_install():
     user = 'ec2-user'#, 'apache']
 
     try:
-        sudo('useradd {0}.'.format(user))
+        #sudo('useradd {0}.'.format(user))
         sudo('chmod 700 /home/{0}'.format(user))
+        sudo('chmod +x /home/{0}'.format(user))
         sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
-        sudo('chmod 700 /home/{}/.ssh/authorized_keys'.format(user))
+        sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
         sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD:ALL" >> /etc/sudoers' '''.format(user))
     except:
@@ -215,8 +216,8 @@ def project_install():
     try:
         sudo('mkdir /home/ec2-user/boinc_sourcefinder')
         sudo('git clone https://github.com/sam6321/boinc_sourcefinder.git /home/ec2-user/boinc_sourcefinder')
-        sudo('mkdir ~/sf_cubes')
-        sudo('mkdir ~/sf_parameters')
+        sudo('mkdir /home/ec2-user/sf_cubes')
+        sudo('mkdir /home/ec2-user/sf_parameters')
     except:
         pass
 
@@ -229,11 +230,13 @@ def project_install():
         sudo('chkconfig mysqld --add')
         sudo('chkconfig mysqld on')
         sudo('service mysqld start')
+        sudo('sudo chkconfig mysqld on')
     except:
         pass
 
-    #if env.db_hostname == 'localhost':  # Create a user for the DB and change the default one's password, only if we're using localhost as our DB
-    #    run('''mysql -u root "CREATE USER '{1}'@'localhost' IDENTIFIED BY '{0}';"'''.format(env.db_password, env.db_username)) # "ALTER USER 'root'@'localhost' IDENTIFIED BY {0};
+    if env.db_hostname == 'localhost':  # Create a user for the DB and change the default one's password, only if we're using localhost as our DB
+        sudo("/usr/libexec/mysql55/mysqladmin -u root password '{0}'".format(env.db_password))
+        sudo("/usr/libexec/mysql55/mysqladmin -u root -h localhost password '{0}'".format(env.db_password))
 
     # Setup the database for recording WU's
     run(
@@ -250,6 +253,14 @@ def project_install():
     sudo('chmod -R oug+x /home/ec2-user/projects/{0}/html'.format(PROJECT_NAME))
     sudo('chmod ug+w /home/ec2-user/projects/{0}/log_*'.format(PROJECT_NAME))
     sudo('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(PROJECT_NAME))
+
+    with cd('/home/ec2-user/projects/{0}/'.format(PROJECT_NAME)):
+        sudo('chmod 02770 upload')
+        sudo('chmod 02770 html/cache')
+        sudo('chmod 02770 html/inc')
+        sudo('chmod 02770 html/languages')
+        sudo('chmod 02770 html/languages/compiled')
+        sudo('chmod 02770 html/user_profile')
 
     if exists("/home/ec2-user/boinc_sourcefinder/server/config/duchamp.settings"):
         sudo("rm /home/ec2-user/boinc_sourcefinder/server/config/duchamp.settings")
@@ -280,8 +291,21 @@ def setup_website():
 
     Copy the config files and restart the httpd daemon
     """
+    with cd('/home/ec2-user'):
+        sudo('chown ec2-user:ec2-user * -R')
+
     sudo('cp /home/ec2-user/projects/{0}/{0}.httpd.conf /etc/httpd/conf.d'.format(PROJECT_NAME))
+
+    pword = env.db_password
+
+    if len(pword) == 0 or pword == "":
+        pword = 'password'
+
+    sudo('htpasswd -cb /home/ec2-user/projects/{0}/html/ops/.htpasswd {1} {2}'.format(PROJECT_NAME, env.db_username, pword))
+
+    sudo('service httpd stop')
     sudo('service httpd start')
+    sudo('sudo chkconfig httpd on')
 
 
 def create_vm():
@@ -313,12 +337,17 @@ def create_vm():
 
     sudo("cp /home/ec2-user/boinc_sourcefinder/machine-setup/app_templates /home/ec2-user/projects/{0}/ -r".format(PROJECT_NAME))
 
+    # Ensure the project config is set up correctly
+    sudo('python /home/ec2-user/boinc_sourcefinder/machine-setup/boinc-server/setup_project_xml.py duchamp "Duchamp Sourcefinder"')
+
     with cd("/home/ec2-user/projects/{0}/".format(PROJECT_NAME)):
         sudo('bin/xadd')
 
     # Run the setup_app.py script to set up the VM correctly
     sudo('mkdir /home/ec2-user/projects/{0}/apps/duchamp'.format(PROJECT_NAME))
     sudo("python /home/ec2-user/boinc_sourcefinder/server/setup_app.py 1.0 DuchampVM.vdi".format(PROJECT_NAME))
+
+    return True
 
 
 def base_setup_env():
@@ -448,12 +477,15 @@ def boinc_build_ami():
     puts('Installing sourcefinder project...')
     project_install()
 
-    puts('Setting up website')
-    setup_website()
-
     puts("Attempting to create client VM")
     if not create_vm():
         return False
+
+
+    puts('Setting up website')
+    setup_website()
+
+    return True
 
     puts("stopping the instance")
     env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)

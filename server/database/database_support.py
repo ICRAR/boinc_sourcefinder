@@ -11,7 +11,7 @@ RUN = Table('run',
 
 PARAMETER_FILE = Table('parameter_file',
                        DUCHAMP_METADATA,
-                       Column('parameter_file_id', BigInteger, primary_key=True),
+                       Column('parameter_id', BigInteger, primary_key=True),
                        Column('parameter_file_name', String)
                        )
 
