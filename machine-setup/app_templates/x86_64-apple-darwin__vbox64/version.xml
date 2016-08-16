@@ -1,0 +1,21 @@
+<version>
+    <file>
+	<physical_name>vboxwrapper_26178_x86_64-apple-darwin</physical_name>
+        <main_program/>
+        <copy_file/>
+        <logical_name>vboxwrapper</logical_name>
+    </file>
+    <file>
+        <physical_name>DuchampVM.vdi</physical_name>
+        <logical_name>vm_image.vdi</logical_name>
+    	<copy_file/>
+	<gzip/>
+    </file>
+    <file> 
+         <physical_name>vbox_job.xml</physical_name>
+         <logical_name>vbox_job.xml</logical_name>
+         <copy_file/>
+    </file>
+    <dont_throttle/>
+    <api_version>7.5.0</api_version>
+</version>
