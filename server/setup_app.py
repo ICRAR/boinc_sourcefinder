@@ -63,9 +63,9 @@ def new_app(app_path):
             print "Coping {0} to {1}".format(f, os.path.join(app_path, folder))
             shutil.copy(os.path.join(base_template, f), os.path.join(app_path, folder))  # Copy each of the files in the base_template in to each of the newly made platform path.
 
-        for f in os.listdir(folder):
+        for f in os.listdir(os.path.join(app_path, folder)):
             # Sign each file within the app folder
-            sign_file(f)
+            sign_file(os.path.join(os.path.join(app_path, folder), f))
 
 
 def sign_file(filename):
