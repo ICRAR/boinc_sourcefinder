@@ -77,49 +77,6 @@ def sign_file(filename):
                         stdout=f)
 
 
-def fix_project_xml(filename):
-
-    good = False
-    with open(filename, 'r') as f:
-        for line in f:
-            if line.startswith("<app>"):
-                good = True
-                break
-
-    if good:
-        return  # already has the app in it
-
-    edit_line = 0
-    with open(filename, 'rw') as f:
-        edit_line += 1
-        for line in f:
-            if line.startswith("<boinc>"):
-                # insert after this
-                break
-
-    with open(filename, 'rw') as f:
-
-        file_data = f.readlines()
-
-        print file_data[:edit_line]
-        print file_data[edit_line:]
-
-        out_data = []
-        for line in file_data[:edit_line]:
-            out_data.append(line)
-
-        out_data.append("<app>")
-        out_data.append("<name>duchamp</name>")
-        out_data.append("<user_friendly_name>Duchamp SourceFinder</user_friendly_name>")
-        out_data.append("</app>")
-
-        for line in file_data[edit_line:]:
-            out_data.append(line)
-
-    with open(filename, 'w') as f:
-        f.writelines(out_data)
-
-
 def update_app(app_path, vm_path):
     # Updating an app
 
@@ -177,12 +134,10 @@ def update_app(app_path, vm_path):
         os.system('gzip < {0} > {0}.gz'.format(sys.argv[2]))
         dstatck.pop()
 
+
 def main():
     app_version_path = os.path.join(filesystem['apps'], sys.argv[1])  # This should be the app version
     vm_path = os.path.join(filesystem['vms'], sys.argv[2])  # This should be the path to the duchamp VM.vdi
-
-    # First, ensure the project xml file contains the Duchamp app
-    fix_project_xml(os.path.join(filesystem['project'], "project.xml"))
 
     if not os.path.isfile(vm_path):
         print "Invalid VM path given. Make sure your vm is located in {0}".format(filesystem['vms'])
