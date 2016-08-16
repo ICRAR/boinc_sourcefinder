@@ -150,7 +150,7 @@ def register_parameters_runid(run_id, parameters):
 
         # Silently remove all invalids from the list.
         size1 = len(parameters)
-        parameters = [x for x in parameters if connection.execute(select([PARAMETER_FILE]).where(PARAMETER_FILE.c.parameter_file_id == x)).fetchone() is not None]
+        parameters = [x for x in parameters if connection.execute(select([PARAMETER_FILE]).where(PARAMETER_FILE.c.parameter_id == x)).fetchone() is not None]
         size2 = len(parameters)
 
         if size1 > size2:
