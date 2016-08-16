@@ -313,6 +313,9 @@ def create_vm():
 
     sudo("cp /home/ec2-user/boinc_sourcefinder/machine-setup/app_templates /home/ec2-user/projects/{0}/ -r".format(PROJECT_NAME))
 
+    with cd("/home/ec2-user/projects/{0}/".format(PROJECT_NAME)):
+        sudo('bin/xadd')
+
     # Run the setup_app.py script to set up the VM correctly
     sudo('mkdir /home/ec2-user/projects/{0}/apps/duchamp'.format(PROJECT_NAME))
     sudo("python /home/ec2-user/boinc_sourcefinder/server/setup_app.py 1.0 DuchampVM.vdi".format(PROJECT_NAME))

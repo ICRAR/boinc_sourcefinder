@@ -77,6 +77,48 @@ def sign_file(filename):
                         stdout=f)
 
 
+def fix_project_xml(filename):
+
+    good = False
+    with open(filename, 'r') as f:
+        for line in f:
+            if line.startswith("<app>"):
+                good = True
+                break
+
+    if good:
+        return  # already has the app in it
+
+    edit_line = 0
+    with open(filename, 'rw') as f:
+        edit_line += 1
+        for line in f:
+            if line.startswith("<boinc>"):
+                # insert after this
+                break
+
+    with open(filename, 'rw') as f:
+
+        file_data = f.readlines()
+
+        print file_data[:edit_line]
+        print file_data[edit_line:]
+
+        out_data = []
+        for line in file_data[:edit_line]:
+            out_data.append(line)
+
+        out_data.append("<app>")
+        out_data.append("<name>duchamp</name>")
+        out_data.append("<user_friendly_name>Duchamp SourceFinder</user_friendly_name>")
+        out_data.append("</app>")
+
+        for line in file_data[edit_line:]:
+            out_data.append(line)
+
+    with open(filename, 'w') as f:
+        f.writelines(out_data)
+
 def update_app(app_path, vm_path):
     # Updating an app
 
@@ -105,7 +147,7 @@ def update_app(app_path, vm_path):
         os.link(vm_path, os.path.join(folder, sys.argv[2]))
 
         # Sign it
-        print "Copying vm signature in to {0}".format(sign_file)
+        print "Copying vm signature in to {0}".format(folder)
         shutil.copy(sign_filename, folder)
 
     download_vm_path = os.path.join(filesystem['download'], sys.argv[2])
