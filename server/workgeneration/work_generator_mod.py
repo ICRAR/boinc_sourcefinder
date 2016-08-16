@@ -78,7 +78,7 @@ def get_parameter_files(connection, cube_run_id):
 
     for param in params:
         fname = connection.execute(select([PARAMETER_FILE.c.parameter_file_name]).
-                                   where(PARAMETER_FILE.c.parameter_file_id == param['parameter_id'])).first()[0]
+                                   where(PARAMETER_FILE.c.parameter_id == param['parameter_id'])).first()[0]
 
         parameter_files.append(os.path.join(DIR_PARAM, fname))
 
