@@ -1,4 +1,4 @@
-DROP SCHEMA sourcefinder;
+DROP SCHEMA IF EXISTS sourcefinder;
 CREATE SCHEMA IF NOT EXISTS sourcefinder DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
 USE sourcefinder ;
 
