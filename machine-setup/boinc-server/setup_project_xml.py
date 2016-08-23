@@ -4,13 +4,13 @@ PROJECT_NAME = sys.argv[1]
 PROJECT_NICE_NAME = sys.argv[2]
 
 
-def find_line(filename, line):
+def find_line(filename, ln):
 
     edit_line = 0
     with open(filename, 'rw') as f:
         edit_line += 1
         for line in f:
-            if line.startswith(line):
+            if line.startswith(ln):
                 # insert after this
                 break
 
