@@ -282,12 +282,16 @@ bucket = icrar.sourcefinder.files' > /home/ec2-user/boinc_sourcefinder/server/co
     # Create the initial set of parameter files
     sudo('python /home/ec2-user/boinc_sourcefinder/server/workgeneration/generate_parameter_files.py')
 
-    sudo('python /home/ec2-user/boinc_sourcefinder/py_boinc/cy_project/src/setup.py install')
+    with cd('/home/ec2-user/boinc_sourcefinder/py_boinc/cy_project/src/'):
+        sudo('python setup.py install')
 
     # Copy over the duchamp_in and duchamp_out files that the work generator / validator uses
-    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/duchamp_in.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
+    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/boinc-server/duchamp_in.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
 
-    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/duchamp_out.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
+    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/boinc-server/duchamp_out.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
+
+    # Start the project!
+    sudo('/home/ec2-user/projects/duchamp/bin/start')
 
 
 def setup_website():
@@ -311,6 +315,9 @@ def setup_website():
     sudo('service httpd stop')
     sudo('service httpd start')
     sudo('sudo chkconfig httpd on')
+
+    with cd('/home/ec2-user/projects/duchamp'):
+        sudo('bin/run_in_ops create_forums.php')
 
 
 def create_vm():
