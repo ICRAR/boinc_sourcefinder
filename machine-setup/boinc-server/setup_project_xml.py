@@ -3,6 +3,7 @@ import sys
 PROJECT_NAME = sys.argv[1]
 PROJECT_NICE_NAME = sys.argv[2]
 
+
 def fix_project_xml(filename):
 
     good = False

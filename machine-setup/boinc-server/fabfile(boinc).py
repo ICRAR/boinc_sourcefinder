@@ -21,7 +21,7 @@ INSTANCE_TYPE = 't2.small'
 
 YUM_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel python-pip curl-devel gfortran blas-devel lapack-devel'
 BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
-PIP_PACKAGES = 'boto sqlalchemy mysql fabric numpy scipy astropy'
+PIP_PACKAGES = 'boto sqlalchemy mysql fabric numpy scipy astropy cython'
 
 AWS_KEY = os.path.expanduser('~/.ssh/icrar_theskynet_private_test.pem')
 KEY_NAME = 'icrar_theskynet_private_test' # the key name to use to connect to the server
@@ -282,7 +282,12 @@ bucket = icrar.sourcefinder.files' > /home/ec2-user/boinc_sourcefinder/server/co
     # Create the initial set of parameter files
     sudo('python /home/ec2-user/boinc_sourcefinder/server/workgeneration/generate_parameter_files.py')
 
-    # Modify the config.xml file to match our project settings.
+    sudo('python /home/ec2-user/boinc_sourcefinder/py_boinc/cy_project/src/setup.py install')
+
+    # Copy over the duchamp_in and duchamp_out files that the work generator / validator uses
+    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/duchamp_in.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
+
+    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/duchamp_out.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
 
 
 def setup_website():
@@ -480,7 +485,6 @@ def boinc_build_ami():
     puts("Attempting to create client VM")
     if not create_vm():
         return False
-
 
     puts('Setting up website')
     setup_website()

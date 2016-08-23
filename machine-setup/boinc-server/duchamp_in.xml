@@ -1,0 +1,23 @@
+<input_template>
+    <file_info>
+        <number>0</number>
+    </file_info>
+    <file_info>
+        <number>1</number>
+    </file_info>
+    <workunit>
+            <file_ref>
+                <file_number>0</file_number>
+                <open_name>shared/input.fits.gz</open_name>
+                <copy_file/>
+            </file_ref>
+            <file_ref>
+                <file_number>1</file_number>
+                <open_name>shared/parameters.tar.gz</open_name>
+                <copy_file/>
+            </file_ref>
+        <rsc_disk_boinc>200000000000</rsc_disk_boinc>
+        <min_quorum>2</min_quorum>
+    </workunit>
+</input_template>
+
