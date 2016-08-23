@@ -55,6 +55,6 @@ RESULT = Table('result',
 
 CUBE_STATUS = Table('cube_status',
                     DUCHAMP_METADATA,
-                    Column('cube_status_id', BigInteger, primary_key=True, autoincrement=True),
+                    Column('cube_status_id', BigInteger, primary_key=True),
                     Column('status', String)
                     )
