@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS sourcefinder.`parameter_run` (
 
 # Cube processing status
 CREATE TABLE IF NOT EXISTS sourcefinder.`cube_status` (
-  cube_status_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  cube_status_id BIGINT UNSIGNED NOT NULL,
   status VARCHAR(100) NOT NULL,
 
   PRIMARY KEY (cube_status_id)
