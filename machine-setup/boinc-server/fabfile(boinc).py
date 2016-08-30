@@ -15,20 +15,18 @@ from fabric.utils import puts, abort, fastprint
 
 from os.path import exists as local_exists
 
-USERNAME = 'ec2-user'
-AMI_ID = 'ami-6869aa05' #'ami-7d6d6656'. This is the default amazon ami.
-INSTANCE_TYPE = 't2.small'
+USERNAME = 'ec2-user'  # The username used to connect to the server via SSH
+AMI_ID = 'ami-6869aa05'  # This is the default amazon ami.
+INSTANCE_TYPE = 't2.small'  # The type of instance to create
 
 YUM_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel python-pip curl-devel gfortran blas-devel lapack-devel'
 BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
-PIP_PACKAGES = 'boto sqlalchemy mysql fabric numpy scipy astropy cython'
+PIP_PACKAGES = 'boto sqlalchemy mysql fabric numpy scipy astropy cython boto3'
 
 AWS_KEY = os.path.expanduser('~/.ssh/icrar_theskynet_private_test.pem')
-KEY_NAME = 'icrar_theskynet_private_test' # the key name to use to connect to the server
-# PUBLIC_DNS = 'ec2-user@54-208-207-86.compute-1.amazonaws.com' unused
-SECURITY_GROUPS = ['sg-dd33e0b2'] # TheSkyNet security group
-SUBNET_ID = 'subnet-794e7d16' # production = subnet-5390a03c
-# NETWORK = 'vpc=b493a3db' # production = vpc-53af9f3c unused
+KEY_NAME = 'icrar_theskynet_private_test'  # the key name to use to connect to the server
+SECURITY_GROUPS = ['sg-dd33e0b2']  # TheSkyNet security group
+SUBNET_ID = 'subnet-794e7d16'  # production = subnet-5390a03c
 PROJECT_NAME = 'duchamp'
 PARAMETERS_DIRECTORY = "~/sf_parameters"
 CUBES_DIRECTORY = "~/sf_cubes"
@@ -235,10 +233,14 @@ def project_install():
         pass
 
     if env.db_hostname == 'localhost':  # Create a user for the DB and change the default one's password, only if we're using localhost as our DB
-        sudo("/usr/libexec/mysql55/mysqladmin -u root password '{0}'".format(env.db_password))
-        sudo("/usr/libexec/mysql55/mysqladmin -u root -h localhost password '{0}'".format(env.db_password))
+        sudo("/usr/libexec/mysql55/mysql_secure_installation")
+        puts("Database configured successfully.")
+        puts("Please enter the database credentials: ")
+        prompt('DB username?', 'db_username')
+        prompt('DB password?', 'db_password')
 
-    # Setup the database for recording WU's
+
+        # Setup the database for recording WU's
     run(
         'mysql --user={0} --host={1} --password={2} < /home/ec2-user/boinc_sourcefinder/server/database/create_database.sql'.format(
             env.db_username, env.db_hostname, env.db_password))
@@ -305,19 +307,14 @@ def setup_website():
 
     sudo('cp /home/ec2-user/projects/{0}/{0}.httpd.conf /etc/httpd/conf.d'.format(PROJECT_NAME))
 
-    pword = env.db_password
+    prompt("Username for ops?", "ops_user")
+    prompt("Password for ops?", "ops_password")
 
-    if len(pword) == 0 or pword == "":
-        pword = 'password'
-
-    sudo('htpasswd -cb /home/ec2-user/projects/{0}/html/ops/.htpasswd {1} {2}'.format(PROJECT_NAME, env.db_username, pword))
+    sudo('htpasswd -cb /home/ec2-user/projects/{0}/html/ops/.htpasswd {1} {2}'.format(PROJECT_NAME, env.ops_user, env.ops_password))
 
     sudo('service httpd stop')
     sudo('service httpd start')
     sudo('sudo chkconfig httpd on')
-
-    with cd('/home/ec2-user/projects/duchamp'):
-        sudo('bin/run_in_ops create_forums.php')
 
 
 def create_vm():
@@ -394,8 +391,6 @@ def base_setup_env():
     env.user = USERNAME
     env.key_filename = AWS_KEY
 
-    puts("Provide this as part of the command line for the next part: -H {0} ".format(ec2_instance.ip_address))
-
 
 def base_build_ami():
     """
@@ -471,9 +466,12 @@ def boinc_build_ami():
     # print env
 
     require('hosts', provided_by=[boinc_setup_env])
-    require('db_username', used_for="Setting up the database.")
-    require('db_password', used_for="Setting up the database.")
     require('db_hostname', used_for="Setting up the database.")
+
+    if env.db_hostname != 'localhost':
+        require('db_username', used_for="Setting up the database.")
+        require('db_password', used_for="Setting up the database.")
+
 
     # time.sleep(5)
 
@@ -496,8 +494,6 @@ def boinc_build_ami():
     puts('Setting up website')
     setup_website()
 
-    return True
-
     puts("stopping the instance")
     env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
     while not env.ec2_instance.update() == 'stopped':
@@ -508,7 +504,7 @@ def boinc_build_ami():
     prompt("Please enter an AMI name for the server instance:", 'ami_name', default="Sourcefinder server AMI")
 
     puts("The AMI is being created. Don't forget to terminate the instance if not needed")
-    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base BOINC AMI')
+    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base Sourcefinder AMI')
 
     puts('All done')
 

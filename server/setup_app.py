@@ -60,7 +60,7 @@ def new_app(app_path):
 
     for folder in folders:
         for f in base_template_folders:
-            print "Coping {0} to {1}".format(f, os.path.join(app_path, folder))
+            print "Copying {0} to {1}".format(f, os.path.join(app_path, folder))
             shutil.copy(os.path.join(base_template, f), os.path.join(app_path, folder))  # Copy each of the files in the base_template in to each of the newly made platform path.
 
         for f in os.listdir(os.path.join(app_path, folder)):

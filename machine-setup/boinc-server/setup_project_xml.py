@@ -53,33 +53,4 @@ def fix_project_xml(filename):
     with open(filename, 'w') as f:
         f.writelines(out_data)
 
-
-def fix_config_xml(filename):
-    edit_line = find_line(filename, "</daemon>")
-
-    with open(filename, 'rw') as f:
-
-        file_data = f.readlines()
-
-        out_data = []
-
-        for line in file_data[:edit_line]:
-            out_data.append(line)
-
-        out_data.append("<daemon>\n")
-        out_data.append("<cmd>/home/ec2-user/boinc_sourcefinder/server/assimilator/sourcefinder_assimilator.py -d 4 -app duchamp</cmd>")
-        out_data.append("</daemon>\n")
-
-        out_data.append("<daemon>\n")
-        out_data.append("<cmd>sample_bitwise_validator --app duchamp</cmd>")
-        out_data.append("</daemon>\n")
-
-        for line in file_data[edit_line:]:
-            out_data.append(line)
-
-    with open(filename, 'w') as f:
-        f.writelines(out_data)
-
-
 fix_project_xml("/home/ec2-user/projects/{0}/project.xml".format(PROJECT_NAME))
-fix_config_xml("/home/ec2-user/projects/{0}/config.xml".format(PROJECT_NAME))
