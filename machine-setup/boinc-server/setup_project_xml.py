@@ -67,11 +67,11 @@ def fix_config_xml(filename):
             out_data.append(line)
 
         out_data.append("<daemon>\n")
-        out_data.append("<cmd>/home/ec2-user/boinc_sourcefinder/server/assimilator/sourcefinder_assimilator.py -d 4 -app duchamp\n</cmd>")
+        out_data.append("<cmd>/home/ec2-user/boinc_sourcefinder/server/assimilator/sourcefinder_assimilator.py -d 4 -app duchamp</cmd>")
         out_data.append("</daemon>\n")
 
         out_data.append("<daemon>\n")
-        out_data.append("<cmd>sample_bitwise_validator --app duchamp\n</cmd>")
+        out_data.append("<cmd>sample_bitwise_validator --app duchamp</cmd>")
         out_data.append("</daemon>\n")
 
         for line in file_data[edit_line:]:
