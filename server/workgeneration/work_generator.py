@@ -1,8 +1,9 @@
+#! /usr/bin/env python
+
 # Work generator used to create workunits
 
 import argparse
 import os
-import shutil
 import sys
 
 base_path = os.path.dirname(__file__)
@@ -10,97 +11,98 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
 from utils.logging_helper import config_logger
 
-LOGGER = config_logger(__name__)
-LOGGER.info('Starting work generation')
+from config import  BOINC_DB_LOGIN, DB_LOGIN, WG_THRESHOLD, DIR_BOINC_PROJECT_PATH, DIR_PARAM
 
-
+sys.path.append(DIR_BOINC_PROJECT_PATH) # for pyboinc
 
 from sqlalchemy.engine import create_engine
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 import py_boinc
 from database.boinc_database_support import RESULT
 from Boinc import configxml
 from database.database_support import CUBE
-from work_generator_mod import convert_file_to_wu, create_workunit
 
-# TODO initially hard coded, will add to fabric files later on
-BOINC_DB_LOGIN = 'mysql://root@localhost/duchamp'
-DB_LOGIN = 'mysql://root@localhost/sourcefinder'
-WG_THRESHOLD = 500
-BOINC_PROJECT_PATH = '/home/ec2-user/projects/duchamp'
-parser = argparse.ArgumentParser()
-parser.add_argument('run_id', nargs=1, help='The run_id of paramater sets that you for which you want to generate work')
+from work_generator_mod import process_cube
 
-args = vars(parser.parse_args())
-RUN_ID = args['run_id'][0]
-
-# make a connection with the BOINC database on the server
-
-ENGINE = create_engine(BOINC_DB_LOGIN)
-connection = ENGINE.connect()
-# Fits that have server state of 2 - subtract that number from the WU threshold to determine how many new workunits are required
-count = connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()[0]
-connection.close()
-
-LOGGER.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
-
-# THIS MAKES EVERYTHING RUN FROM THE BOINC PROJECT PATH REMEMBER THIS RYAN...REMEMBER THIS
-if os.path.exists(BOINC_PROJECT_PATH):
-    os.chdir(BOINC_PROJECT_PATH)
-else:
-    os.chdir('.')
+LOGGER = config_logger(__name__)
+LOGGER.info('Starting work generation')
 
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
-param_abs_path = ''
-wu_abs_path = ''
+# Generate work for every cube in the database that has progress set to 0, regardless of the run ID.
 
-if count is not None and count >= WG_THRESHOLD:
-    LOGGER.info('Nothing to do')
-else:
-    boinc_config = configxml.ConfigFile().read()
-    download_directory = boinc_config.config.download_dir
-    fanout = long(boinc_config.config.uldl_dir_fanout)
-    LOGGER.info('Download directory is ' + download_directory + ' fanout is ' + str(fanout))
 
-    # check to see if parameter files for run_id exist:
-    if os.path.exists('parameter_files_' + RUN_ID):
-        LOGGER.info('Parameter set for run ' + RUN_ID + 'exists')
-        # tar the parameter files
-        param_abs_path = os.path.abspath('parameter_files_{0}'.format(RUN_ID))
-        LOGGER.info('Absolute path is' + param_abs_path)
-        tar = 'tar -zcvf {0}.tar.gz {0}'.format('parameter_files_{0}'.format(RUN_ID))
-        os.system(tar)
+def parse_args():
+    # Only one argument, which is the run ID
+    parser = argparse.ArgumentParser()
+    parser.add_argument('run_id', nargs='?', help='The run ID to register to', default=None)
+    args = vars(parser.parse_args())
+
+    return args['run_id']
+
+
+def check_threshold():
+    # Checks the current number of work units that have not been processed.
+
+    t_engine = create_engine(BOINC_DB_LOGIN) # to avoid confusion with the other variables these are prefixed with t
+    t_connection = t_engine.connect()
+
+    count = t_connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()[0]
+    t_connection.close()
+
+    LOGGER.info('Checking pending = {0} : threshold = {1}'.format(count, WG_THRESHOLD))
+
+    if count is None:  # in case of errors
+        return True
+
+    return count >= WG_THRESHOLD
+
+
+def main():
+
+    if check_threshold(): # true if we have enough already, false if we dont.
+        LOGGER.info('Nothing to do')
     else:
-        LOGGER.info('No parameter_files for run_id ' + RUN_ID)
-        exit()
+        boinc_config = configxml.ConfigFile(os.path.join(DIR_BOINC_PROJECT_PATH, 'config.xml')).read()
+        download_directory = boinc_config.config.download_dir
+        fanout = long(boinc_config.config.uldl_dir_fanout)
 
-    ret_val = py_boinc.boinc_db_open()
-    if ret_val != 0:
-        LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
+        LOGGER.info('Download directory is {0} fanout is {1}'.format(download_directory, str(fanout)))
 
-    files_to_workunits = []
-    # Check for registered cubes
-    registered = connection.execute(select([CUBE.c.cube_name]).where(CUBE.c.progress == 0))
-    if registered is None:
-        LOGGER.info("No files registered for work")
-    else:
-        for row in registered:  # get all workunits from wu directory
-            wu_abs_path = row[0]
-            string = row[0].rpartition('/')[-1]  # get rid of path names
-            wu_file = '{0}_{1}'.format(RUN_ID, string)
-            LOGGER.info('current wu is {0}'.format(wu_file))
-            wu_download_dir = convert_file_to_wu(wu_file, download_directory, fanout)
-            LOGGER.info('wu download directory is {0}'.format(wu_download_dir))
-            LOGGER.info(wu_abs_path)
-            LOGGER.info('wu path is {0}'.format(wu_download_dir))
-            shutil.copyfile(wu_abs_path, wu_download_dir)
-            param_download_dir = convert_file_to_wu('parameter_files_{0}.tar.gz'.format(RUN_ID), download_directory, fanout)
-            LOGGER.info('Param download dir is {0}'.format(param_download_dir))
-            shutil.copyfile(param_abs_path + '.tar.gz', param_download_dir)
-            # create the workunit
-            file_list = [wu_file, 'parameter_files_{0}.tar.gz'.format(RUN_ID)]
-            print file_list
-            #  convert workunit to the list
-            create_workunit('duchamp', wu_file, file_list)
+        run_id = parse_args()
+
+        LOGGER.info('Opening BOINC DB')
+        os.chdir(DIR_BOINC_PROJECT_PATH)
+
+        ret_val = py_boinc.boinc_db_open()
+        if ret_val != 0:
+            LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
+            exit(1)
+
+        # Check for registered cubes, ONLY ON OUR RUN ID!!
+
+        if run_id is not None:
+            # Check for registered cubes only for the specified run id.
+            cube_count = connection.execute(select([func.count(CUBE.c.cube_id)]).where(CUBE.c.progress == 0 and CUBE.c.run_id == run_id)).first()[0]
+            cubes = connection.execute(select([CUBE]).where(CUBE.c.progress == 0 and CUBE.c.run_id == run_id))
+        else:
+            # Check for all registered cubes
+            cube_count = connection.execute(select([func.count(CUBE.c.cube_id)]).where(CUBE.c.progress == 0)).first()[0]
+            cubes = connection.execute(select([CUBE]).where(CUBE.c.progress == 0))
+
+        if cube_count == 0:
+            if run_id is not None:
+                LOGGER.info('No pending cubes for run id {0}.'.format(run_id))
+            else:
+                LOGGER.info('No pending cubes.')
+        else:
+            # We have some cubes to process
+
+            for row in cubes:
+                process_cube(row, download_directory, fanout, connection)
+
+        py_boinc.boinc_db_close()
+
+if __name__ == '__main__':
+    main()

@@ -4,5 +4,5 @@
     <enable_shared_directory/>
     <vm_disk_controller_model>IntelAHCI</vm_disk_controller_model>
     <vm_disk_controller_type>sata</vm_disk_controller_type>
-    <vm_minimum_checkpoint_interval>1000000</vm_minimum_checkpoint_interval> <!-- about 11 days -->
+    <minimum_checkpoint_interval>1000000</minimum_checkpoint_interval>
 </vbox_job>

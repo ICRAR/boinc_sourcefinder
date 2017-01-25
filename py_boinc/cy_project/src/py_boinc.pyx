@@ -58,7 +58,13 @@ cdef extern from "c_project/create_work.h":
                     float rsc_fpops_est,
                     float rsc_fpops_bound,
                     float rsc_memory_bound,
-                    float rsc_disk_bound)
+                    float rsc_disk_bound,
+                    char* additional_xml,
+                    int opaque,
+                    int priority,
+                    int size_class,
+                    char** input_files,
+                    int number_input_files)
 
 cpdef int boinc_db_transaction_start():
     return transaction_start()
@@ -93,7 +99,9 @@ cpdef int boinc_create_work(char* app_name,
                       int priority,
                       int size_class,
                       list_input_files):
+
     cdef char **c_input_files = to_cstring_array(list_input_files)
+
     cdef int retval = create_work(app_name,
                        min_quorom,
                        max_success_results,

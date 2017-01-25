@@ -134,6 +134,7 @@ class Assimilator():
         if wu.error_mask & boinc_db.WU_ERROR_TOO_MANY_SUCCESS_RESULTS:
             self.logCritical("[%s] Error: too many success results\n", wu.name)
             return True
+
         return False
 
     def do_pass(self, app):
@@ -152,7 +153,7 @@ class Assimilator():
 
         units = database.Workunits.find(app=app, assimilate_state=boinc_db.ASSIMILATE_READY)
 
-        self.logDebug("pass %d, units %d\n", self.pass_count, len(units))
+        # self.logDebug("pass %d, units %d\n", self.pass_count, len(units))
 
         # look for workunits with correct appid and
         # assimilate_state==ASSIMILATE_READY
@@ -210,7 +211,6 @@ class Assimilator():
         are parsed as their true types, so integers will be ints,
         not strings.
         """
-
         args.reverse()
         while len(args):
             arg = args.pop()
@@ -265,6 +265,8 @@ class Assimilator():
                 workdone = self.do_pass(app)
                 database.close()
                 if not workdone:
+                    # clogging up the log file and I want to see other debug messages
+                    #self.logDebug("Sleeping for {0}\n".format(self.sleep_interval))
                     time.sleep(self.sleep_interval)
 
     def _writeLog(self, mode, *args):
