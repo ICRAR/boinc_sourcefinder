@@ -17,14 +17,14 @@ from os.path import exists as local_exists
 
 USERNAME = 'ec2-user'  # The username used to connect to the server via SSH
 AMI_ID = 'ami-6869aa05'  # This is the default amazon ami.
-INSTANCE_TYPE = 't2.small'  # The type of instance to create
+INSTANCE_TYPE = 't2.medium'  # The type of instance to create
 
 YUM_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel python-pip curl-devel gfortran blas-devel lapack-devel'
 BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
 PIP_PACKAGES = 'boto sqlalchemy mysql fabric numpy scipy astropy cython boto3'
 
-AWS_KEY = os.path.expanduser('~/.ssh/icrar_theskynet_private_test.pem')
-KEY_NAME = 'icrar_theskynet_private_test'  # the key name to use to connect to the server
+AWS_KEY = os.path.expanduser('~/.ssh/icrar_theskynet_sourcefinder_prod.pem')
+KEY_NAME = 'icrar_theskynet_sourcefinder_prod'  # the key name to use to connect to the server
 SECURITY_GROUPS = ['sg-dd33e0b2']  # TheSkyNet security group
 SUBNET_ID = 'subnet-794e7d16'  # production = subnet-5390a03c
 PROJECT_NAME = 'duchamp'
@@ -34,13 +34,7 @@ DEFAULT_S3_BUCKET = "icrar.sourcefinder.files"
 
 # def nfs_connect(shared_directory):
 #   """connect the nfs server to the /projects directory of the BOINC server"""
-#   sudo('mount -t nfs {0}:/{1} /projects'.format(PUBLIC_DNS, shared_directory))
-
-
-def yum_update():
-    """Update general machine packages"""
-
-    sudo('yum update')
+#   sudo('mount -t nfs {0}:/{1} /projects'.format(PUBLIC_DNS, shared_directory)
 
 
 def mount_ebs(block_name):
@@ -52,7 +46,6 @@ def mount_ebs(block_name):
     sudo('chown -R {0}:{0} /home/{0}/storage'.format(env.user))
 
 
-# Kevin's code
 def create_instance(ebs_size, ami_name, ec2_connection):
     """
     Create the AWS instance
@@ -167,8 +160,12 @@ def start_ami_instance(ami_id, instance_name):
 
 
 def general_install():
+    """
+    Install general packages to the server
+    :return:
+    """
     puts("updating yum...")
-    yum_update()
+    sudo('yum update')
 
     puts("installing yum packages...")
     sudo('yum install {0}'.format(YUM_PACKAGES))
@@ -182,9 +179,72 @@ def general_install():
             'export PYTHONPATH'])
 
 
-def boinc_install():
+def setup_website():
+    """
+    Setup the website
+
+    Copy the config files and restart the httpd daemon
+    """
+    with cd('/home/ec2-user'):
+        sudo('chown ec2-user:ec2-user * -R')
+
+    sudo('cp /home/ec2-user/projects/{0}/{0}.httpd.conf /etc/httpd/conf.d'.format(PROJECT_NAME))
+
+    prompt("Username for ops?", "ops_user")
+    prompt("Password for ops?", "ops_password")
+
+    sudo('htpasswd -cb /home/ec2-user/projects/{0}/html/ops/.htpasswd {1} {2}'.format(PROJECT_NAME, env.ops_user, env.ops_password))
+
+    sudo('service httpd stop')
+    sudo('service httpd start')
+    sudo('sudo chkconfig httpd on')
+
+
+def boinc_make_project():
+    """
+    Makes the boinc project on the server and starts it up
+    :return:
+    """
+
+    if not exists('home/ec2-user/projects/{0}/'.format(PROJECT_NAME)):
+        with cd('/home/ec2-user/boinc/tools'):
+            sudo('rm /home/ec2-user/projects/{0}/ -rf'.format(PROJECT_NAME))
+            run('./make_project --delete_prev_inst --drop_db_first -v --no_query --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'.format(
+                    env.hosts[0], env.db_username, env.db_hostname, env.db_password, PROJECT_NAME))
+
+    sudo('chmod -R oug+r /home/ec2-user/projects/{0}'.format(PROJECT_NAME))
+    sudo('chmod -R oug+x /home/ec2-user/projects/{0}/html'.format(PROJECT_NAME))
+    sudo('chmod ug+w /home/ec2-user/projects/{0}/log_*'.format(PROJECT_NAME))
+    sudo('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(PROJECT_NAME))
+
+    with cd('/home/ec2-user/projects/{0}/'.format(PROJECT_NAME)):
+        sudo('chmod 02770 upload')
+        sudo('chmod 02770 html/cache')
+        sudo('chmod 02770 html/inc')
+        sudo('chmod 02770 html/languages')
+        sudo('chmod 02770 html/languages/compiled')
+        sudo('chmod 02770 html/user_profile')
+
+    # Copy over the duchamp_in and duchamp_out files that the work generator / validator uses
+    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/boinc-server/duchamp_in.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
+
+    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/boinc-server/duchamp_out.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
+
+    setup_website()
+
+    # Start the project!
+    sudo('/home/ec2-user/projects/duchamp/bin/start')
+
+
+def project_install():
+    """
+    Installs boinc and the sourcefinder project.
+    Does NOT make a boinc project
+    :return:
+    """
 
     sudo('yum install {0}'.format(BOINC_PACKAGES))
+
     if not exists('boinc'):
         run('git clone https://github.com/BOINC/boinc.git')
         with cd('/home/ec2-user/boinc'):
@@ -193,10 +253,6 @@ def boinc_install():
             run('make')
     sudo('usermod -a -G ec2-user apache')
 
-
-def project_install():
-    # boinc_install() done before this anyway
-    # Clone the git project
     user = 'ec2-user'#, 'apache']
 
     try:
@@ -241,28 +297,8 @@ def project_install():
 
 
         # Setup the database for recording WU's
-    run(
-        'mysql --user={0} --host={1} --password={2} < /home/ec2-user/boinc_sourcefinder/server/database/create_database.sql'.format(
+    run('mysql --user={0} --host={1} --password={2} < /home/ec2-user/boinc_sourcefinder/server/database/create_database.sql'.format(
             env.db_username, env.db_hostname, env.db_password))
-
-    if not exists('home/ec2-user/projects/{0}/'.format(PROJECT_NAME)):
-        with cd('/home/ec2-user/boinc/tools'):
-            sudo('rm /home/ec2-user/projects/{0}/ -rf'.format(PROJECT_NAME))
-            run('./make_project --delete_prev_inst --drop_db_first -v --no_query --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'.format(
-                env.hosts[0], env.db_username, env.db_hostname, env.db_password, PROJECT_NAME))
-
-    sudo('chmod -R oug+r /home/ec2-user/projects/{0}'.format(PROJECT_NAME))
-    sudo('chmod -R oug+x /home/ec2-user/projects/{0}/html'.format(PROJECT_NAME))
-    sudo('chmod ug+w /home/ec2-user/projects/{0}/log_*'.format(PROJECT_NAME))
-    sudo('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(PROJECT_NAME))
-
-    with cd('/home/ec2-user/projects/{0}/'.format(PROJECT_NAME)):
-        sudo('chmod 02770 upload')
-        sudo('chmod 02770 html/cache')
-        sudo('chmod 02770 html/inc')
-        sudo('chmod 02770 html/languages')
-        sudo('chmod 02770 html/languages/compiled')
-        sudo('chmod 02770 html/user_profile')
 
     if exists("/home/ec2-user/boinc_sourcefinder/server/config/duchamp.settings"):
         sudo("rm /home/ec2-user/boinc_sourcefinder/server/config/duchamp.settings")
@@ -287,34 +323,18 @@ bucket = icrar.sourcefinder.files' > /home/ec2-user/boinc_sourcefinder/server/co
     with cd('/home/ec2-user/boinc_sourcefinder/py_boinc/cy_project/src/'):
         sudo('python setup.py install')
 
-    # Copy over the duchamp_in and duchamp_out files that the work generator / validator uses
-    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/boinc-server/duchamp_in.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
 
-    sudo('cp /home/ec2-user/boinc_sourcefinder/machine-setup/boinc-server/duchamp_out.xml /home/ec2-user/projects/{0}/templates/'.format(PROJECT_NAME))
+def upload_vm():
 
-    # Start the project!
-    sudo('/home/ec2-user/projects/duchamp/bin/start')
+    if not exists("/home/ec2-user/DuchampVM.vdi.gz"):
+        if not local_exists("DuchampVM.vdi.gz"):
+            puts("Missing DuchampVM.vdi.gz VM file.")
+            puts("Please place the VM file in the same file as the fabric script, and ensure it is named correctly")
 
+            return False
 
-def setup_website():
-    """
-    Setup the website
-
-    Copy the config files and restart the httpd daemon
-    """
-    with cd('/home/ec2-user'):
-        sudo('chown ec2-user:ec2-user * -R')
-
-    sudo('cp /home/ec2-user/projects/{0}/{0}.httpd.conf /etc/httpd/conf.d'.format(PROJECT_NAME))
-
-    prompt("Username for ops?", "ops_user")
-    prompt("Password for ops?", "ops_password")
-
-    sudo('htpasswd -cb /home/ec2-user/projects/{0}/html/ops/.htpasswd {1} {2}'.format(PROJECT_NAME, env.ops_user, env.ops_password))
-
-    sudo('service httpd stop')
-    sudo('service httpd start')
-    sudo('sudo chkconfig httpd on')
+        puts("Uploading VM to server...")
+        put('DuchampVM.vdi.gz', "/home/ec2-user/DuchampVM.vdi.gz".format(PROJECT_NAME), use_sudo=True)
 
 
 def create_vm():
@@ -329,15 +349,7 @@ def create_vm():
     except:
         pass
 
-    if not exists("/home/ec2-user/DuchampVM.vdi.gz"):
-        if not local_exists("DuchampVM.vdi.gz"):
-            puts("Missing DuchampVM.vdi.gz VM file.")
-            puts("Please place the VM file in the same file as the fabric script, and ensure it is named correctly")
-
-            return False
-
-        puts("Uploading VM to server...")
-        put('DuchampVM.vdi.gz', "/home/ec2-user/DuchampVM.vdi.gz".format(PROJECT_NAME), use_sudo=True)
+    upload_vm()
 
     sudo("cp /home/ec2-user/DuchampVM.vdi.gz /home/ec2-user/projects/{0}/vm/DuchampVM.vdi.gz".format(PROJECT_NAME))
 
@@ -394,17 +406,29 @@ def base_setup_env():
 
 def base_build_ami():
     """
-    Build the base AMI
+    Install all general packages, install boinc (without making the project), and upload the client VM to the server
     """
     puts('Building the amazon instance for server use...')
 
     require('hosts', provided_by=[base_setup_env])
 
+    require('db_hostname', used_for="Setting up the database.")
+
+    if env.db_hostname != 'localhost':
+        require('db_username', used_for="Setting up the database.")
+        require('db_password', used_for="Setting up the database.")
+
     puts('Updating yum')
-    yum_update()
+    sudo('yum update')
 
     puts('Performing general install')
     general_install()
+
+    puts('Installing sourcefinder software')
+    project_install()
+
+    puts('Uploading virtual machine to server')
+    upload_vm()
 
     puts("Stopping the instance")
     env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
@@ -420,8 +444,7 @@ def base_build_ami():
 
 def boinc_setup_env():
     """
-    Ask a series of questions before deploying to the cloud
-    Allow the user to select if an Elastic IP address is to be used
+    Get the previously constructed AMI and start an instance of it
     """
 
     ec2_connection = boto.connect_ec2()
@@ -459,33 +482,21 @@ def boinc_setup_env():
 
 def boinc_build_ami():
     """
-    Deploy the single server environment
-    Deploy the single server system in the AWS cloud 
+    Builds the boinc project on the boinc server.
+    The server is almost ready for use after this step.
     """
-    # puts('env = ')
-    # print env
 
     require('hosts', provided_by=[boinc_setup_env])
     require('db_hostname', used_for="Setting up the database.")
 
-    if env.db_hostname != 'localhost':
-        require('db_username', used_for="Setting up the database.")
-        require('db_password', used_for="Setting up the database.")
-
-
-    # time.sleep(5)
+    require('db_username', used_for="Setting up the database.")
+    require('db_password', used_for="Setting up the database.")
 
     puts('Updating packages...')
     general_install()
 
-    puts('Installing boinc...')
-    boinc_install()
-
-    # puts('setting up ebs') doesnt appear to be needed?
-    # mount_ebs("xvda") # testing with SDA3
-
-    puts('Installing sourcefinder project...')
-    project_install()
+    puts('Building boinc project...')
+    boinc_make_project()
 
     puts("Attempting to create client VM")
     if not create_vm():
@@ -494,18 +505,8 @@ def boinc_build_ami():
     puts('Setting up website')
     setup_website()
 
-    puts("stopping the instance")
-    env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
-    while not env.ec2_instance.update() == 'stopped':
-        fastprint('.')
-        time.sleep(5)
-
-    puts("Server install has completed successfully. The running server will now be saved as an AMI.")
-    prompt("Please enter an AMI name for the server instance:", 'ami_name', default="Sourcefinder server AMI")
-
-    puts("The AMI is being created. Don't forget to terminate the instance if not needed")
-    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base Sourcefinder AMI')
-
+    puts("Server install has completed successfully.")
+    puts("Server should be listed in AWS as {0}".format(env.instance_name))
     puts('All done')
 
 
