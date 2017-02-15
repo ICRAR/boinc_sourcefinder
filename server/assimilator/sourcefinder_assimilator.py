@@ -46,7 +46,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         with open(hashfile, 'r') as f:
             hash_from_file = f.read()
 
-        self.logNormal('Hash comparison {0} == {1}\n'.format(hash, hash_from_file))
+        self.logNormal('Hash comparison {0}\n'.format(hash == hash_from_file))
 
         return hash == hash_from_file
 
