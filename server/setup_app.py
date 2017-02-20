@@ -3,40 +3,14 @@
 import os, sys, shutil, subprocess
 from subprocess import Popen, PIPE
 from time import sleep
+from config import filesystem
+from utils.utilities import DirStack
 
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
-class DirStack:
-    """
-    DirStack is a simple helper class that allows the user to push directories on to the stack then
-    pop them off later. If you want to change the working directory of the program, use stack.push() then
-    os.chdir(dir).
-    Later, to restore the previous directory, use stack.pop()
-    """
-
-    def __init__(self):
-        self.stack = []
-
-    def push(self):
-        self.stack.append(os.getcwd())
-
-    def pop(self):
-        os.chdir(self.stack.pop())
-
 # Arg1 the app version to update
 # Arg2 path to the VM to set up
-
-filesystem = {'apps': '/home/ec2-user/projects/duchamp/apps/duchamp',
-              'app_templates': '/home/ec2-user/projects/duchamp/app_templates/',
-              'vms': '/home/ec2-user/projects/duchamp/vm/',
-              'sign_executable': '/home/ec2-user/projects/duchamp/bin/sign_executable',
-              'update_versions': '/home/ec2-user/projects/duchamp/bin/update_versions',
-              'keys': '/home/ec2-user/projects/duchamp/keys/',
-              'download': '/home/ec2-user/projects/duchamp/download/',
-              'project': '/home/ec2-user/projects/duchamp/'
-}
-
 
 def new_app(app_path):
     # Creating a new app
