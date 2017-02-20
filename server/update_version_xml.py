@@ -69,7 +69,7 @@ def main():
 
     apps = []
     vbox_config_name = ''
-    vm_name = os.path.join(filesystem['vms'], 'DuchampVM.vdi')
+    vm_name = os.path.join(filesystem['vms'], args['vm_name'])
     base_template_folder = os.path.join(filesystem['app_templates'], 'base_template')
 
     for folder in os.listdir(filesystem['app_templates']):
