@@ -42,6 +42,7 @@ def parse_args():
 
 def fix_app_version_xml(app_path, vm_name, xml_config_name):
     print 'Fixing {0}'.format(app_path)
+    basename = os.path.basename
     dstack.push()
     os.chdir(app_path)
 
@@ -54,7 +55,7 @@ def fix_app_version_xml(app_path, vm_name, xml_config_name):
             break
 
     with open(version_xml_path, 'w') as f:
-        new_xml = base_xml.format(exe_name, vm_name, xml_config_name)
+        new_xml = base_xml.format(basename(exe_name), basename(vm_name), basename(xml_config_name))
         print 'New XML: {0}'.format(new_xml)
         f.write(new_xml)
 
