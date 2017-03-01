@@ -1,5 +1,5 @@
 # A generic utilities package containing misc functions and classes used by server apps.
-import os
+import os, errno, tarfile
 
 class DirStack:
     """
@@ -25,3 +25,16 @@ def retry_on_exception(function, exception, num_retries):
             return function()
         except exception:
             num_retries -= 1
+
+def make_path(path):
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+
+
+def extract_tar(tar, path):
+    with tarfile.open(tar) as tf:
+        make_path(path)
+        tf.extractall(path)
