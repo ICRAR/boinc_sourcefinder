@@ -12,7 +12,7 @@ RESULT = Table('result',
                Column('workunitid', BigInteger),
                Column('appid', BigInteger),
                Column('name', String),
-               Column('server_state', BigInteger).
+               Column('server_state', BigInteger),
                Column('outcome', BigInteger),
 )
 
