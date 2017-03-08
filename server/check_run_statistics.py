@@ -13,11 +13,34 @@
 #   define('RESULT_OUTCOME_VALIDATE_ERROR',   6);
 #   define('RESULT_OUTCOME_CLIENT_DETACHED',  7);
 
+RESULT_OUTCOME_INIT = 0
+RESULT_OUTCOME_SUCCESS = 1
+RESULT_OUTCOME_COULDNT_SEND = 2
+RESULT_OUTCOME_CLIENT_ERROR = 3
+RESULT_OUTCOME_NO_REPLY = 4
+RESULT_OUTCOME_DIDNT_NEED = 5
+RESULT_OUTCOME_VALIDATE_ERROR = 6
+RESULT_OUTCOME_CLIENT_DETACHED = 7
+
 # Count all of the current server states:
 #   define('RESULT_SERVER_STATE_INACTIVE',       1);
 #   define('RESULT_SERVER_STATE_UNSENT',         2);
 #   define('RESULT_SERVER_STATE_IN_PROGRESS',    4);
 #   define('RESULT_SERVER_STATE_OVER',           5);
+
+RESULT_SERVER_STATE_INACTIVE = 1
+RESULT_SERVER_STATE_UNSENT = 2
+RESULT_SERVER_STATE_IN_PROGRESS = 4
+RESULT_SERVER_STATE_OVER = 5
+
+RESULT_NEW = 0
+RESULT_FILES_DOWNLOADING = 1
+RESULT_FILES_DOWNLOADED = 2
+RESULT_COMPUTE_ERROR = 3
+RESULT_FILES_UPLOADING = 4
+RESULT_FILES_UPLOADED = 5
+RESULT_ABORTED = 6
+RESULT_UPLOAD_FAILED = 7
 
 import os, sys
 from database.database_support import CUBE, PARAMETER_FILE
@@ -29,56 +52,44 @@ from config import BOINC_DB_LOGIN, DB_LOGIN
 
 class Stats:
     def __init__(self):
-        self.total_cubes = 0
-        self.cubes_without_wus = 0
-        self.cubes_without_canonical_results = 0
-        self.bad_canonical_results = 0
+        self.total_cubes = 0        # Total number of cubes (work units)
+        self.total_results = 0      # Total number of results
+        self.canonical_results = 0  # Number of work units with a canonical result
 
-        self.result_init = 0
-        self.result_success = 0
-        self.result_couldnt_send = 0
-        self.result_client_error = 0
-        self.result_no_reply = 0
-        self.result_didnt_need = 0
-        self.result_validate_error = 0
-        self.result_client_detached = 0
+        self.outcome_bad = 0        # Bad outcomes
+        self.outcome_good = 0       # Good outcomes
 
-        self.result_unknown = 0
+        self.client_bad = 0         # Bad client states
+        self.client_inprogress = 0  # Clients still in progress
+        self.client_good = 0        # Good client states
 
         self.server_inactive = 0
         self.server_unsent = 0
-        self.server_in_progress = 0
+        self.server_inprogress = 0
         self.server_over = 0
 
-        self.server_unknown = 0
-
-    def percentage(self, stat):
-        return "{0}%".format((stat / float(self.total_cubes)) * 100)
+    def percentage(self, stat, percent):
+        return "{0}%".format((stat / float(percent)) * 100)
 
     def summarise(self):
         # Print numbers and percentages
 
         print "Total Cubes: {0}".format(self.total_cubes)
-        print "Cubes without work units: {0}. {1}".format(self.cubes_without_wus, self.percentage(self.cubes_without_wus))
-        print "Cubes without canonical results: {0}. {1}".format(self.cubes_without_canonical_results, self.percentage(self.cubes_without_canonical_results))
-        print "Cubes with bad canonical result values: {0}. {1}".format(self.bad_canonical_results, self.percentage(self.bad_canonical_results))
+        print "Total Results: {0}".format(self.total_results)
+        print "Total Canonical Results: {0}. {1}".format(self.canonical_results, self.percentage(self.canonical_results, self.total_cubes))
+        print "Average Results Per Cube: {0}".format(self.total_results / float(self.total_cubes))
 
-        print "\nResult Init: {0}. {1}".format(self.result_init, self.percentage(self.result_init))
-        print "Result Success: {0}. {1}".format(self.result_success, self.percentage(self.result_success))
-        print "Result Couldn't Send: {0}. {1}".format(self.result_couldnt_send, self.percentage(self.result_couldnt_send))
-        print "Result Client Error: {0}. {1}".format(self.result_client_error, self.percentage(self.result_client_error))
-        print "Result No Reply: {0}. {1}".format(self.result_no_reply, self.percentage(self.result_no_reply))
-        print "Result Didn't Need: {0}. {1}".format(self.result_didnt_need, self.percentage(self.result_didnt_need))
-        print "Result Validate Error: {0}. {1}".format(self.result_validate_error, self.percentage(self.result_validate_error))
-        print "Result Client Detached: {0}. {1}".format(self.result_client_detached, self.percentage(self.result_client_detached))
-        print "\nResult Unknown: {0}. {1}".format(self.result_unknown, self.percentage(self.result_unknown))
+        print "\nGood Results: {0}. {1}".format(self.outcome_good, self.percentage(self.outcome_good, self.total_results))
+        print "\nBad Results: {0}. {1}".format(self.outcome_bad, self.percentage(self.outcome_bad, self.total_results))
 
-        print "\nServer State Inactive: {0}. {1}".format(self.server_inactive, self.percentage(self.server_inactive))
-        print "Server State Unsent: {0}. {1}".format(self.server_unsent, self.percentage(self.server_unsent))
-        print "Server State In Progress: {0}. {1}".format(self.server_in_progress, self.percentage(self.server_in_progress))
-        print "Server State Over: {0}. {1}".format(self.server_over, self.percentage(self.server_over))
+        print "\nClient Bad: {0}. {1}".format(self.client_bad, self.percentage(self.client_bad, self.total_results))
+        print "\nClient InProgress: {0}. {1}".format(self.client_inprogress, self.percentage(self.client_inprogress, self.total_results))
+        print "\nClient Good: {0}. {1}".format(self.client_good, self.percentage(self.client_good, self.total_results))
 
-        print "\nServer State Unknown: {0}. {1}".format(self.server_unknown, self.percentage(self.server_unknown))
+        print "\nServer Inactive: {0}. {1}".format(self.server_inactive, self.percentage(self.server_inactive, self.total_results))
+        print "\nServer Unsent: {0}. {1}".format(self.server_unsent, self.percentage(self.server_unsent, self.total_results))
+        print "\nServer InProgress: {0}. {1}".format(self.server_inprogress, self.percentage(self.server_inprogress, self.total_results))
+        print "\nServer Over: {0}. {1}".format(self.server_over, self.percentage(self.server_over, self.total_results))
 
 
 def make_connection(login):
@@ -112,51 +123,38 @@ def main():
         wu = CONNECTION_BOINC.execute(select([WORK_UNIT]).where(WORK_UNIT.c.name == '{0}_{1}'.format(run_id, cube['cube_name']))).first()
 
         if wu is None:
-            stats.cubes_without_wus += 1
             continue
 
-        if wu['canonical_resultid'] == 0:
-            stats.cubes_without_canonical_results += 1
-            continue
+        if wu['canonical_resultid'] != 0:
+            stats.canonical_results += 1
 
-        result = CONNECTION_BOINC.execute(select([RESULT]).where(RESULT.c.id == wu['canonical_resultid'])).first()
+        results = CONNECTION_BOINC.execute(select([RESULT]).where(RESULT.c.workunitid == wu['id']))
 
-        if result is None:
-            stats.bad_canonical_results += 1
-            continue
+        for result in results:
+            server_state = result['server_state']
+            client_state = result['client_state']
+            outcome = result['outcome']
 
-        server_state = result['server_state']
-        outcome = result['outcome']
+            if outcome == RESULT_OUTCOME_CLIENT_ERROR:
+                stats.outcome_bad += 1
+            else:
+                stats.outcome_good += 1
 
-        if server_state == 1:
-            stats.server_inactive += 1
-        elif server_state == 2:
-            stats.server_unsent += 1
-        elif server_state == 4:
-            stats.server_in_progress += 1
-        elif server_state == 5:
-            stats.server_over += 1
-        else:
-            stats.server_unknown += 1
+            if client_state == RESULT_COMPUTE_ERROR or client_state == RESULT_ABORTED or client_state == RESULT_UPLOAD_FAILED:
+                stats.client_bad += 1
+            elif client_state == RESULT_FILES_DOWNLOADED or client_state == RESULT_FILES_DOWNLOADING or client_state == RESULT_FILES_UPLOADING:
+                stats.client_inprogress += 1
+            else:
+                stats.client_good += 1
 
-        if outcome == 0:
-            stats.result_init += 1
-        elif outcome == 1:
-            stats.result_success += 1
-        elif outcome == 2:
-            stats.result_couldnt_send += 1
-        elif outcome == 3:
-            stats.result_client_error += 1
-        elif outcome == 4:
-            stats.result_no_reply += 1
-        elif outcome == 5:
-            stats.result_didnt_need += 1
-        elif outcome == 6:
-            stats.result_validate_error += 1
-        elif outcome == 7:
-            stats.result_client_detached += 1
-        else:
-            stats.result_unknown += 1
+            if server_state == RESULT_SERVER_STATE_INACTIVE:
+                stats.server_inactive += 1
+            elif server_state == RESULT_SERVER_STATE_UNSENT:
+                stats.server_unsent += 1
+            elif server_state == RESULT_SERVER_STATE_IN_PROGRESS:
+                stats.server_inprogress += 1
+            elif server_state == RESULT_SERVER_STATE_OVER:
+                stats.server_over += 1
 
     stats.summarise()
 
