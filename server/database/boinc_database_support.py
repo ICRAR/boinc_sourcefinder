@@ -1,7 +1,7 @@
 """
 Connect to the BOINC database
 """
-from sqlalchemy import Column, MetaData, BigInteger, String, Table
+from sqlalchemy import Column, MetaData, BigInteger, Integer, String, Table
 
 BOINC_METADATA = MetaData()
 
@@ -10,18 +10,17 @@ RESULT = Table('result',
                Column('id', BigInteger, primary_key=True, autoincrement=True),
                Column('server_state', BigInteger),
                Column('workunitid', BigInteger),
-               Column('appid', BigInteger),
+               Column('appid', Integer),
                Column('name', String),
-               Column('server_state', BigInteger),
-               Column('outcome', BigInteger),
+               Column('outcome', Integer),
 )
 
 WORK_UNIT = Table('workunit',
                   BOINC_METADATA,
                   Column('id', BigInteger, primary_key=True, autoincrement=True),
                   Column('name', String),
-                  Column('assimilate_state', BigInteger),
-                  Column('canonical_resultid', BigInteger)
+                  Column('assimilate_state', Integer),
+                  Column('canonical_resultid', Integer),
 )
 
 USER = Table('user',
