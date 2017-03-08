@@ -109,8 +109,7 @@ def main():
     for cube in cubes:
         stats.total_cubes += 1
 
-        wu = CONNECTION_BOINC.execute("select * from duchamp.workunit where workunit.name == {0}_{1}".format(run_id, cube.name)).first()
-        #wu = CONNECTION_BOINC.execute(select([WORK_UNIT]).where(WORK_UNIT.c.name == '{0}_{1}'.format(run_id, cube.name))).first()
+        wu = CONNECTION_BOINC.execute(select([WORK_UNIT]).where(WORK_UNIT.c.name == '{0}_{1}'.format(run_id, cube['cube_name']))).first()
 
         if wu is None:
             stats.cubes_without_wus += 1
