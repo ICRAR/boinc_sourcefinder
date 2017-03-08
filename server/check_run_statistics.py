@@ -134,6 +134,7 @@ def main():
             server_state = result['server_state']
             client_state = result['client_state']
             outcome = result['outcome']
+            stats.total_results += 1
 
             if outcome == RESULT_OUTCOME_CLIENT_ERROR:
                 stats.outcome_bad += 1
