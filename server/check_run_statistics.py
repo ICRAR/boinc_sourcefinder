@@ -80,16 +80,16 @@ class Stats:
         print "Average Results Per Cube: {0}".format(self.total_results / float(self.total_cubes))
 
         print "\nGood Results: {0}. {1}".format(self.outcome_good, self.percentage(self.outcome_good, self.total_results))
-        print "\nBad Results: {0}. {1}".format(self.outcome_bad, self.percentage(self.outcome_bad, self.total_results))
+        print "Bad Results: {0}. {1}".format(self.outcome_bad, self.percentage(self.outcome_bad, self.total_results))
 
         print "\nClient Bad: {0}. {1}".format(self.client_bad, self.percentage(self.client_bad, self.total_results))
-        print "\nClient InProgress: {0}. {1}".format(self.client_inprogress, self.percentage(self.client_inprogress, self.total_results))
-        print "\nClient Good: {0}. {1}".format(self.client_good, self.percentage(self.client_good, self.total_results))
+        print "Client InProgress: {0}. {1}".format(self.client_inprogress, self.percentage(self.client_inprogress, self.total_results))
+        print "Client Good: {0}. {1}".format(self.client_good, self.percentage(self.client_good, self.total_results))
 
         print "\nServer Inactive: {0}. {1}".format(self.server_inactive, self.percentage(self.server_inactive, self.total_results))
-        print "\nServer Unsent: {0}. {1}".format(self.server_unsent, self.percentage(self.server_unsent, self.total_results))
-        print "\nServer InProgress: {0}. {1}".format(self.server_inprogress, self.percentage(self.server_inprogress, self.total_results))
-        print "\nServer Over: {0}. {1}".format(self.server_over, self.percentage(self.server_over, self.total_results))
+        print "Server Unsent: {0}. {1}".format(self.server_unsent, self.percentage(self.server_unsent, self.total_results))
+        print "Server InProgress: {0}. {1}".format(self.server_inprogress, self.percentage(self.server_inprogress, self.total_results))
+        print "Server Over: {0}. {1}".format(self.server_over, self.percentage(self.server_over, self.total_results))
 
 
 def make_connection(login):
