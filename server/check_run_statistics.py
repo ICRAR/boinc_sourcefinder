@@ -53,7 +53,7 @@ class Stats:
         self.server_unknown = 0
 
     def percentage(self, stat):
-        return "{0}%".format((stat / self.total_cubes) * 100)
+        return "{0}%".format((stat / float(self.total_cubes)) * 100)
 
     def summarise(self):
         # Print numbers and percentages
