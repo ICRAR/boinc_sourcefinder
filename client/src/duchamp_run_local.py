@@ -93,7 +93,8 @@ def main():
     for i in range(0, num_workers):
         out_folder = 'worker_{0}'.format(i)
         make_path(os.path.join(args['output_folder'], out_folder))
-        thread = threading.Thread(target=worker, name=out_folder, args=[args['input_folder'][0], out_folder])
+        thread = threading.Thread(target=worker, name=out_folder,
+                                  args=[args['input_folder'][0], os.path.join(args['output_folder'], out_folder)])
         threads.append(thread)
         thread.start()
 
