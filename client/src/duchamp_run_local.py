@@ -1,7 +1,14 @@
 # Inputs: input folder, parameter folder, output folder
 # Outputs: output folder contains output file for each input.
-import argparse, os, time, threading, tarfile, subprocess
+import argparse, os, time, threading, tarfile, subprocess, errno
 
+
+def make_path(path):
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run duchamp on the provided set of inputs, using the provided set of parameters')
