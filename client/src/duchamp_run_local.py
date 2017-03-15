@@ -47,6 +47,7 @@ def worker(thread_name, input_folder, param_folder, output_folder):
 
         renamed = os.path.join(output_folder, 'input.fits')
         os.rename(unzipped, renamed)
+        print '{0} renamed {1} to {2}'.format(thread_name, unzipped, renamed)
         for param in param_files:
             param_abs = os.path.join(param_folder, param)
             print '{0}: Running duchamp on {1} with parameters {2}'.format(thread_name, fits_file, param)
