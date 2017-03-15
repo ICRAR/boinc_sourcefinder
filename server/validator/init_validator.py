@@ -109,7 +109,14 @@ def main():
     return 0
 
 if __name__ == '__main__':
-    exit_code = main()
-    if extract_path:
-        shutil.rmtree(extract_path)
-    sys.exit(exit_code)
+    try:
+        exit_code = main()
+        if extract_path:
+            shutil.rmtree(extract_path)
+        sys.exit(exit_code)
+    except Exception as e:
+        print "Exception in init validator: {0}".format(e.message)
+        # Pretend they're valid for now so that we don't lose results.
+        sys.exit(0)
+
+
