@@ -26,6 +26,7 @@ param_files = []
 
 def worker(thread_name, input_folder, param_folder, output_folder):
 
+    print '{0}: {1}, {2}, {3}'.format(thread_name, input_folder, param_folder, output_folder)
     while True:
         fits_files_lock.acquire()
 
