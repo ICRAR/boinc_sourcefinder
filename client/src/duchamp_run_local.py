@@ -24,7 +24,7 @@ fits_files_lock = None
 param_files = []
 
 
-def worker(input_folder, param_folder, output_folder):
+def worker(thread_name, input_folder, param_folder, output_folder):
 
     while True:
         fits_files_lock.acquire()
@@ -37,27 +37,28 @@ def worker(input_folder, param_folder, output_folder):
         fits_files_lock.release()
 
         input_file = os.path.join(input_folder, fits_file)
-        print 'Input: {0}'.format(input_file)
+        print '{0}: Input: {1}'.format(thread_name, input_file)
 
         unzipped = os.path.join(output_folder, fits_file[:-3])
-        print 'Unzipping to: {0}'.format(unzipped)
+        print '{0}: Unzipping to: {1}'.format(thread_name, unzipped)
 
         with open(unzipped, 'w+') as f:
             subprocess.call(['gunzip', '-c', input_file], stdout=f)
 
-        os.rename(unzipped, os.path.join(output_folder, 'input.fits'))
+        renamed = os.path.join(output_folder, 'input.fits')
+        os.rename(unzipped, renamed)
         for param in param_files:
             param_abs = os.path.join(param_folder, param)
-            print 'Running duchamp on {0} with parameters {1}'.format(fits_file, param)
+            print '{0}: Running duchamp on {1} with parameters {2}'.format(thread_name, fits_file, param)
             start = time.time()
             with open(os.devnull, 'w') as f:
                 subprocess.call(['Duchamp', '-p', param_abs], cwd=output_folder, stdout=f, stderr=f)
             end = time.time()
-            print 'Took {0} ms'.format((end - start) * 1000)
+            print '{0}: Took {1} ms'.format(thread_name, (end - start) * 1000)
 
-        os.remove(unzipped)
+        os.remove(renamed)
 
-    print '{0} done!'.format(output_folder)
+    print '{0} done!'.format(thread_name)
 
 
 def main():
@@ -95,7 +96,7 @@ def main():
         out_folder = 'worker_{0}'.format(i)
         make_path(os.path.join(args['output_folder'], out_folder))
         thread = threading.Thread(target=worker, name=out_folder,
-                                  args=[args['input_folder'][0],
+                                  args=[out_folder, args['input_folder'][0],
                                         args['parameter_folder'][0],
                                         os.path.join(args['output_folder'], out_folder)])
         threads.append(thread)
