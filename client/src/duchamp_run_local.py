@@ -39,7 +39,7 @@ def worker(input_folder, output_folder):
         input_file = os.path.join(input_folder, fits_file)
         print 'Input: {0}'.format(input_file)
 
-        subprocess.call(['gunzip', '-c', input_file, '>', output_folder])
+        subprocess.call(['gunzip', '-c', input_file], stdout=output_folder)
 
         fits_file = [f for f in os.listdir(output_folder) if f.endswith('.fits')][0]
         os.rename(fits_file, 'input.fits')
