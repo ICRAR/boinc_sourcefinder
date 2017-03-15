@@ -42,8 +42,8 @@ def worker(input_folder, output_folder):
         output_file = os.path.join(output_folder, fits_file[:-3])
         print 'Unzipping to: {0}'.format(output_file)
 
-        with open(output_file, 'w+'):
-            subprocess.call(['gunzip', '-c', input_file], stdout=output_file)
+        with open(output_file, 'w+') as f:
+            subprocess.call(['gunzip', '-c', input_file], stdout=f)
 
         fits_file = [f for f in os.listdir(output_folder) if f.endswith('.fits')][0]
         os.rename(fits_file, 'input.fits')
