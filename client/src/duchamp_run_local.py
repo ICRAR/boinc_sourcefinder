@@ -45,14 +45,13 @@ def worker(input_folder, param_folder, output_folder):
         with open(unzipped, 'w+') as f:
             subprocess.call(['gunzip', '-c', input_file], stdout=f)
 
-        fits_file = [f for f in os.listdir(output_folder) if f.endswith('.fits')][0]
-        os.rename(os.path.join(output_folder, fits_file), os.path.join(output_folder, 'input.fits'))
+        os.rename(unzipped, os.path.join(output_folder, 'input.fits'))
         for param in param_files:
-            param = os.path.join(param_folder, param)
+            param_abs = os.path.join(param_folder, param)
             print 'Running duchamp on {0} with parameters {1}'.format(fits_file, param)
             start = time.time()
             with open(os.devnull, 'w') as f:
-                subprocess.call(['Duchamp', '-p', param], cwd=output_folder, stdout=f)
+                subprocess.call(['Duchamp', '-p', param_abs], cwd=output_folder, stdout=f)
             end = time.time()
             print 'Took {0} ms'.format((end - start) * 1000)
 
