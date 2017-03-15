@@ -51,7 +51,7 @@ def worker(input_folder, param_folder, output_folder):
             param = os.path.join(param_folder, param)
             print 'Running duchamp on {0}'.format(param)
             start = time.time()
-            subprocess.call(['Duchamp', '-p', param], cwd=output_folder)
+            subprocess.call(['Duchamp', '-p', param], cwd=output_folder, stdout=os.devnull)
             end = time.time()
             print 'Took {0} ms'.format((end - start) * 1000)
 
