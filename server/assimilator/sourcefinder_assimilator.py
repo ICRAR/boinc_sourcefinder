@@ -79,15 +79,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         retval = self.process_result(wu, out_file)
 
-        # Are there any other files in the directory of the out_file?
-        if retval == 0:  # only remove if we're not retrying later
-            base = os.path.dirname(out_file)
-            fs = os.listdir(base)
-
-            if len(fs) <= 1:
-                # Only one file (the output file we just processed) we can remove this directory
-                shutil.rmtree(base)
-
         self.connection.close()
 
         return retval
