@@ -5,8 +5,8 @@ import argparse, os, time, threading, tarfile, subprocess
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run duchamp on the provided set of inputs, using the provided set of parameters')
-    parser.add_argument('input_folder', type=str, nargs='1')
-    parser.add_argument('parameter_folder', type=str, nargs='1')
+    parser.add_argument('input_folder', type=str, nargs=1)
+    parser.add_argument('parameter_folder', type=str, nargs=1)
     parser.add_argument('output_folder', type=str, default='.')
     parser.add_argument('--threads', type=int, default=4)
 
