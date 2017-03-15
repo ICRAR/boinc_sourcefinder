@@ -59,7 +59,7 @@ def worker(thread_name, input_folder, param_folder, output_folder):
             print '{0}: Running duchamp on {1} with parameters {2}'.format(thread_name, fits_file, param)
             start = time.time()
             with open(os.devnull, 'w') as f:
-                subprocess.call(['Duchamp', '-p', param_abs], cwd=output_folder, stdout=f)
+                subprocess.call(['Duchamp', '-p', param_abs], cwd=output_folder, stdout=f, stderr=f)
             end = time.time()
             print '{0}: Took {1} ms'.format(thread_name, (end - start) * 1000)
 
