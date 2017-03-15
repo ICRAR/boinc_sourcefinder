@@ -49,7 +49,7 @@ def worker(input_folder, param_folder, output_folder):
         os.rename(os.path.join(output_folder, fits_file), os.path.join(output_folder, 'input.fits'))
         for param in param_files:
             param = os.path.join(param_folder, param)
-            print 'Running duchamp on {0}'.format(param)
+            print 'Running duchamp on {0} with parameters {1}'.format(fits_file, param)
             start = time.time()
             with open(os.devnull, 'w') as f:
                 subprocess.call(['Duchamp', '-p', param], cwd=output_folder, stdout=f)
