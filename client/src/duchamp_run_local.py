@@ -51,6 +51,9 @@ def worker(thread_name, input_folder, param_folder, output_folder):
         print '{0} renamed {1} to {2}'.format(thread_name, unzipped, renamed)
 
         fits_output_path = os.path.join(output_folder, input_file[:-8])
+        print input_file[:-8]
+        print fits_output_path
+        print output_folder
         make_path(fits_output_path)
         print '{0} Making output path... {1}'.format(thread_name, fits_output_path)
 
