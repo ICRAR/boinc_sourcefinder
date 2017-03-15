@@ -46,7 +46,7 @@ def worker(input_folder, output_folder):
             subprocess.call(['gunzip', '-c', input_file], stdout=f)
 
         fits_file = [f for f in os.listdir(output_folder) if f.endswith('.fits')][0]
-        os.rename(fits_file, 'input.fits')
+        os.rename(os.path.join(output_folder, fits_file), os.path.join(output_folder, 'input.fits'))
         for param in param_files:
             print 'Running duchamp on {0}'.format(param)
             start = time.time()
