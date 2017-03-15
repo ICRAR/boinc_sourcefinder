@@ -36,7 +36,9 @@ def worker(input_folder, output_folder):
         fits_file = fits_files.pop()
         fits_files_lock.release()
 
-        tar = tarfile.open(os.path.join(input_folder, fits_file))
+        input_file = os.path.join(input_folder, fits_file)
+        print 'Input: {0}'.format(input_file)
+        tar = tarfile.open(input_file)
         tar.extractall(output_folder)
         tar.close()
 
