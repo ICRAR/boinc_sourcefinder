@@ -73,6 +73,10 @@ def main():
     param_files = [f for f in os.listdir(args['parameter_folder'][0]) if f.endswith('.par')]
     num_workers = args['threads']
 
+    print 'Number of fits files {0}'.format(len(fits_files))
+    print 'Number of parameter files {0}'.format(len(param_files))
+    print 'Worker Threads {0}'.format(num_workers)
+
     threads = []
     for i in range(0, num_workers):
         out_folder = 'worker_{0}'.format(i)
