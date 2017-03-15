@@ -24,7 +24,7 @@ fits_files_lock = None
 param_files = []
 
 
-def worker(input_folder, output_folder):
+def worker(input_folder, param_folder, output_folder):
 
     while True:
         fits_files_lock.acquire()
@@ -48,6 +48,7 @@ def worker(input_folder, output_folder):
         fits_file = [f for f in os.listdir(output_folder) if f.endswith('.fits')][0]
         os.rename(os.path.join(output_folder, fits_file), os.path.join(output_folder, 'input.fits'))
         for param in param_files:
+            param = os.path.join()
             print 'Running duchamp on {0}'.format(param)
             start = time.time()
             subprocess.call(['Duchamp', '-p', param])
@@ -94,7 +95,9 @@ def main():
         out_folder = 'worker_{0}'.format(i)
         make_path(os.path.join(args['output_folder'], out_folder))
         thread = threading.Thread(target=worker, name=out_folder,
-                                  args=[args['input_folder'][0], os.path.join(args['output_folder'], out_folder)])
+                                  args=[args['input_folder'][0],
+                                        args['parameter_folder'][0],
+                                        os.path.join(args['output_folder'], out_folder)])
         threads.append(thread)
         thread.start()
 
