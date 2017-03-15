@@ -62,6 +62,10 @@ def main():
                 # Run Duchamp subprocess for each parameter file the fits file (duchamp -p param_file)
     # Wait for all worker threads
     # Copy all output files from the worker directories in to the output folder.
+    print 'Input: {0}'.format(args['input_folder'])
+    print 'Parameters: {0}'.format(args['parameter_folder'])
+    print 'Output: {0}'.format(args['output_folder'])
+    time.sleep(5)
 
     global fits_files, fits_files_lock, param_files
     fits_files = [f for f in os.listdir(args['input_folder']) if f.endswith('.fits.gz')]
