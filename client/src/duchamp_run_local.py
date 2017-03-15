@@ -71,7 +71,7 @@ def main():
     fits_files = [f for f in os.listdir(args['input_folder'][0]) if f.endswith('.fits.gz')]
     fits_files_lock = threading.Lock()
     param_files = [f for f in os.listdir(args['parameter_folder'][0]) if f.endswith('.par')]
-    num_workers = args['--threads']
+    num_workers = args['threads']
 
     threads = []
     for i in range(0, num_workers):
