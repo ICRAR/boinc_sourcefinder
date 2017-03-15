@@ -17,7 +17,7 @@ fits_files_lock = None
 param_files = []
 
 
-def worker(output_folder):
+def worker(input_folder, output_folder):
 
     while True:
         fits_files_lock.acquire()
@@ -29,7 +29,7 @@ def worker(output_folder):
         fits_file = fits_files.pop()
         fits_files_lock.release()
 
-        tar = tarfile.open(fits_file)
+        tar = tarfile.open(os.path.join(input_folder, fits_file))
         tar.extractall(output_folder)
         tar.close()
 
@@ -81,7 +81,7 @@ def main():
     for i in range(0, num_workers):
         out_folder = 'worker_{0}'.format(i)
         os.mkdir(os.path.join(args['output_folder'], out_folder))
-        thread = threading.Thread(target=worker, name=out_folder, args=[out_folder])
+        thread = threading.Thread(target=worker, name=out_folder, args=[args['input_folder'][0], out_folder])
         threads.append(thread)
         thread.start()
 
