@@ -43,7 +43,7 @@ def worker(input_folder, param_folder, output_folder):
         print 'Unzipping to: {0}'.format(unzipped)
 
         with open(unzipped, 'w+') as f:
-            subprocess.call(['gunzip', '-c', input_file], stdout=f)
+            subprocess.call(['gunzip', '-c', input_file], stdout=f,cwd=output_folder)
 
         fits_file = [f for f in os.listdir(output_folder) if f.endswith('.fits')][0]
         os.rename(os.path.join(output_folder, fits_file), os.path.join(output_folder, 'input.fits'))
@@ -51,10 +51,7 @@ def worker(input_folder, param_folder, output_folder):
             param = os.path.join(param_folder, param)
             print 'Running duchamp on {0}'.format(param)
             start = time.time()
-            olddir = os.getcwd()
-            os.chdir(output_folder)
             subprocess.call(['Duchamp', '-p', param])
-            os.chdir(olddir)
             end = time.time()
             print 'Took {0} ms'.format((end - start) * 1000)
 
