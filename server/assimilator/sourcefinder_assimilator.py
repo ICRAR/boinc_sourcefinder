@@ -116,8 +116,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             for f in files:
                 self.logNormal("{0}\n".format(f))
 
-            self.logNormal("WU files to erase: {0}".format(len(wu_files)))
-            for f in files:
+            self.logNormal("WU files to erase: {0}\n".format(len(wu_files)))
+            for f in wu_files:
                 self.logNormal("{0}\n".format(f))
 
             self.erase_files(files)
