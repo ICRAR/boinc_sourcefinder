@@ -77,8 +77,8 @@ def check_log_parameters():
 
 check_functions = [(check_output_files, 'Missing one or more output files'),
                    (check_csv_header, 'CSV header is incorrect'),
-                   (check_csv_hash, 'CSV hash is incorrect'),
-                   (check_log_parameters, "Log file doesn't contain a run for each parameter")]
+                   (check_csv_hash, 'CSV hash is incorrect')]
+                   #(check_log_parameters, "Log file doesn't contain a run for each parameter")]
 
 
 def parse_args():
