@@ -10,6 +10,7 @@ import os, sys, hashlib, csv, shutil
 sys.path.append(os.path.abspath('/home/ec2-user/boinc_sourcefinder/server/'))
 sys.path.append(os.path.abspath('/home/ec2-user/boinc_sourcefinder/server/validator'))
 
+from config import filesystem
 from utils.utilities import make_path, extract_tar
 from shared import output_files
 
@@ -102,6 +103,11 @@ def main():
         print "Validation successful"
         return 0
     else:
+        print "Validation Failed"
+        folder = os.path.join(filesystem['validator_invalids'], 'compare')
+        make_path(folder)
+        shutil.copy(f[0], folder)
+        shutil.copy(f[1], folder)
         return 1
 
 if __name__ == '__main__':

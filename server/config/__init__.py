@@ -44,7 +44,8 @@ filesystem = {'apps': '/home/ec2-user/projects/duchamp/apps/duchamp',
               'download': '/home/ec2-user/projects/duchamp/download/',
               'project': '/home/ec2-user/projects/duchamp/',
               'log': '/home/ec2-user/projects/duchamp/log_ip-10-0-131-204/',
-              'old_logs': '/home/ec2-user/old_logs/'
+              'old_logs': '/home/ec2-user/old_logs/',
+              'validator_invalids': '/home/ec2-user/validator_invalids/'
              }
 
 if __name__ == '__main__':
