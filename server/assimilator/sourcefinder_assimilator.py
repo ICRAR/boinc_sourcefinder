@@ -85,7 +85,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         for f in files:
             self.logNormal("Erasing {0}".format(f))
-            shutil.move(f, deletion_path)
+            try:
+                shutil.move(f, deletion_path)
+            except IOError as e:
+                self.logCritical("Could not move: {0}".format(e.message))
 
     def assimilate_handler(self, wu, results, canonical_result):
         self.engine = create_engine(DB_LOGIN)
