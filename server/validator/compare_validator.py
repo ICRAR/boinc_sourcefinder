@@ -6,8 +6,7 @@
 
 import os, sys, hashlib, csv, shutil
 
-base_path = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+sys.path.append(os.path.abspath('/home/ec2-user/boinc_sourcefinder/server/'))
 
 from utils.utilities import make_path, extract_tar
 from shared import output_files
