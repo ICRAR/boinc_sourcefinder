@@ -31,5 +31,7 @@ def main():
         with gzip.open(os.path.join(filesystem['old_logs'], compressed_name), 'wb') as compressed_file:
             compressed_file.write(file_data)
 
+        os.remove(full_path)
+
 if __name__ == "__main__":
     main()
