@@ -48,6 +48,7 @@ def check_csv_hash():
     with open(hashfile_abs, 'r') as f:
         hash_file = f.read()
 
+    print "Hash compare: {0}, {1}".format(csv_hash, hash_file)
     return csv_hash == hash_file
 
 
@@ -58,6 +59,7 @@ def check_csv_header():
         csv_reader = csv.DictReader(f)
         headers = [f.strip() for f in csv_reader.fieldnames]
 
+    print "Header compare:\n{0}\n{1}".format(headers, csv_valid_header)
     return headers == csv_valid_header
 
 
@@ -66,6 +68,10 @@ def check_log_parameters():
     log_abs = os.path.join(outputs_path, output_files['log'])
     with open(log_abs, 'r') as logfile:
         matches = re.findall("INFO:root:Running duchamp for supercube_run_[0-9]{5}\.par", logfile.read())
+
+    if len(matches) < num_parameters:
+        with open(log_abs, 'r') as logfile:
+            print "Log file that is invalid: {0}".format(logfile.read())
 
     return len(matches) >= num_parameters
 

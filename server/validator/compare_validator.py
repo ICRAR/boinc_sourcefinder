@@ -69,6 +69,7 @@ class CSVCompare:
             return False
 
         if len(self.cells) != len(other.cells):
+            print "Length of cells differs: {0}, to {1}".format(len(self.cells), len(other.cells))
             return False
 
         for r1, r2 in zip(self.cells, other.cells):
@@ -76,6 +77,7 @@ class CSVCompare:
             val2 = float(r2)
 
             if abs(val1 - val2) > self.threshold:
+                print "A cell value doesn't match: {0}, to {1}".format(val1, val2)
                 return False
 
         return True
