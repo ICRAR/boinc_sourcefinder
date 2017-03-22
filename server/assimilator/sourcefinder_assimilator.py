@@ -113,8 +113,13 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             files = [self.get_file_path(r) for r in results]
             wu_files = self.get_wu_files(wu)
 
-            self.logNormal("Result files to erase: {0}".format(files))
-            self.logNormal("WU files to erase: {0}".format(wu_files))
+            self.logNormal("Result files to erase: {0}\n".format(len(files)))
+            for f in files:
+                self.logNormal("{0}\n".format(f))
+
+            self.logNormal("WU files to erase: {0}".format(len(wu_files)))
+            for f in files:
+                self.logNormal("{0}\n".format(f))
 
             self.erase_files(files)
             self.erase_files(wu_files)
@@ -258,10 +263,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                 s3.file_upload(os.path.join(outputs, f), get_file_upload_key(wu.name, f))
 
         shutil.rmtree(outputs)
-
-        # Remove the actual result file too
-
-
 
         return 0
 

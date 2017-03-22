@@ -42,7 +42,9 @@ filesystem = {'apps': '/home/ec2-user/projects/duchamp/apps/duchamp',
               'update_versions': '/home/ec2-user/projects/duchamp/bin/update_versions',
               'keys': '/home/ec2-user/projects/duchamp/keys/',
               'download': '/home/ec2-user/projects/duchamp/download/',
-              'project': '/home/ec2-user/projects/duchamp/'
+              'project': '/home/ec2-user/projects/duchamp/',
+              'log': 'home/ec2-user/projects/duchamp/log_ip-10-0-131-204/',
+              'old_logs': '/home/ec2-user/old_logs/'
              }
 
 if __name__ == '__main__':
