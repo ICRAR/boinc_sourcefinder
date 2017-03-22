@@ -21,7 +21,7 @@ import tarfile as tf
 import csv
 import hashlib
 import shutil
-from utils.utilities import retry_on_exception
+from utils.utilities import retry_on_exception, make_path
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
@@ -80,10 +80,13 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         return files
 
     def erase_files(self, files):
+        deletion_path = '/home/ec2-user/files_to_delete'
+        make_path(deletion_path)
+
         for f in files:
             if os.path.isfile(f):
                 self.logNormal("Erasing {0}".format(f))
-                shutil.rmtree(f)
+                shutil.move(f, deletion_path)
 
     def assimilate_handler(self, wu, results, canonical_result):
         self.engine = create_engine(DB_LOGIN)
