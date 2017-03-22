@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 # Validation stage 2
 # Compares two results and determines if they are equivalent.
 # Checks based on the following criteria:
@@ -7,6 +8,7 @@
 import os, sys, hashlib, csv, shutil
 
 sys.path.append(os.path.abspath('/home/ec2-user/boinc_sourcefinder/server/'))
+sys.path.append(os.path.abspath('/home/ec2-user/boinc_sourcefinder/server/validator'))
 
 from utils.utilities import make_path, extract_tar
 from shared import output_files
