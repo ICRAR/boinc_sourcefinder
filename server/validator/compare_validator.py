@@ -30,6 +30,7 @@ class CSVCompare:
         hash_name = hashlib.md5(wu_file).hexdigest()[:8]
 
         self.cells = None
+        self.rows = None
 
         self.extract_directory_base = "/tmp/tmp_output{0}".format(hash_name)
         self.threshold = 0.0001
@@ -57,6 +58,7 @@ class CSVCompare:
                 # Load the CSV rows.
                 csv_file = csv.DictReader(f)
                 self.cells = [a for r in csv_file for a in r.values()]
+                self.rows = [r for r in csv_file]
         except:
             raise
         finally:
@@ -64,6 +66,12 @@ class CSVCompare:
                 shutil.rmtree(extract_dir)
 
         return self.cells
+
+    def _compare_rows(self, row1, row2):
+        for cell1, cell2 in zip(row1, row2):
+            if abs(float(cell1) - float(cell2)) > self.threshold:
+                return False
+        return True
 
     def __eq__(self, other):
         if type(other) != type(self):
@@ -73,12 +81,15 @@ class CSVCompare:
             print "Length of cells differs: {0}, to {1}".format(len(self.cells), len(other.cells))
             return False
 
-        for r1, r2 in zip(self.cells, other.cells):
-            val1 = float(r1)
-            val2 = float(r2)
+        # Search for a matching rows. All of my rows must match with one of their rows.
+        for my_row in self.rows:
+            found = False
+            for other_row in other.rows:
+                if self._compare_rows(my_row, other_row):
+                    found = True
+                    break
 
-            if abs(val1 - val2) > self.threshold:
-                print "A cell value doesn't match: {0}, to {1}".format(val1, val2)
+            if not found:
                 return False
 
         return True
