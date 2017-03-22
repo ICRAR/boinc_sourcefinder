@@ -84,9 +84,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         make_path(deletion_path)
 
         for f in files:
-            if os.path.isfile(f):
-                self.logNormal("Erasing {0}".format(f))
-                shutil.move(f, deletion_path)
+            self.logNormal("Erasing {0}".format(f))
+            shutil.move(f, deletion_path)
 
     def assimilate_handler(self, wu, results, canonical_result):
         self.engine = create_engine(DB_LOGIN)
