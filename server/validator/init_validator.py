@@ -114,7 +114,7 @@ def main():
             print func[1]
             folder = os.path.join(filesystem['validator_invalids'], 'init')
             make_path(folder)
-            shutil.copy(f)
+            shutil.copy(f, folder)
             return 1
 
     return 0
