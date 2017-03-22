@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 # Validation stage 1
 # Checks one result and determines if it is valid
 # Checks based on the following criteria:
