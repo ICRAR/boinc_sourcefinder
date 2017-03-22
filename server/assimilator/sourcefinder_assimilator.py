@@ -11,7 +11,7 @@ sys.path.append('/home/ec2-user/boinc_sourcefinder/server/assimilator')
 
 from utils.logging_helper import config_logger
 from utils.amazon_helper import S3Helper, get_file_upload_key
-from config import DB_LOGIN, S3_BUCKET_NAME
+from config import DB_LOGIN, S3_BUCKET_NAME, filesystem
 from sqlalchemy import create_engine, select, and_
 from sqlalchemy.exc import OperationalError
 from database.database_support import CUBE, RESULT
@@ -59,6 +59,32 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         self.process_result(wu, filename)
 
+    def get_wu_files(self, wu):
+        files = []
+        path = filesystem['download']
+        wu_name = wu.name + '.fits.gz'
+
+        s = hashlib.md5(wu_name).hexdigest()[:8]
+        x = long(s, 16)
+
+        hash_dir_name = "{0}/{1}".format(path, x % int(self.config.uldl_dir_fanout))
+        wu_path = os.path.join(hash_dir_name, wu_name)
+        wu_path_md5 = wu_path + '.md5'
+
+        if os.path.isfile(wu_path):
+            files.append(wu_path)
+
+        if os.path.isfile(wu_path_md5):
+            files.append(wu_path_md5)
+
+        return files
+
+    def erase_files(self, files):
+        for f in files:
+            if os.path.isfile(f):
+                self.logNormal("Erasing {0}".format(f))
+                shutil.rmtree(f)
+
     def assimilate_handler(self, wu, results, canonical_result):
         self.engine = create_engine(DB_LOGIN)
         self.connection = self.engine.connect()
@@ -78,6 +104,17 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             return 0
 
         retval = self.process_result(wu, out_file)
+
+        if retval == 0:
+            # Successful assimilation, erase the work unit file and all the other result files
+            files = [self.get_file_path(r) for r in results]
+            wu_files = self.get_wu_files(wu)
+
+            self.logNormal("Result files to erase: {0}".format(files))
+            self.logNormal("WU files to erase: {0}".format(wu_files))
+
+            self.erase_files(files)
+            self.erase_files(wu_files)
 
         self.connection.close()
 
@@ -218,6 +255,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                 s3.file_upload(os.path.join(outputs, f), get_file_upload_key(wu.name, f))
 
         shutil.rmtree(outputs)
+
+        # Remove the actual result file too
+
+
 
         return 0
 
