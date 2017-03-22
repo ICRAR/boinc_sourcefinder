@@ -71,10 +71,12 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         wu_path = os.path.join(hash_dir_name, wu_name)
         wu_path_md5 = wu_path + '.md5'
 
-        if os.path.isfile(wu_path):
+        self.logNormal("Wu file?: {0}\n".format(wu_path))
+        if os.path.exists(wu_path):
             files.append(wu_path)
 
-        if os.path.isfile(wu_path_md5):
+        self.logNormal("Wu file md5?: {0}\n".format(wu_path_md5))
+        if os.path.exists(wu_path_md5):
             files.append(wu_path_md5)
 
         return files
@@ -88,7 +90,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             try:
                 shutil.move(f, deletion_path)
             except IOError as e:
-                self.logCritical("Could not move: {0}".format(e.message))
+                self.logCritical("Could not move: {0}\n".format(e.message))
 
     def assimilate_handler(self, wu, results, canonical_result):
         self.engine = create_engine(DB_LOGIN)
