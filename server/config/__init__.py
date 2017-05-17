@@ -34,6 +34,20 @@ if exists(config_file_name):
 else:
     print "No log file!"
 
+# Shared file system defs used by common tools.
+filesystem = {'apps': '/home/ec2-user/projects/duchamp/apps/duchamp',
+              'app_templates': '/home/ec2-user/projects/duchamp/app_templates/',
+              'vms': '/home/ec2-user/projects/duchamp/vm/',
+              'sign_executable': '/home/ec2-user/projects/duchamp/bin/sign_executable',
+              'update_versions': '/home/ec2-user/projects/duchamp/bin/update_versions',
+              'keys': '/home/ec2-user/projects/duchamp/keys/',
+              'download': '/home/ec2-user/projects/duchamp/download/',
+              'project': '/home/ec2-user/projects/duchamp/',
+              'log': '/home/ec2-user/projects/duchamp/log_ip-10-0-131-204/',
+              'old_logs': '/home/ec2-user/old_logs/',
+              'validator_invalids': '/home/ec2-user/validator_invalids/'
+             }
+
 if __name__ == '__main__':
     # Print the config
     if not config:
