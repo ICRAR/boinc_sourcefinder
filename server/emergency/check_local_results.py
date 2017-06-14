@@ -125,5 +125,11 @@ if __name__ == '__main__':
         print key, len(files_index[key])
 
     print "ones_to_get"
+    line = []
     for i, value in enumerate(ones_to_get):
-        print value
+        line.append(value)
+        if i % 20 == 0:
+            print line
+            line = []
+
+    print line
