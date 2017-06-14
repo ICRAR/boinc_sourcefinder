@@ -85,6 +85,11 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         for unit in units:
 
             wu = database.Workunits.find(name="10_{0}".format(unit['cube_name']))
+            if len(wu) == 0:
+                self.logCritical("Could not find boinc wu\n")
+                continue
+
+            wu = wu[0]
             self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
 
             results = database.Results.find(workunit=wu)
