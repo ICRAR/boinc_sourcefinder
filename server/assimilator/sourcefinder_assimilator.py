@@ -193,13 +193,13 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.logCritical("Running on %s\n", file)
 
         try:
-            path = os.path.dirname(file)
-            # File exists, good to start handling it.
-
             # The file is a .tar.gz file, but it has no extention when the boinc client returns it
             if not file.endswith(".tar.gz"):
                 shutil.copy(file, file + ".tar.gz")
                 file += ".tar.gz"
+
+            path = os.path.dirname(file)
+            # File exists, good to start handling it.
 
             self.logCritical("Decompressing tar file...\n")
 
