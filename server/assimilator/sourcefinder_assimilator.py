@@ -340,10 +340,5 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 if __name__ == '__main__':
 
     asm = SourcefinderAssimilator()
-
-    if len(sys.argv) == 3 and sys.argv[1] == '--flat':
-        dirname = sys.argv[2]
-        asm.run_flat_files(dirname)
-    else:
-        asm.run()
+    asm.run()
 
