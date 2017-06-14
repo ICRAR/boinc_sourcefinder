@@ -22,13 +22,12 @@ from database.database_support import CUBE, RESULT
 def collect_file_names(directory, file_list):
     dir_objects = [os.path.join(directory, d) for d in os.listdir(directory)]
 
-    print dir_objects
-
     filenames = [f for f in dir_objects if os.path.isfile(f)]
     dirnames = [d for d in dir_objects if os.path.isdir(d)]
 
     for f in filenames:
-        file_list.append(os.path.basename(f))
+        name = os.path.basename(f)
+        file_list.add(name[0: name.find('r') - 1])
 
     for d in dirnames:
         collect_file_names(d, file_list)
@@ -40,11 +39,11 @@ def collect_db_names(name_list):
 
     cubes = connection.execute(select([CUBE]).where(CUBE.c.cube_id > 0))
     for cube in cubes:
-        name_list.add(cube['cube_name'])
+        name_list.append(cube['cube_name'])
 
 if __name__ == '__main__':
-    file_names = []
-    db_names = set()
+    file_names = set()
+    db_names = []
     ones_we_have = []
     ones_we_dont_have = []
 
