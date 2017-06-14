@@ -107,7 +107,7 @@ if __name__ == '__main__':
     print "Total flat files: {0}".format(len(file_names))
 
     print "file_names"
-    for key in file_names:
+    for key in files_index:
         print key, len(files_index[key])
 
     print "We have: "
