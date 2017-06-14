@@ -205,6 +205,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             outputs = os.path.join(path, "/outputs")  # this will be the folder that the data is decompressed in to
 
+            self.logCritical("Outputs: %s\n", outputs)
+
             # It's tar'd
             tar = tf.open(file)
             tar.extractall(path)
