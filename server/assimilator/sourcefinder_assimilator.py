@@ -80,9 +80,9 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         # For each cube name, get the canonical result from the db and the name of the canonical result path
         units = database.Workunits.find(assimilate_state=boinc_db.ASSIMILATE_DONE)
 
-        self.logNormal("Starting flat files for wus %d", len(units))
+        self.logCritical("Starting flat files for wus %d", len(units))
         for wu in units:
-            self.logNormal('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
+            self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
 
             results = database.Results.find(workunit=wu)
             canonical_result = None
@@ -93,7 +93,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                     break
 
             if canonical_result is None:
-                self.logNormal("No canonical result for %s", wu.name)
+                self.logCritical("No canonical result for %s", wu.name)
                 continue
 
             name = re.search('<file_name>(.*)</file_name>', canonical_result.xml_doc_in).group(1)
@@ -101,7 +101,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             path = self.get_flat_file_path(directory, name)
 
             if path is None:
-                self.logNormal("Canonical result %s doesn't exist in path %s", name, path)
+                self.logCritical("Canonical result %s doesn't exist in path %s", name, path)
                 continue
 
             # Now assimilate the canonical result
@@ -188,6 +188,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         outputs = ''
 
+        self.logCritical(file)
+
         try:
             path = os.path.dirname(file)
             # File exists, good to start handling it.
@@ -197,7 +199,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                 shutil.copy(file, file + ".tar.gz")
                 file += ".tar.gz"
 
-            self.logDebug("Decompressing tar file...\n")
+            self.logCritical("Decompressing tar file...\n")
 
             outputs = os.path.join(path, "/outputs")  # this will be the folder that the data is decompressed in to
 
@@ -222,9 +224,9 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             if file_to_use is None:
                 self.logCritical('Client uploaded a WU file, but it does not contain the required CSV file. Cannot assimilate.\n')
-                self.logDebug('The following files were included: \n')
+                self.logCritical('The following files were included: \n')
                 for f in fs:
-                    self.logDebug('{0}\n'.format(f))
+                    self.logCritical('{0}\n'.format(f))
 
                 return 0
 
