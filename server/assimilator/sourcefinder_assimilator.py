@@ -198,7 +198,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                 shutil.copy(file, file + ".tar.gz")
                 file += ".tar.gz"
 
-            path = os.path.dirname(file)
+            path = os.path.abspath(file)
             # File exists, good to start handling it.
 
             self.logCritical("Decompressing tar file...\n")
