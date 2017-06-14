@@ -190,7 +190,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         outputs = ''
 
-        self.logCritical(file)
+        self.logCritical("Running on %s\n", file)
 
         try:
             path = os.path.dirname(file)
@@ -329,7 +329,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                     s3.file_upload(os.path.join(outputs, f), get_file_upload_key(wu.name, f))
 
         except Exception as e:
-            self.logCritical("Error processing work unit: {0}".format(e.message))
+            self.logCritical("Error processing work unit: {0}\n".format(e.message))
             return 1  # try again later
         finally:
             if outputs != '':
