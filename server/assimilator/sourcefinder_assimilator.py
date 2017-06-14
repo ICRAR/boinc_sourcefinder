@@ -85,7 +85,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
 
             underscore = wu.name.find('_')
-            res = self.engine.execute(select([CUBE]).where(CUBE.c.cube_name == wu.name[underscore:])).first()
+            res = self.engine.execute(select([CUBE]).where(CUBE.c.cube_name == wu.name[underscore + 1:])).first()
 
             if res is None or res[0]['progress'] == 2:
                 self.logCritical("Skipping because it's already been processed\n")
