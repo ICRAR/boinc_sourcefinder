@@ -20,7 +20,10 @@ from database.database_support import CUBE, RESULT
 
 
 def collect_file_names(directory, file_list):
-    dirpath, dirnames, filenames = os.walk(directory)
+    dir_objects = os.listdir(directory)
+
+    filenames = [f for f in dir_objects if os.path.isfile(f)]
+    dirnames = [d for d in dir_objects if os.path.isdir(d)]
 
     for f in filenames:
         file_list.append(os.path.basename(f))
@@ -43,7 +46,7 @@ if __name__ == '__main__':
     ones_we_have = []
     ones_we_dont_have = []
 
-    collect_file_names('/home/ec2-user/', file_names)
+    collect_file_names('/home/ec2-user/upload', file_names)
     collect_db_names(db_names)
 
     for name in file_names:
