@@ -70,7 +70,7 @@ def index_cubes(names):
         if set_number in index:
             index[set_number] += 1
         else:
-            index[set_number] = 0
+            index[set_number] = 1
 
     return index
 
@@ -79,6 +79,9 @@ if __name__ == '__main__':
     db_names = []
     ones_we_have = []
     ones_we_dont_have = []
+
+    print find_cube_set_number('askap_cube_1_8_22')
+    print find_cube_set_number('askap_cube_22_8_22')
 
     collect_file_names('/home/ec2-user/upload', file_names)
     collect_db_names(db_names)
