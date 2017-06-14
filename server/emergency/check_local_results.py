@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
     print "file_names"
     for key in file_names:
-        print key, len(file_names[key])
+        print key, len(files_index[key])
 
     print "We have: "
     print len(ones_we_have)
