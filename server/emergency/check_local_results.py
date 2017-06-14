@@ -50,11 +50,6 @@ if __name__ == '__main__':
     collect_file_names('/home/ec2-user/upload', file_names)
     collect_db_names(db_names)
 
-    print "FILE_NAMES ----------------------------------------------------"
-    print file_names
-    print "DB_NAMES -----------------------------------------------------"
-    print db_names
-
     for name in db_names:
         if name in file_names:
             ones_we_have.append(name)
@@ -63,6 +58,9 @@ if __name__ == '__main__':
 
     ones_we_dont_have.sort()
     ones_we_have.sort()
+
+    print "Total db cubes: {0}".format(len(db_names))
+    print "Total flat files: {0}".format(len(file_names))
 
     print "We have: "
     print len(ones_we_have)
