@@ -79,6 +79,7 @@ def find_index_difference(index1, index2):
     diff = {}
     for key in index1:
         if key not in index2:
+            diff[key] = list(index1[key])
             continue
 
         values1 = index1[key]
