@@ -22,6 +22,8 @@ from database.database_support import CUBE, RESULT
 def collect_file_names(directory, file_list):
     dir_objects = os.listdir(directory)
 
+    print dir_objects
+
     filenames = [f for f in dir_objects if os.path.isfile(f)]
     dirnames = [d for d in dir_objects if os.path.isdir(d)]
 
@@ -36,7 +38,7 @@ def collect_db_names(name_list):
     engine = create_engine(DB_LOGIN)
     connection = engine.connect()
 
-    cubes = connection.execute(select([CUBE]))
+    cubes = connection.execute(select([CUBE]).where(CUBE.c.cube_id > 0))
     for cube in cubes:
         name_list.add(cube['cube_name'])
 
