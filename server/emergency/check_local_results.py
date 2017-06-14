@@ -125,12 +125,10 @@ if __name__ == '__main__':
     for key in files_index:
         print key, len(files_index[key])
 
-    print "ones_to_get"
-    line = []
-    for i, value in enumerate(ones_to_get):
-        line.append(value)
-        if i % 20 == 0:
-            print line
-            line = []
+    with open('ones_to_get.txt', 'w') as f:
+        ones_to_get.sort()
+        for entry in ones_to_get:
+            f.write(entry)
+            f.write('\n')
 
     print line
