@@ -74,12 +74,27 @@ def index_cubes(names):
 
     return index
 
+
+def find_index_difference(index1, index2):
+    diff = {}
+    for key in index1:
+        if key not in index2:
+            continue
+
+        values1 = index1[key]
+        values2 = set(index2[key])
+
+        for value in values1:
+            if value not in values2:
+                if key not in diff:
+                    diff[key] = [value]
+                else:
+                    diff[key].append(value)
+
+    return diff
 if __name__ == '__main__':
     file_names = set()
     db_names = []
-    ones_we_have = []
-    ones_we_dont_have = []
-
     print find_cube_set_number('askap_cube_1_8_22')
     print find_cube_set_number('askap_cube_22_8_22')
 
@@ -88,17 +103,16 @@ if __name__ == '__main__':
 
     db_index = index_cubes(db_names)
     files_index = index_cubes(file_names)
-
-    for name in db_names:
-        if name in file_names:
-            ones_we_have.append(name)
-        else:
-            ones_we_dont_have.append(name)
-
-    ones_we_dont_have.sort()
-    ones_we_have.sort()
+    index_diff = find_index_difference(db_index, files_index)
 
     print "Total db cubes: {0}".format(len(db_names))
+
+    ones_to_get = []
+
+    print "index_diff"
+    for key in index_diff:
+        print key, len(index_diff[key])
+        ones_to_get += index_diff[key]
 
     print "db_index"
     for key in db_index:
@@ -110,8 +124,6 @@ if __name__ == '__main__':
     for key in files_index:
         print key, len(files_index[key])
 
-    print "We have: "
-    print len(ones_we_have)
-
-    print "We don't have: "
-    print len(ones_we_dont_have)
+    print "ones_to_get"
+    for i, value in enumerate(ones_to_get):
+        print value
