@@ -68,9 +68,9 @@ def index_cubes(names):
     for name in names:
         set_number = find_cube_set_number(name)
         if set_number in index:
-            index[set_number] += 1
+            index[set_number].append(name)
         else:
-            index[set_number] = 1
+            index[set_number] = [name]
 
     return index
 
@@ -86,6 +86,9 @@ if __name__ == '__main__':
     collect_file_names('/home/ec2-user/upload', file_names)
     collect_db_names(db_names)
 
+    db_index = index_cubes(db_names)
+    files_index = index_cubes(file_names)
+
     for name in db_names:
         if name in file_names:
             ones_we_have.append(name)
@@ -95,16 +98,20 @@ if __name__ == '__main__':
     ones_we_dont_have.sort()
     ones_we_have.sort()
 
-    have_index = index_cubes(ones_we_have)
-    dont_have_index = index_cubes(ones_we_dont_have)
-
     print "Total db cubes: {0}".format(len(db_names))
+
+    print "db_index"
+    for key in db_index:
+        print key, len(db_index[key])
+
     print "Total flat files: {0}".format(len(file_names))
+
+    print "file_names"
+    for key in file_names:
+        print key, len(db_index[key])
 
     print "We have: "
     print len(ones_we_have)
-    print have_index
 
     print "We don't have: "
     print len(ones_we_dont_have)
-    print dont_have_index
