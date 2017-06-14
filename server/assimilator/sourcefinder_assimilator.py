@@ -81,7 +81,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         units = self.engine.execute(select([CUBE]).where(CUBE.c.progress == 1))
 
-        self.logCritical("Starting flat files for wus %d\n", len(units))
+        self.logCritical("Starting flat file processor\n")
         for unit in units:
 
             wu = database.Workunits.find(name="10_{0}".format(unit['cube_name']))
