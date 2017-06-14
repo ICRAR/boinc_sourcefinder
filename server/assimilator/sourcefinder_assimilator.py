@@ -72,6 +72,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         :param filename:
         :return:
         """
+        database.connect()
         self.engine = create_engine(DB_LOGIN)
         self.connection = self.engine.connect()
 
@@ -107,6 +108,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                 break
 
         self.connection.close()
+        database.close()
 
     def get_wu_files(self, wu):
         files = []
