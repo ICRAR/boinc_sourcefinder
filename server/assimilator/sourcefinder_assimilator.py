@@ -78,22 +78,14 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         # Get all cube names from the DB.
         # For each cube name, get the canonical result from the db and the name of the canonical result path
-        units = database.Workunits.find(assimilate_state=boinc_db.ASSIMILATE_DONE)
+
+        units = self.engine.execute(select([CUBE]).where(CUBE.c.progress == 1))
 
         self.logCritical("Starting flat files for wus %d\n", len(units))
-        for wu in units:
+        for unit in units:
+
+            wu = database.Workunits.find(name="10_{0}".format(unit['cube_name']))
             self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
-
-            underscore = wu.name.find('_')
-            res = self.engine.execute(select([CUBE]).where(CUBE.c.cube_name == wu.name[underscore + 1:])).first()
-
-            if res is None:
-                self.logCritical("Skipping because it doesn't exist in the sourcefinder db")
-                continue
-
-            if res['progress'] == 2:
-                self.logCritical("Skipping because it's already been processed\n")
-                continue
 
             results = database.Results.find(workunit=wu)
             canonical_result = None
