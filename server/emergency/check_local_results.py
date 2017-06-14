@@ -27,7 +27,7 @@ def collect_file_names(directory, file_list):
 
     for f in filenames:
         name = os.path.basename(f)
-        file_list.add(name[0: name.find('r') - 3])
+        file_list.add(name[3: name.find('r') - 3])
 
     for d in dirnames:
         collect_file_names(d, file_list)
@@ -65,9 +65,7 @@ if __name__ == '__main__':
     ones_we_have.sort()
 
     print "We have: "
-    for entry in ones_we_have:
-        print entry
+    print len(ones_we_have)
 
     print "We don't have: "
-    for entry in ones_we_dont_have:
-        print entry
+    print len(ones_we_dont_have)
