@@ -83,8 +83,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         self.logCritical("Starting flat file processor\n")
         for unit in units:
+            n = "10_{0}".format(unit['cube_name'])
+            self.logCritical('WuName: {0}'.format(n))
+            wu = database.Workunits.find(name=n)
 
-            wu = database.Workunits.find(name="10_{0}".format(unit['cube_name']))
             if len(wu) == 0:
                 self.logCritical("Could not find boinc wu\n")
                 continue
