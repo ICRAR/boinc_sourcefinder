@@ -41,6 +41,39 @@ def collect_db_names(name_list):
     for cube in cubes:
         name_list.append(cube['cube_name'])
 
+
+def is_number(char):
+    return char in '0123456789'
+
+
+def find_cube_set_number(name):
+
+    numbers = ''
+    first_number_idx = 0
+    for i in range(0, len(name)):
+        if is_number(name[i]):
+            first_number_idx = i
+            break
+
+    while is_number(name[first_number_idx]):
+        numbers += name[first_number_idx]
+        first_number_idx += 1
+
+    return int(numbers)
+
+
+def index_cubes(names):
+    index = {}
+
+    for name in names:
+        set_number = find_cube_set_number(name)
+        if set_number in index:
+            index[set_number] += 1
+        else:
+            index[set_number] = 0
+
+    return index
+
 if __name__ == '__main__':
     file_names = set()
     db_names = []
@@ -59,11 +92,16 @@ if __name__ == '__main__':
     ones_we_dont_have.sort()
     ones_we_have.sort()
 
+    have_index = index_cubes(ones_we_have)
+    dont_have_index = index_cubes(ones_we_dont_have)
+
     print "Total db cubes: {0}".format(len(db_names))
     print "Total flat files: {0}".format(len(file_names))
 
     print "We have: "
     print len(ones_we_have)
+    print have_index
 
     print "We don't have: "
     print len(ones_we_dont_have)
+    print dont_have_index
