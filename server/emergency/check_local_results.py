@@ -130,5 +130,3 @@ if __name__ == '__main__':
         for entry in ones_to_get:
             f.write(entry)
             f.write('\n')
-
-    print line
