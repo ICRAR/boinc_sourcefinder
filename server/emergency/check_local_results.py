@@ -27,7 +27,7 @@ def collect_file_names(directory, file_list):
 
     for f in filenames:
         name = os.path.basename(f)
-        file_list.add(name[0: name.find('r') - 1])
+        file_list.add(name[0: name.find('r') - 3])
 
     for d in dirnames:
         collect_file_names(d, file_list)
@@ -50,8 +50,13 @@ if __name__ == '__main__':
     collect_file_names('/home/ec2-user/upload', file_names)
     collect_db_names(db_names)
 
-    for name in file_names:
-        if name in db_names:
+    print "FILE_NAMES ----------------------------------------------------"
+    print file_names
+    print "DB_NAMES -----------------------------------------------------"
+    print db_names
+
+    for name in db_names:
+        if name in file_names:
             ones_we_have.append(name)
         else:
             ones_we_dont_have.append(name)
