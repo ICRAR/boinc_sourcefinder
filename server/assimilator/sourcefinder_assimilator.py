@@ -141,10 +141,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             # File exists, good to start handling it.
 
             # The file is a .tar.gz file, but it has no extention when the boinc client returns it
-            os.rename(file, file + ".tar.gz")
+            shutil.copy(file, file + ".tar.gz")
             file += ".tar.gz"
-
-            #if tf.is_tarfile(file):
 
             self.logDebug("Decompressing tar file...\n")
 
@@ -154,6 +152,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             tar = tf.open(file)
             tar.extractall(path)
             tar.close()
+
+            os.remove(file)
 
             fs = os.listdir(outputs)
             file_to_use = None
@@ -207,13 +207,15 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
                 # Example WU name: 6_askap_cube_1_1_19
 
+                underscore = wu.name.find('_')
+
                 try:
-                    run_id = int(wu.name[0])
+                    run_id = int(wu.name[0:underscore])
                 except ValueError:
                     self.logCritical('Malformed WU name {0}\n'.format(wu.name))
                     return 0
 
-                cube_name = wu.name[2:]
+                cube_name = wu.name[underscore + 1:]
 
                 # First column is the cube ID
                 cube_id = retry_on_exception(lambda :(
