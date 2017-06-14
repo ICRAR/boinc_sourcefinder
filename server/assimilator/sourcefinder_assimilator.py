@@ -115,7 +115,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             # Now assimilate the canonical result
             if self.process_result(wu, path) != 0:
-                break
+                continue
 
         self.connection.close()
         database.close()
