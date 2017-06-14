@@ -80,7 +80,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         # For each cube name, get the canonical result from the db and the name of the canonical result path
         units = database.Workunits.find(assimilate_state=boinc_db.ASSIMILATE_DONE)
 
-        self.logCritical("Starting flat files for wus %d", len(units))
+        self.logCritical("Starting flat files for wus %d\n", len(units))
         for wu in units:
             self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
 
@@ -93,15 +93,17 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                     break
 
             if canonical_result is None:
-                self.logCritical("No canonical result for %s", wu.name)
+                self.logCritical("No canonical result for %s\n", wu.name)
                 continue
 
             name = re.search('<file_name>(.*)</file_name>', canonical_result.xml_doc_in).group(1)
 
             path = self.get_flat_file_path(directory, name)
 
+            self.logCritical("Path: %s\n", path)
+
             if path is None:
-                self.logCritical("Canonical result %s doesn't exist in path %s", name, path)
+                self.logCritical("Canonical result %s doesn't exist in path %s\n", name, directory)
                 continue
 
             # Now assimilate the canonical result
@@ -138,7 +140,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         make_path(deletion_path)
 
         for f in files:
-            self.logNormal("Erasing {0}".format(f))
+            self.logNormal("Erasing {0}\n".format(f))
             try:
                 shutil.move(f, deletion_path)
             except IOError as e:
