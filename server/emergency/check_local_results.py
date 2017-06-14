@@ -20,7 +20,7 @@ from database.database_support import CUBE, RESULT
 
 
 def collect_file_names(directory, file_list):
-    dir_objects = os.listdir(directory)
+    dir_objects = [os.path.join(directory, d) for d in os.listdir(directory)]
 
     print dir_objects
 
