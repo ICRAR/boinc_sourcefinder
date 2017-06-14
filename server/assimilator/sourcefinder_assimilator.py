@@ -204,7 +204,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             self.logCritical("Decompressing tar file...\n")
 
-            outputs = os.path.join(path, "/outputs")  # this will be the folder that the data is decompressed in to
+            outputs = os.path.join(path, "outputs")  # this will be the folder that the data is decompressed in to
 
             self.logCritical("Outputs: %s\n", outputs)
 
