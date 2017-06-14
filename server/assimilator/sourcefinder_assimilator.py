@@ -87,7 +87,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             underscore = wu.name.find('_')
             res = self.engine.execute(select([CUBE]).where(CUBE.c.cube_name == wu.name[underscore + 1:])).first()
 
-            if res is None or res[0]['progress'] == 2:
+            if res is None or res['progress'] == 2:
                 self.logCritical("Skipping because it's already been processed\n")
                 continue
 
