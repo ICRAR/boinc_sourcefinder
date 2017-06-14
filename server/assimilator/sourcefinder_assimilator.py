@@ -22,6 +22,8 @@ import csv
 import hashlib
 import shutil
 from utils.utilities import retry_on_exception, make_path
+from Boinc import database, boinc_db
+import re
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
@@ -50,14 +52,61 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         return hash == hash_from_file
 
-    def run_test(self, wu, filename):
+    def get_flat_file_path(self, directory, name):
+
+        path = os.path.join(directory, name)
+
+        if os.path.isfile(path):
+            return path
+
+        path += '.tar.gz'
+
+        if os.path.isfile(path):
+            return path
+
+        return None
+
+    def run_flat_files(self, directory):
         """
         Used to test the assimilator on a file, rather than running it via the assimilate handler
         :param filename:
         :return:
         """
+        self.engine = create_engine(DB_LOGIN)
+        self.connection = self.engine.connect()
 
-        self.process_result(wu, filename)
+        # Get all cube names from the DB.
+        # For each cube name, get the canonical result from the db and the name of the canonical result path
+        units = database.Workunits.find(assimilate_state=boinc_db.ASSIMILATE_DONE)
+
+        for wu in units:
+            self.logNormal('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
+
+            results = database.Results.find(workunit=wu)
+            canonical_result = None
+
+            for result in results:
+                if result == wu.canonical_result:
+                    canonical_result = result
+                    break
+
+            if canonical_result is None:
+                self.logNormal("No canonical result for %s", wu.name)
+                continue
+
+            name = re.search('<file_name>(.*)</file_name>', canonical_result.xml_doc_in).group(1)
+
+            path = self.get_flat_file_path(directory, name)
+
+            if path is None:
+                self.logNormal("Canonical result %s doesn't exist in path %s", name, path)
+                continue
+
+            # Now assimilate the canonical result
+            if self.process_result(wu, path) != 0:
+                break
+
+        self.connection.close()
 
     def get_wu_files(self, wu):
         files = []
@@ -141,12 +190,13 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             # File exists, good to start handling it.
 
             # The file is a .tar.gz file, but it has no extention when the boinc client returns it
-            shutil.copy(file, file + ".tar.gz")
-            file += ".tar.gz"
+            if not file.endswith(".tar.gz"):
+                shutil.copy(file, file + ".tar.gz")
+                file += ".tar.gz"
 
             self.logDebug("Decompressing tar file...\n")
 
-            outputs = path + "/outputs"  # this will be the folder that the data is decompressed in to
+            outputs = os.path.join(path, "/outputs")  # this will be the folder that the data is decompressed in to
 
             # It's tar'd
             tar = tf.open(file)
@@ -218,7 +268,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                 cube_name = wu.name[underscore + 1:]
 
                 # First column is the cube ID
-                cube_id = retry_on_exception(lambda :(
+                cube_id = retry_on_exception(lambda: (
                     self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()[0]), OperationalError,
                                              1)
 
@@ -285,6 +335,12 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 # Add the following to your assimilator file:
 
 if __name__ == '__main__':
+
     asm = SourcefinderAssimilator()
-    asm.run()
+
+    if len(sys.argv) == 3 and sys.argv[1] == '--flat':
+        dirname = sys.argv[2]
+        asm.run_flat_files(dirname)
+    else:
+        asm.run()
 
