@@ -80,6 +80,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         # For each cube name, get the canonical result from the db and the name of the canonical result path
         units = database.Workunits.find(assimilate_state=boinc_db.ASSIMILATE_DONE)
 
+        self.logNormal("Starting flat files for wus %d", len(units))
         for wu in units:
             self.logNormal('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
 
