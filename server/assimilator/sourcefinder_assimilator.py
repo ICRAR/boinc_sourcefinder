@@ -69,7 +69,7 @@ class SourcefinderAssimilator(assimilator.Assimilator):
     def run_flat_files(self, directory):
         """
         Used to test the assimilator on a file, rather than running it via the assimilate handler
-        :param filename:
+        :param directory:
         :return:
         """
         database.connect()
@@ -86,6 +86,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             n = "10_{0}".format(unit['cube_name'])
             self.logCritical('WuName: {0}\n'.format(n))
             wu = database.Workunits.find(name=n)
+
+            print wu
 
             wu = wu[0]
             self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
