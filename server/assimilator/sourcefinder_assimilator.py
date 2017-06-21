@@ -92,6 +92,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             wu = database.Workunits.find(name=n)
 
+            if len(wu) == 0:
+                self.logCritical("Can't find work unit: {0}\n".format(n))
+                continue
+
             wu = wu[0]
 
             self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
