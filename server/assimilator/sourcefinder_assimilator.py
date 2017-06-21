@@ -80,9 +80,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.engine = create_engine(DB_LOGIN)
         self.connection = self.engine.connect()
 
-        self.boinc_engine = create_engine(BOINC_DB_LOGIN)
-        self.boinc_connection = self.boinc_engine.connect()
-
         # Get all cube names from the DB.
         # For each cube name, get the canonical result from the db and the name of the canonical result path
 
@@ -93,20 +90,17 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             n = "10_{0}".format(unit['cube_name'])
             self.logCritical('WuName: {0}\n'.format(n))
 
-            wu = self.boinc_engine.execute(select([WORK_UNIT]).where(WORK_UNIT.c.name == n)).first()
-            # wu = database.Workunits.find(name=n)
+            wu = database.Workunits.find(name=n)
 
-            self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu['name']))
+            self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
 
-            canonical_result = self.boinc_engine.execute(select([RESULT]).where(RESULT.c.id == wu.canonical_resultid)).first()
-            #results = database.Results.find(workunit=wu)
-            #canonical_result = None
+            results = database.Results.find(workunit=wu)
+            canonical_result = None
 
-
-            #for result in results:
-            #    if result == wu.canonical_result:
-            #        canonical_result = result
-            #        break
+            for result in results:
+                if result == wu.canonical_result:
+                    canonical_result = result
+                    break
 
             if canonical_result is None:
                 self.logCritical("No canonical result for %s\n", wu.name)
