@@ -296,6 +296,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                     self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()[0]), OperationalError,
                                              1)
 
+                print cube_name, cube_id
+
                 # Row 1 is header
                 rowcount = 1
                 for row in csv_reader:
