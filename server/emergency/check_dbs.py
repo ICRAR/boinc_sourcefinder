@@ -13,7 +13,7 @@ from config import DB_LOGIN, BOINC_DB_LOGIN, S3_BUCKET_NAME, filesystem
 from sqlalchemy import create_engine, select, and_
 from sqlalchemy.exc import OperationalError
 from database.database_support import CUBE, RESULT
-from database.boinc_database_support import WORKUNIT
+from database.boinc_database_support import WORK_UNIT
 
 def get_boinc_result_list():
     engine = create_engine(BOINC_DB_LOGIN)
