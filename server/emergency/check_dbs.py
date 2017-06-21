@@ -19,7 +19,7 @@ def get_boinc_result_list():
     engine = create_engine(BOINC_DB_LOGIN)
     connection = engine.connect()
 
-    workunits = connection.execute(select([WORKUNIT]).where(WORKUNIT.c.canonical_resultid != 0))
+    workunits = connection.execute(select([WORK_UNIT]).where(WORK_UNIT.c.canonical_resultid != 0))
 
     return [workunit['name'] for workunit in workunits]
 
