@@ -15,7 +15,6 @@ from config import DB_LOGIN, BOINC_DB_LOGIN, S3_BUCKET_NAME, filesystem
 from sqlalchemy import create_engine, select, and_
 from sqlalchemy.exc import OperationalError
 from database.database_support import CUBE, RESULT
-from database.boinc_database_support import RESULT, WORK_UNIT
 import assimilator
 import gzip as gz
 import tarfile as tf
@@ -301,7 +300,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                     rowcount += 1
                     try:
                         transaction = self.connection.begin()
-                        print cube_name, cube_id, run_id
                         self.connection.execute(
                                 RESULT.insert(),
                                 cube_id=cube_id,
