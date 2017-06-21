@@ -229,8 +229,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             tar.extractall(path)
             tar.close()
 
-            os.remove(file)
-
             fs = os.listdir(outputs)
             file_to_use = None
             hashfile = None
@@ -328,8 +326,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                         self.logCritical('Malformed CSV. Parameter number for row {0} is invalid\n'.format(rowcount))
                     except csv.Error as e:
                         self.logCritical('Malformed CSV. Error on line {0}: {1}\n'.format(csv_reader.line_num, e))
-                    except:
-                        self.logCritical('Undefined error occurred while attempting to load CSV.\n')
+                    except Exception as e:
+                        self.logCritical('Undefined error occurred while attempting to load CSV: {0}\n'.format(e.message))
                         return 1  # try again later
 
                 self.logNormal('Successfully loaded work unit {0} in to the database\n'.format(wu.name))
