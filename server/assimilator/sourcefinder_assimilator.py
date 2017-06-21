@@ -92,6 +92,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
             wu = database.Workunits.find(name=n)
 
+            wu = wu[0]
+
             self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
 
             results = database.Results.find(workunit=wu)
