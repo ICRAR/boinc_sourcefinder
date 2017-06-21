@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '/home/ec2-user/projects
 sys.path.append('/home/ec2-user/boinc_sourcefinder/server')
 sys.path.append('/home/ec2-user/boinc_sourcefinder/server/assimilator')
 
-from config import DB_LOGIN, S3_BUCKET_NAME, filesystem
+from config import DB_LOGIN, BOINC_DB_LOGIN, S3_BUCKET_NAME, filesystem
 from sqlalchemy import create_engine, select, and_
 from sqlalchemy.exc import OperationalError
 from database.database_support import CUBE, RESULT
