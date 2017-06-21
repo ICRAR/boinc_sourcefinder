@@ -10,7 +10,7 @@ sys.path.append('/home/ec2-user/boinc_sourcefinder/server')
 sys.path.append('/home/ec2-user/boinc_sourcefinder/server/assimilator')
 
 from config import DB_LOGIN, BOINC_DB_LOGIN, S3_BUCKET_NAME, filesystem
-from sqlalchemy import create_engine, select, and_
+from sqlalchemy import create_engine, select, and_, func
 from sqlalchemy.exc import OperationalError
 from database.database_support import CUBE, RESULT
 from database.boinc_database_support import WORK_UNIT
@@ -27,9 +27,9 @@ def get_sourcefinder_result_list():
     engine = create_engine(DB_LOGIN)
     connection = engine.connect()
 
-    results = connection.execute(select([RESULT.c.workunit_name]).where(RESULT.c.result_id > 0))
+    results = connection.execute(select([CUBE]).where(CUBE.c.progress == 2))
 
-    return [result['workunit_name'] for result in results]
+    return [result['cube_name'] for result in results]
 
 
 if __name__ == '__main__':
