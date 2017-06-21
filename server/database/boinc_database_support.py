@@ -14,6 +14,7 @@ RESULT = Table('result',
                Column('appid', Integer),
                Column('name', String),
                Column('outcome', Integer),
+               Column('xml_doc_in', String)
 )
 
 WORK_UNIT = Table('workunit',

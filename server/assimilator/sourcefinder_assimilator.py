@@ -11,10 +11,11 @@ sys.path.append('/home/ec2-user/boinc_sourcefinder/server/assimilator')
 
 from utils.logging_helper import config_logger
 from utils.amazon_helper import S3Helper, get_file_upload_key
-from config import DB_LOGIN, S3_BUCKET_NAME, filesystem
+from config import DB_LOGIN, BOINC_DB_LOGIN, S3_BUCKET_NAME, filesystem
 from sqlalchemy import create_engine, select, and_
 from sqlalchemy.exc import OperationalError
 from database.database_support import CUBE, RESULT
+from database.boinc_database_support import RESULT, WORK_UNIT
 import assimilator
 import gzip as gz
 import tarfile as tf
@@ -38,6 +39,9 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         assimilator.Assimilator.__init__(self)
         self.connection = None
         self.engine = None
+
+        self.boinc_engine = None
+        self.boinc_connection = None
 
     def hash_filecheck(self, file, hashfile):
         with open(file, 'r') as f:
@@ -76,6 +80,9 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.engine = create_engine(DB_LOGIN)
         self.connection = self.engine.connect()
 
+        self.boinc_engine = create_engine(BOINC_DB_LOGIN)
+        self.boinc_connection = self.boinc_engine.connect()
+
         # Get all cube names from the DB.
         # For each cube name, get the canonical result from the db and the name of the canonical result path
 
@@ -85,20 +92,21 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         for unit in units:
             n = "10_{0}".format(unit['cube_name'])
             self.logCritical('WuName: {0}\n'.format(n))
-            wu = database.Workunits.find(name=n)
 
-            print wu
+            wu = self.boinc_engine.execute(select([WORK_UNIT]).where(WORK_UNIT.c.name == n)).first()
+            # wu = database.Workunits.find(name=n)
 
-            wu = wu[0]
-            self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu.name))
+            self.logCritical('Starting assimilate handler for work unit: {0}\n'.format(wu['name']))
 
-            results = database.Results.find(workunit=wu)
-            canonical_result = None
+            canonical_result = self.boinc_engine.execute(select([RESULT]).where(RESULT.c.id == wu.canonical_resultid)).first()
+            #results = database.Results.find(workunit=wu)
+            #canonical_result = None
 
-            for result in results:
-                if result == wu.canonical_result:
-                    canonical_result = result
-                    break
+
+            #for result in results:
+            #    if result == wu.canonical_result:
+            #        canonical_result = result
+            #        break
 
             if canonical_result is None:
                 self.logCritical("No canonical result for %s\n", wu.name)
