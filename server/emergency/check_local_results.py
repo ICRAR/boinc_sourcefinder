@@ -13,10 +13,26 @@ from config import DB_LOGIN, S3_BUCKET_NAME, filesystem
 from sqlalchemy import create_engine, select, and_
 from sqlalchemy.exc import OperationalError
 from database.database_support import CUBE, RESULT
+from database.boinc_database_support import WORK_UNIT
 
-# Need to get list of all result file names from db
-# Need to get list of all result file names that exist.
-# Compare lists and determine which result files exist in the db but not in the filesystem
+# Get names of cubes that we have progress 2 for.
+# Get names of workunits with canonical resultid > 0
+
+def get_boinc_result_list():
+    engine = create_engine(BOINC_DB_LOGIN)
+    connection = engine.connect()
+
+    workunits = connection.execute(select([WORK_UNIT]).where(WORK_UNIT.c.canonical_resultid != 0))
+
+    return [workunit['name'] for workunit in workunits]
+
+def get_sourcefinder_result_list():
+    engine = create_engine(DB_LOGIN)
+    connection = engine.connect()
+
+    results = connection.execute(select([CUBE]).where(CUBE.c.progress == 2))
+
+    return [result['cube_name'] for result in results]
 
 
 def collect_file_names(directory, file_list):
@@ -31,15 +47,6 @@ def collect_file_names(directory, file_list):
 
     for d in dirnames:
         collect_file_names(d, file_list)
-
-
-def collect_db_names(name_list):
-    engine = create_engine(DB_LOGIN)
-    connection = engine.connect()
-
-    cubes = connection.execute(select([CUBE]).where(CUBE.c.cube_id > 0))
-    for cube in cubes:
-        name_list.append(cube['cube_name'])
 
 
 def is_number(char):
@@ -96,15 +103,14 @@ def find_index_difference(index1, index2):
 if __name__ == '__main__':
     file_names = set()
     db_names = []
-    print find_cube_set_number('askap_cube_1_8_22')
-    print find_cube_set_number('askap_cube_22_8_22')
 
-    collect_file_names('/home/ec2-user/upload', file_names)
-    collect_db_names(db_names)
+    boinc_workunits = [b[3:] for b in get_boinc_result_list()]
+    sourcefinder_processed_cubes = [s for s in get_sourcefinder_result_list()]
 
-    db_index = index_cubes(db_names)
-    files_index = index_cubes(file_names)
-    index_diff = find_index_difference(db_index, files_index)
+    workunit_index = index_cubes(boinc_workunits)
+    sourcefinder_index = index_cubes(sourcefinder_processed_cubes)
+
+    index_diff = find_index_difference(workunit_index, sourcefinder_index)
 
     print "Total db cubes: {0}".format(len(db_names))
 
@@ -114,16 +120,6 @@ if __name__ == '__main__':
     for key in index_diff:
         print key, len(index_diff[key])
         ones_to_get += index_diff[key]
-
-    print "db_index"
-    for key in db_index:
-        print key, len(db_index[key])
-
-    print "Total flat files: {0}".format(len(file_names))
-
-    print "file_names"
-    for key in files_index:
-        print key, len(files_index[key])
 
     with open('ones_to_get.txt', 'w') as f:
         ones_to_get.sort()
