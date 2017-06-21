@@ -101,9 +101,6 @@ def find_index_difference(index1, index2):
 
     return diff
 if __name__ == '__main__':
-    file_names = set()
-    db_names = []
-
     boinc_workunits = [b[3:] for b in get_boinc_result_list()]
     sourcefinder_processed_cubes = [s for s in get_sourcefinder_result_list()]
 
@@ -112,7 +109,8 @@ if __name__ == '__main__':
 
     index_diff = find_index_difference(workunit_index, sourcefinder_index)
 
-    print "Total db cubes: {0}".format(len(db_names))
+    print "Total boinc workunits: {0}".format(len(boinc_workunits))
+    print "Total total processed cubes: {0}".format(len(sourcefinder_processed_cubes))
 
     ones_to_get = []
 
