@@ -40,9 +40,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.connection = None
         self.engine = None
 
-        self.boinc_engine = None
-        self.boinc_connection = None
-
     def hash_filecheck(self, file, hashfile):
         with open(file, 'r') as f:
             m = hashlib.md5()
@@ -293,8 +290,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
                 # First column is the cube ID
                 cube_id = retry_on_exception(lambda: (
-                    self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()[0]), OperationalError,
+                    self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()['cube_id']), OperationalError,
                                              1)
+
+                cube_id = int(cube_id)
 
                 print cube_name, cube_id
 
