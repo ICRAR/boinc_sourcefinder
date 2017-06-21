@@ -295,14 +295,13 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
                 cube_id = int(cube_id)
 
-                print cube_name, cube_id
-
                 # Row 1 is header
                 rowcount = 1
                 for row in csv_reader:
                     rowcount += 1
                     try:
                         transaction = self.connection.begin()
+                        print cube_name, cube_id, run_id
                         self.connection.execute(
                                 RESULT.insert(),
                                 cube_id=cube_id,
