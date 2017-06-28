@@ -216,11 +216,8 @@ class SourcefinderAssimilator(assimilator.Assimilator):
             files = [self.get_file_path(r) for r in results]
             wu_files = self.get_wu_files(wu)
 
-            try:
-                self.move_files(files, COMPLETED_RESULT_PATH)
-                self.move_files(wu_files, COMPLETED_WU_PATH)
-            except Exception as e:
-                self.logCritical("Could not move: {0}\n".format(e.message))
+            self.move_files(files, COMPLETED_RESULT_PATH)
+            self.move_files(wu_files, COMPLETED_WU_PATH)
 
         self.connection.close()
 
