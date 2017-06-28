@@ -34,10 +34,10 @@ def get_sourcefinder_result_list():
         name = cube['cube_name']
 
         if name not in results:
-            results[name] = 0
+            results[name] = False
 
         if cube['progress'] == 2:
-            results[name] += 1
+            results[name] = True
 
     return results
 
@@ -66,13 +66,13 @@ def index_cubes(cubes):
     have = {}
     dont_have = {}
 
-    for cube, num_results in cubes.iteritems():
+    for cube, has_result in cubes.iteritems():
         set_number = find_cube_set_number(cube)
 
-        if num_results == 0:
-            dic = dont_have
-        else:
+        if has_result:
             dic = have
+        else:
+            dic = dont_have
 
         if set_number in dic:
             dic[set_number].append(cube)
