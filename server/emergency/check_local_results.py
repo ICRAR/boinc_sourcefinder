@@ -66,7 +66,7 @@ def index_cubes(cubes):
     dont_have = {}
     have = {}
 
-    for cube, num_results in cubes:
+    for cube, num_results in cubes.iteritems():
         set_number = find_cube_set_number(cube)
 
         dic = dont_have if num_results == 0 else have
@@ -84,11 +84,11 @@ if __name__ == '__main__':
     have, dont_have = index_cubes(results)
 
     print "Ones we have"
-    for key, value in have:
+    for key, value in have.iteritems():
         print key, len(value)
 
     print "Ones we dont have"
-    for key, value in dont_have:
+    for key, value in dont_have.iteritems():
         print key, len(value)
 
     """boinc_workunits = [b[3:] for b in get_boinc_result_list()]
