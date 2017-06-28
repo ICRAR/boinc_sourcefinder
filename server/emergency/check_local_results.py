@@ -81,6 +81,16 @@ def index_cubes(cubes):
 if __name__ == '__main__':
 
     results = get_sourcefinder_result_list()
+
+    total_cubes = 0
+    total_results = 0
+    for key, value in results.iteritems():
+        total_cubes += 1
+        total_results += int(value > 0)
+
+    print "Total cubes: ", total_cubes
+    print "Total results: ", total_results
+
     have, dont_have = index_cubes(results)
 
     print "Ones we have"
