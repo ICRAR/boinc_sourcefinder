@@ -30,6 +30,7 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 # This represents the valid first row of the csv.
 csv_valid_header = ['ParameterNumber','RA','DEC','freq','w_50','w_20','w_FREQ','F_int','F_tot','F_peak','Nvoxel','Nchan','Nspatpix']
+TMPFILE = '/tmp/sourcefinder_result.tar.gz'
 
 
 class SourcefinderAssimilator(assimilator.Assimilator):
@@ -205,10 +206,9 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.logCritical("Running on %s\n", file)
 
         try:
-            # The file is a .tar.gz file, but it has no extention when the boinc client returns it
-            if not file.endswith(".tar.gz"):
-                shutil.copy(file, file + ".tar.gz")
-                file += ".tar.gz"
+            # First, copy the work unit to a safe place
+            shutil.copy(file, TMPFILE)
+            file = TMPFILE
 
             path = os.path.dirname(file)
             self.logCritical("File Path: %s\n", path)
@@ -242,7 +242,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                 self.logCritical('The following files were included: \n')
                 for f in fs:
                     self.logCritical('{0}\n'.format(f))
-
                 return 0
 
             if hashfile is None:
@@ -337,11 +336,9 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                                    , OperationalError, 1) # Retry this function once if it fails the first time.
 
             # Here is where we copy the data in to an S3 bucket
-
-            if rowcount > 1:  # Only save the file if there's actually results in it.
-                for f in fs:
-                    s3 = S3Helper(S3_BUCKET_NAME)
-                    s3.file_upload(os.path.join(outputs, f), get_file_upload_key(wu.name, f))
+            for f in fs:
+                s3 = S3Helper(S3_BUCKET_NAME)
+                s3.file_upload(os.path.join(outputs, f), get_file_upload_key(wu.name, f))
 
         except Exception as e:
             self.logCritical("Error processing work unit: {0}\n".format(e.message))
