@@ -180,8 +180,13 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
     def move_files(self, files, where):
         for f in files:
-            shutil.copy(f, where)
-            os.remove(f)
+            if os.path.exists(f):
+                self.logDebug("Moving: {0}\n".format(f))
+                shutil.copy(f, where)
+                os.remove(f)
+            else:
+                self.logDebug("Not moving {0}. Doesn't exist\n".format(f))
+
 
     def assimilate_handler(self, wu, results, canonical_result):
         self.engine = create_engine(DB_LOGIN)
