@@ -18,35 +18,28 @@ from database.boinc_database_support import WORK_UNIT
 # Get names of cubes that we have progress 2 for.
 # Get names of workunits with canonical resultid > 0
 
-def get_boinc_result_list():
-    engine = create_engine(BOINC_DB_LOGIN)
-    connection = engine.connect()
-
-    workunits = connection.execute(select([WORK_UNIT]).where(WORK_UNIT.c.canonical_resultid != 0))
-
-    return [workunit['name'] for workunit in workunits]
 
 def get_sourcefinder_result_list():
     engine = create_engine(DB_LOGIN)
     connection = engine.connect()
 
-    results = connection.execute(select([CUBE]).where(CUBE.c.progress == 2))
+    # Get all cubes from run 10
+    # Check how many have results
+    cubes = connection.execute(select([CUBE]))
 
-    return [result['cube_name'] for result in results]
+    results = {}
 
+    for cube in cubes:
+        # Is there a result in either runs.
+        name = cube['cube_name']
 
-def collect_file_names(directory, file_list):
-    dir_objects = [os.path.join(directory, d) for d in os.listdir(directory)]
+        if name not in results:
+            results[name] = 0
 
-    filenames = [f for f in dir_objects if os.path.isfile(f)]
-    dirnames = [d for d in dir_objects if os.path.isdir(d)]
+        if cube['progress'] == 2:
+            results[name] += 1
 
-    for f in filenames:
-        name = os.path.basename(f)
-        file_list.add(name[3: name.find('r') - 3])
-
-    for d in dirnames:
-        collect_file_names(d, file_list)
+    return results
 
 
 def is_number(char):
@@ -69,39 +62,36 @@ def find_cube_set_number(name):
     return int(numbers)
 
 
-def index_cubes(names):
-    index = {}
+def index_cubes(cubes):
+    dont_have = {}
+    have = {}
 
-    for name in names:
-        set_number = find_cube_set_number(name)
-        if set_number in index:
-            index[set_number].append(name)
+    for cube, num_results in cubes:
+        set_number = find_cube_set_number(cube)
+
+        dic = dont_have if num_results == 0 else have
+
+        if set_number in dic:
+            dic[set_number].append(cube)
         else:
-            index[set_number] = [name]
+            dic[set_number] = [cube]
 
-    return index
+    return have, dont_have
 
-
-def find_index_difference(index1, index2):
-    diff = {}
-    for key in index1:
-        if key not in index2:
-            diff[key] = list(index1[key])
-            continue
-
-        values1 = index1[key]
-        values2 = set(index2[key])
-
-        for value in values1:
-            if value not in values2:
-                if key not in diff:
-                    diff[key] = [value]
-                else:
-                    diff[key].append(value)
-
-    return diff
 if __name__ == '__main__':
-    boinc_workunits = [b[3:] for b in get_boinc_result_list()]
+
+    results = get_sourcefinder_result_list()
+    have, dont_have = index_cubes(results)
+
+    print "Ones we have"
+    for key, value in have:
+        print key, len(value)
+
+    print "Ones we dont have"
+    for key, value in dont_have:
+        print key, len(value)
+
+    """boinc_workunits = [b[3:] for b in get_boinc_result_list()]
     sourcefinder_processed_cubes = [s for s in get_sourcefinder_result_list()]
 
     workunit_index = index_cubes(boinc_workunits)
@@ -124,3 +114,4 @@ if __name__ == '__main__':
         for entry in ones_to_get:
             f.write(entry)
             f.write('\n')
+    """
