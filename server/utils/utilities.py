@@ -18,6 +18,7 @@ class DirStack:
     def pop(self):
         os.chdir(self.stack.pop())
 
+
 def retry_on_exception(function, exception, num_retries):
 
     while num_retries > 0:
@@ -25,6 +26,7 @@ def retry_on_exception(function, exception, num_retries):
             return function()
         except exception:
             num_retries -= 1
+
 
 def make_path(path):
     try:

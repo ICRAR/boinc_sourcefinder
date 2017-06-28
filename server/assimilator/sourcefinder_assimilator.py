@@ -31,6 +31,8 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 # This represents the valid first row of the csv.
 csv_valid_header = ['ParameterNumber','RA','DEC','freq','w_50','w_20','w_FREQ','F_int','F_tot','F_peak','Nvoxel','Nchan','Nspatpix']
 TMPFILE = '/tmp/sourcefinder_result.tar.gz'
+COMPLETED_WU_PATH = '/home/ec2-user/completed_workunits'
+COMPLETED_RESULT_PATH = '/home/ec2-user/completed_results'
 
 
 class SourcefinderAssimilator(assimilator.Assimilator):
@@ -39,6 +41,34 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         assimilator.Assimilator.__init__(self)
         self.connection = None
         self.engine = None
+
+    def get_cube_info(self, wu_name):
+        # These stay constant for all of the results:
+        # Run ID (Can be obtained from workunit name)
+        # Cube ID (Can be obtained from Run ID and workunit name)
+
+        # These change for each result:
+        # Parameter ID (Can be obtained from Run ID and first column in CSV)
+        # Each of the other rows in the CSV
+
+        # Example WU name: 6_askap_cube_1_1_19
+
+        underscore = wu_name.find('_')
+
+        try:
+            run_id = int(wu_name[0:underscore])
+        except ValueError:
+            raise Exception('Malformed WU name {0}\n'.format(wu_name))
+
+        cube_name = wu_name[underscore + 1:]
+
+        # First column is the cube ID
+        cube = self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()
+
+        if cube is None:
+            raise Exception("Can't find cube {0}\n".format(cube_name))
+
+        return run_id, cube_name, int(cube['cube_id'])
 
     def hash_filecheck(self, file, hashfile):
         with open(file, 'r') as f:
@@ -148,14 +178,10 @@ class SourcefinderAssimilator(assimilator.Assimilator):
 
         return files
 
-    def erase_files(self, files):
-        deletion_path = '/home/ec2-user/files_to_delete'
-        make_path(deletion_path)
-
+    def move_files(self, files, where):
         for f in files:
-            self.logNormal("Erasing {0}\n".format(f))
             try:
-                shutil.move(f, deletion_path)
+                shutil.move(f, where)
             except IOError as e:
                 self.logCritical("Could not move: {0}\n".format(e.message))
 
@@ -180,20 +206,15 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         retval = self.process_result(wu, out_file)
 
         if retval == 0:
-            # Successful assimilation, erase the work unit file and all the other result files
+            make_path(COMPLETED_RESULT_PATH)
+            make_path(COMPLETED_WU_PATH)
+
+            # Successful assimilation, move the the work unit file and all the other result files
             files = [self.get_file_path(r) for r in results]
             wu_files = self.get_wu_files(wu)
 
-            self.logNormal("Result files to erase: {0}\n".format(len(files)))
-            for f in files:
-                self.logNormal("{0}\n".format(f))
-
-            self.logNormal("WU files to erase: {0}\n".format(len(wu_files)))
-            for f in wu_files:
-                self.logNormal("{0}\n".format(f))
-
-            self.erase_files(files)
-            self.erase_files(wu_files)
+            self.move_files(files, COMPLETED_RESULT_PATH)
+            self.move_files(wu_files, COMPLETED_WU_PATH)
 
         self.connection.close()
 
@@ -206,6 +227,19 @@ class SourcefinderAssimilator(assimilator.Assimilator):
         self.logCritical("Running on %s\n", file)
 
         try:
+
+            run_id, cube_name, cube_id = self.get_cube_info(wu.name)
+
+            cube = self.connection.execute(select([CUBE]).where(CUBE.c.cube_id == cube_id)).first()
+
+            if cube is None:
+                self.logCritical('Could not find cube {0}\n'.format(cube_id))
+                return 0
+
+            if cube['progress'] == 2:
+                self.logCritical('Cube {0} already has results!\n'.format(cube_name))
+                return 0
+
             # First, copy the work unit to a safe place
             shutil.copy(file, TMPFILE)
             file = TMPFILE
@@ -265,33 +299,6 @@ class SourcefinderAssimilator(assimilator.Assimilator):
                         return 0
 
                 # CSV is good from here
-
-                # These stay constant for all of the results:
-                # Run ID (Can be obtained from workunit name)
-                # Cube ID (Can be obtained from Run ID and workunit name)
-
-                # These change for each result:
-                # Parameter ID (Can be obtained from Run ID and first column in CSV)
-                # Each of the other rows in the CSV
-
-                # Example WU name: 6_askap_cube_1_1_19
-
-                underscore = wu.name.find('_')
-
-                try:
-                    run_id = int(wu.name[0:underscore])
-                except ValueError:
-                    self.logCritical('Malformed WU name {0}\n'.format(wu.name))
-                    return 0
-
-                cube_name = wu.name[underscore + 1:]
-
-                # First column is the cube ID
-                cube_id = retry_on_exception(lambda: (
-                    self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()['cube_id']), OperationalError,
-                                             1)
-
-                cube_id = int(cube_id)
 
                 # Row 1 is header
                 rowcount = 1
