@@ -69,15 +69,16 @@ def index_cubes(cubes):
     for cube, has_result in cubes.iteritems():
         set_number = find_cube_set_number(cube)
 
-        if has_result:
-            dic = have
-        else:
-            dic = dont_have
+        if set_number not in have:
+            have[set_number] = []
+        if set_number not in dont_have:
+            dont_have[set_number] = []
 
-        if set_number in dic:
-            dic[set_number].append(cube)
+        if has_result:
+            have[set_number].append(cube)
         else:
-            dic[set_number] = [cube]
+            dont_have[set_number].append(cube)
+
 
     return have, dont_have
 
