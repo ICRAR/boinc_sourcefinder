@@ -18,6 +18,10 @@
 # alias cp='cp -i'
 # alias mv='mv -i'
 
+export SOFIA_MODULE_PATH="/root/SoFiA/build/lib.linux-x86_64-2.7"
+export SOFIA_PIPELINE_PATH="/root/SoFiA/sofia_pipeline.py"
+export PATH="$PATH:/root/SoFiA"
+
 # BOINC VM Initialization
 echo BOINC VM Initialization [Sleeping 5 seconds] | vboxmonitor
 sleep 5
