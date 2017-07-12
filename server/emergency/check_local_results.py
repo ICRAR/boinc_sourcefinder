@@ -108,10 +108,10 @@ if __name__ == '__main__':
         to_get += value
 
     with open('ones_to_get.txt', 'w') as f:
-    to_get.sort()
-    for entry in to_get:
-        f.write(entry)
-        f.write('\n')
+        to_get.sort()
+        for entry in to_get:
+            f.write(entry)
+            f.write('\n')
 
     """boinc_workunits = [b[3:] for b in get_boinc_result_list()]
     sourcefinder_processed_cubes = [s for s in get_sourcefinder_result_list()]
