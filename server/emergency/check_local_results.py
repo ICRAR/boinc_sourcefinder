@@ -88,6 +88,7 @@ if __name__ == '__main__':
 
     total_cubes = 0
     total_results = 0
+    to_get = []
     for key, value in results.iteritems():
         total_cubes += 1
         total_results += int(value > 0)
@@ -104,6 +105,13 @@ if __name__ == '__main__':
     print "Ones we dont have"
     for key, value in dont_have.iteritems():
         print key, len(value)
+        to_get += value
+
+    with open('ones_to_get.txt', 'w') as f:
+    to_get.sort()
+    for entry in to_get:
+        f.write(entry)
+        f.write('\n')
 
     """boinc_workunits = [b[3:] for b in get_boinc_result_list()]
     sourcefinder_processed_cubes = [s for s in get_sourcefinder_result_list()]
