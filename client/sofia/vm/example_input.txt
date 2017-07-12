@@ -1,0 +1,153 @@
+
+# SoFiA default settings
+# Do not modify!
+
+# Pipeline modules
+
+steps.doSubcube                 =       false
+steps.doFlag                    =       false
+steps.doSmooth                  =       false
+steps.doScaleNoise              =       false
+steps.doSCfind                  =       true
+steps.doThreshold               =       false
+steps.doWavelet                 =       false
+steps.doCNHI                    =       false
+steps.doMerge                   =       true
+steps.doReliability             =       false
+steps.doParameterise            =       true
+steps.doWriteFilteredCube       =       false
+steps.doWriteMask               =       false
+steps.doWriteCat                =       true
+steps.doMom0                    =       false
+steps.doMom1                    =       false
+steps.doCubelets                =       false
+steps.doDebug                   =       false
+steps.doOptical                 =       false
+
+# Import module
+
+import.inFile                   =       input.fits
+import.weightsFile              =
+import.maskFile                 =
+import.weightsFunction          =
+import.subcube                  =       []
+import.subcubeMode              =       pixel
+
+
+# Flagging module
+
+flag.regions                    =       []
+
+
+# Optical finder module
+
+optical.sourceCatalogue         =
+optical.spatSize                =       0.01
+optical.specSize                =       1e+5
+optical.storeMultiCat           =       false
+
+
+# Smoothing module
+
+smooth.kernel                   =       gaussian
+smooth.edgeMode                 =       constant
+smooth.kernelX                  =       3.0
+smooth.kernelY                  =       3.0
+smooth.kernelZ                  =       3.0
+
+
+# Noise scaling module
+
+scaleNoise.statistic            =       mad
+scaleNoise.scaleX               =       false
+scaleNoise.scaleY               =       false
+scaleNoise.scaleZ               =       true
+scaleNoise.edgeX                =       0
+scaleNoise.edgeY                =       0
+scaleNoise.edgeZ                =       0
+
+
+# 2D-1D wavelet finder module
+
+wavelet.threshold               =       5.0
+wavelet.scaleXY                 =       -1
+wavelet.scaleZ                  =       -1
+wavelet.positivity              =       false
+wavelet.iterations              =       3
+
+
+# S+C finder module
+
+SCfind.threshold                =       6.0
+SCfind.sizeFilter               =       0.0
+SCfind.maskScaleXY              =       2.0
+SCfind.maskScaleZ               =       2.0
+SCfind.edgeMode                 =       constant
+SCfind.rmsMode                  =       negative
+SCfind.kernels                  =       [[ 0, 0, 0,'b'],[ 0, 0, 3,'b'],[ 0, 0, 7,'b'],[ 0, 0, 15,'b'],[ 3, 3, 0,'b'],[ 3, 3, 3,'b'],[ 3, 3, 7,'b'],[ 3, 3, 15,'b'],[ 6, 6, 0,'b'],[ 6, 6, 3,'b'],[ 6, 6, 7,'b'],[ 6, 6, 15,'b']]
+SCfind.kernelUnit               =       pixel
+SCfind.verbose                  =       true
+
+# CNHI finder module
+
+CNHI.pReq                       =       1e-5
+CNHI.qReq                       =       3.8
+CNHI.minScale                   =       5
+CNHI.maxScale                   =       -1
+CNHI.medianTest                 =       true
+CNHI.verbose                    =       1
+
+# Threshold finder module
+
+threshold.threshold             =       4.0
+threshold.clipMethod            =       relative
+threshold.rmsMode               =       std
+threshold.verbose               =       false
+
+
+# Merging module
+
+merge.radiusX                   =       3
+merge.radiusY                   =       3
+merge.radiusZ                   =       3
+merge.minSizeX                  =       3
+merge.minSizeY                  =       3
+merge.minSizeZ                  =       2
+merge.positivity                =       false
+
+
+# Parametrisation module
+
+parameters.fitBusyFunction      =       false
+parameters.optimiseMask         =       false
+parameters.dilateMask           =       false
+parameters.dilateThreshold      =       0.02
+parameters.dilatePixMax         =       10
+parameters.dilateChan           =       1
+
+
+# Reliability module
+
+reliability.parSpace            =       ['n_pix','snr_sum','snr_max']
+reliability.logPars             =       [1,1,1]
+reliability.autoKernel          =       true
+reliability.scaleKernel         =       0.5
+reliability.usecov              =       true
+reliability.negPerBin           =       1.0
+reliability.skellamTol          =       -0.5
+reliability.kernel              =       [0.15,0.05,0.1]
+reliability.fMin                =       10.0
+reliability.threshold           =       0.9
+reliability.makePlot            =       false
+
+
+# Output module
+
+writeCat.overwrite              =       true
+writeCat.compress               =       false
+writeCat.outputDir              =       shared
+writeCat.basename               =       output
+writeCat.writeASCII             =       true
+writeCat.writeXML               =       false
+writeCat.writeSQL               =       false
+writeCat.parameters = ['*']

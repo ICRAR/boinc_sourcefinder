@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import tarfile
 import time
-import logging
+import logger
 import hashlib
 
 file_system = {
@@ -17,7 +17,7 @@ file_system = {
 }
 
 # We now write logs to a log file that is visible for the client (helps a lot with debugging)
-logging.basicConfig(filename=file_system['log_file'], level=logging.INFO)
+logger.basicConfig(filename=file_system['log_file'], level=logger.INFO)
 
 # **Some utilities here are from the server, but the client acts as a standalone file so it doesn't have access to the
 #   server's utilities file**
@@ -175,7 +175,7 @@ def main():
     good = False
 
     try:
-        logging.info('Staring...')
+        logger.info('Staring...')
 
         # Decompress all of the files needed to run duchamp.
         # If already decompressed, does nothing.
@@ -194,9 +194,9 @@ def main():
 
         write_complete_marker()  # This tells the bash script that we actually finished and it should finish too
 
-        logging.info('All done!')
+        logger.info('All done!')
     except:
-        logging.exception('An exception occurred when trying to run')
+        logger.exception('An exception occurred when trying to run')
 
 
 # This function assumes we're in the worker directory
@@ -210,19 +210,19 @@ def unzip_files():
     inputs, params = check_files_unzipped()
 
     if inputs and params:
-        logging.info('No need to unzip anything')
+        logger.info('No need to unzip anything')
         return  # We have everything already in place.
 
     # Input files, by default, are put in the shared directory.
     input_files = os.listdir(file_system['shared'])
 
-    logging.info("Unzipping files...")
-    logging.info(input_files)
+    logger.info("Unzipping files...")
+    logger.info(input_files)
 
     for wu_file in input_files:
         if "fits" in wu_file and not inputs:  # This is a workunit file
 
-            logging.info("Decompressing input fits file...")
+            logger.info("Decompressing input fits file...")
             # Copy the file in to the worker directory
             shutil.copy(join(file_system['shared'], wu_file), file_system['worker'])
 
@@ -243,7 +243,7 @@ def unzip_files():
 
         elif wu_file.endswith("tar.gz") and not params:  # This is a parameter folder
 
-            logging.info("Decompressing parameter files...")
+            logger.info("Decompressing parameter files...")
 
             # Copy the file in to the worker directory
             shutil.copy(join(file_system['shared'], wu_file), file_system['worker'])
@@ -263,7 +263,7 @@ def unzip_files():
 
     # The params folder has just been built, so we need to move the input.fits file in there now
     if not params:
-        logging.info("Coping input.fits over to {0}".format(parameter_folder()))
+        logger.info("Coping input.fits over to {0}".format(parameter_folder()))
         shutil.copy(join(file_system['worker'], 'input.fits'), parameter_folder())
 
 
@@ -312,7 +312,7 @@ def remaining_files():
     # Sort everything by its parameter number
     still_to_go.sort(key=lambda param_n: parameter_number(param_n))
 
-    logging.info('Remaining files: {0}'.format(len(still_to_go)))
+    logger.info('Remaining files: {0}'.format(len(still_to_go)))
 
     return still_to_go
 
@@ -327,23 +327,23 @@ def run_duchamp(files_to_run):
 
     dirstack = DirStack()
     # If we called unzip_files() we can be sure that everything has been laid out for this function to work.
-    logging.info('Running duchamp...')
+    logger.info('Running duchamp...')
 
     dirstack.push()
     os.chdir(parameter_folder())
 
     for run in files_to_run:
 
-        logging.info('Running duchamp for {0}...'.format(run))
+        logger.info('Running duchamp for {0}...'.format(run))
         start = time.time()
         subprocess.call(['Duchamp', '-p', run])
         end = time.time()
 
-        logging.info('Took {0} ms'.format((end - start) * 1000))
+        logger.info('Took {0} ms'.format((end - start) * 1000))
 
     dirstack.pop()
 
-    logging.info('Duchamp is finished')
+    logger.info('Duchamp is finished')
 
 
 def move_outputs(directory):
@@ -361,7 +361,7 @@ def move_outputs(directory):
             shutil.copy('{0}/{1}'.format(parameter_folder(), output_file), directory)
             os.remove('{0}/{1}'.format(parameter_folder(), output_file))
 
-    logging.info('Copied all duchamp-output files')
+    logger.info('Copied all duchamp-output files')
 
 
 def check_and_build_output(directory):
@@ -377,7 +377,7 @@ def check_and_build_output(directory):
     # Check to ensure the number of output files we have matches the number of input files
     remaining = len(remaining_files())
     if remaining > 0:
-        logging.error('Missed {0} parameter files somehow'.format(remaining))
+        logger.error('Missed {0} parameter files somehow'.format(remaining))
         return False  # Tell the rest of the program to try again.
 
     build_output_csv(directory)

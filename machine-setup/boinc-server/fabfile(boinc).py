@@ -318,7 +318,7 @@ bucket = icrar.sourcefinder.files' > /home/ec2-user/boinc_sourcefinder/server/co
                                                                                                     env.db_hostname,
                                                                                                     PROJECT_NAME))
     # Create the initial set of parameter files
-    sudo('python /home/ec2-user/boinc_sourcefinder/server/workgeneration/generate_parameter_files.py')
+    sudo('python /home/ec2-user/boinc_sourcefinder/server/workgeneration/parameter_files.py')
 
     with cd('/home/ec2-user/boinc_sourcefinder/py_boinc/cy_project/src/'):
         sudo('python setup.py install')
