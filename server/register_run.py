@@ -126,15 +126,15 @@ class RunRegister:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('app_name', nargs='1', help='The name of the app to use.')
-    parser.add_argument('run_id', nargs='1', type=int, help='The run ID to register.')
+    parser.add_argument('--app', type=str, required=True, help='The name of the app to use.')
+    parser.add_argument('run_id', type=int, help='The run ID to register.')
     args = vars(parser.parse_args())
 
     return args
 
 if __name__ == '__main__':
     arguments = parse_args()
-    app_name = arguments['app_name']
+    app_name = arguments['app']
 
     cube_register = RunRegister(get_config(app_name))
 
