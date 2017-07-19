@@ -75,6 +75,8 @@ def read_config_file(filename, config_dict):
             default[item.config_name] = item.default
             config_dict[item.name] = item.default
 
+        default.write(filename)
+
         LOG.info("Creating a default config file for: {0}".format(filename))
 
     return config_dict
