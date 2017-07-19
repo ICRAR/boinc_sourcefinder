@@ -85,14 +85,15 @@ class RunRegister:
             # We need to make an insertion here for every single parameter that exists in the parameter_files table
             ret = self.connection.execute(select([PARAMETER_FILE]))
             for row in ret:
-                if not int(row['parameter_id']) in exists:  # only add this to the DB if it does not already exist
-                    self.connection.execute(PARAMETER_RUN.insert(), parameter_id=int(row['parameter_id']), run_id=run_id)
+                param_id = int(row['parameter_id'])
+                if not param_id in exists:  # only add this to the DB if it does not already exist
+                    LOG.info("Adding parameter id {0}".format(param_id))
+                    self.connection.execute(PARAMETER_RUN.insert(), parameter_id=param_id, run_id=run_id)
 
             transaction.commit()
         except Exception as e:
             transaction.rollback()
             raise e
-
 
     def __call__(self, run_id):
         """
