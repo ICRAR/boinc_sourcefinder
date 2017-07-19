@@ -5,7 +5,4 @@
 *.pyc
 *~
 *.settings
-/server/config/
-client/src/boinc-client/virtualbox\env
-server/workgeneration/cubes*
-server/workgeneration/parameter_files_*
+
