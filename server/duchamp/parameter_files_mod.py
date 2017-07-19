@@ -39,6 +39,8 @@ def get_parameter_file_generator(base_class):
             better.
             :return:
             """
+
+            parameters = []
             # fixed parameters
             ImageFile = 'input.fits'
             flagRejectbeforeMerge = 'true'
@@ -68,7 +70,6 @@ def get_parameter_file_generator(base_class):
 
             counter = 0
 
-            parameters = {}
             for i in range(0, len(threshold), 1):
                 for j in range(0, len(reconDim), 1):
                     for k in range(0, len(snrRecon), 1):
@@ -106,7 +107,7 @@ def get_parameter_file_generator(base_class):
                                                                'minChannels            ' + str(minChan[n]) + '\n' + \
                                                                'flagGrowth              true \n' + \
                                                                'growthThreshold        ' + str(growthThreshold[p]) + '\n'
-                                                    parameters[parfile] = fileText
+                                                    parameters.append((parfile, fileText))
 
                                         if flagGrowth[o] == 0:
                                             counter += 1
@@ -135,7 +136,7 @@ def get_parameter_file_generator(base_class):
                                                        'minChannels            ' + str(minChan[n]) + '\n' + \
                                                        'flagGrowth              false \n'
 
-                                            parameters[parfile] = fileText
+                                            parameters.append((parfile, fileText))
 
             return parameters
 

@@ -170,7 +170,7 @@ def get_parameter_file_generator(base_class):
         def create_parameter_file_data(self):
             file_count = 0
 
-            items = {}
+            items = []
 
             for config in itertools.product(*SOFIA_CONFIG):
                 filename = 'supercube_run_{0}_sofia.par'.format(file_count)
@@ -181,7 +181,7 @@ def get_parameter_file_generator(base_class):
                 for idx, field in enumerate(config):
                     config_string += "{0}   =   {1}\n".format(SOFIA_CONFIG[idx].name, field)
 
-                items[filename] = config_string
+                items.append((filename, config_string))
 
             return items
 
