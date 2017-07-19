@@ -51,7 +51,7 @@ class RunRegister:
         :param run_id: The run ID to register
         :return:
         """
-        RUN = self.config["database_duchamp"]["RUN"]
+        RUN = self.config["database"]["RUN"]
 
         # Check to see if this run is already registered
         check = self.connection.execute(select([RUN]).where(RUN.c.run_id == run_id))
@@ -70,8 +70,8 @@ class RunRegister:
         :param run_id: The run ID to register parameters to
         :return:
         """
-        PARAMETER_RUN = self.config["database_duchamp"]["PARAMETER_RUN"]
-        PARAMETER_FILE = self.config["datbase_duchamp"]["PARAMETER_FILE"]
+        PARAMETER_RUN = self.config["database"]["PARAMETER_RUN"]
+        PARAMETER_FILE = self.config["database"]["PARAMETER_FILE"]
 
         # Check which parameters already exist for this run.
         exists = set()
@@ -90,9 +90,9 @@ class RunRegister:
 
             transaction.commit()
         except Exception as e:
-            LOG.exception("Error during transaction")
             transaction.rollback()
             raise e
+
 
     def __call__(self, run_id):
         """
@@ -100,14 +100,14 @@ class RunRegister:
         :param run_id: The run ID to register
         :return:
         """
-        engine = create_engine(self.config["DB_LOGIN"])
+        self.engine = create_engine(self.config["DB_LOGIN"])
 
         if run_id < 0:
             LOG.info('Invalid run ID specified, please specify a run id greater than 0')
             return
 
         # Work out which parameter files to add to the db under this run ID.
-        self.connection = engine.connect()
+        self.connection = self.engine.connect()
         try:
             # Add this run ID
             self.create_run_id(run_id)
