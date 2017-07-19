@@ -30,6 +30,7 @@ import argparse
 
 from config import get_config
 from utils.logger import config_logger
+from utils import make_path
 from sqlalchemy.engine import create_engine
 from sqlalchemy import select, and_
 from astropy.io import fits
@@ -97,20 +98,23 @@ class CubeRegister:
 
     def __call__(self, run_id):
         self.run_id = run_id
+        cube_dir = self.config["DIR_CUBE"]
+
+        make_path(cube_dir)
 
         # Ensure everything is compressed in the cubes directory
         # Note: any files already compressed are not affected
-        os.system('gzip {0}/*'.format(self.config["DIR_CUBE"]))
+        os.system('gzip {0}/*'.format(cube_dir))
 
         # get a list of the cubes to be registered
-        cubes = os.listdir(self.config["DIR_CUBE"])  # list of cubes in the current run
+        cubes = os.listdir(cube_dir)  # list of cubes in the current run
         cubes.sort()
 
         try:
             for cube in cubes:
                 # check if it is actually one of the cubes
                 if "askap" in cube and cube.endswith('.fits.gz'):  # Must have askap in the filename and end with .fits.gz
-                    cube_path = os.path.join(self.config["DIR_CUBE"], cube)
+                    cube_path = os.path.join(cube_dir, cube)
                     self.create_cube(cube_path)
         except Exception:
             LOG.exception('Database exception')
