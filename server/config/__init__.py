@@ -77,7 +77,7 @@ def read_config_file(filename, config_dict):
             default[item.config_name] = item.default
             config_dict[item.name] = item.default
 
-        default.write(filename)
+        default.write()
 
         LOG.info("Creating a default config file for: {0}".format(filename))
 
@@ -96,9 +96,10 @@ def get_config(app):
 
     config = {}
     config_file_name = join(dirname(realpath(__file__)), '{0}.settings'.format(app))
+    common_file_name = join(dirname(realpath(__file__)), 'common.settings'.format(app))
 
     # Copy the fields from common.settings first
-    read_config_file('common.settings', config)
+    read_config_file(common_file_name, config)
     # Copy from the settings for this app
     read_config_file(config_file_name, config)
 

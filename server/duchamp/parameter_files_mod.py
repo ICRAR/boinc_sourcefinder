@@ -24,7 +24,7 @@
 """
 Module to generate parameter files for Duchamp
 """
-from ..utils.logger import config_logger
+from utils.logger import config_logger
 
 LOG = config_logger(__name__)
 
