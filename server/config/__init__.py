@@ -57,7 +57,9 @@ config_entries = [
     ConfigItem("BOINC_DB_NAME", "wgThreshold", 500),
 
     ############### AMAZON SETTINGS ###############
-    ConfigItem("BOINC_DB_NAME", "bucket", "icrar.sourcefinder.files")
+    ConfigItem("BOINC_DB_NAME", "bucket", "icrar.sourcefinder.files"),
+
+    ConfigItem("APP_NAME", "appName", "sourcefinder")
 ]
 
 
