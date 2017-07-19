@@ -67,8 +67,9 @@ def read_config_file(filename, config_dict):
     if exists(filename):
         # Load from config file
         config_obj = ConfigObj(filename)
+
         for item in config_entries:
-            if item in config_obj:
+            if item.config_name in config_obj:
                 config_dict[item.name] = config_obj[item.config_name]
     else:
         # Create a default
