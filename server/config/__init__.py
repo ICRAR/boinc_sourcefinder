@@ -30,6 +30,7 @@ from utils.logger import config_logger
 
 from database_boinc import boinc_database_def
 from database_duchamp import duchamp_database_def
+from database_sofia import sofia_database_def
 
 LOG = config_logger(__name__)
 
@@ -136,6 +137,6 @@ def get_config(app):
     # Add in the database tables
     config["database_boinc"] = boinc_database_def
     config["database_duchamp"] = duchamp_database_def
-    config["database_sofia"] = None
+    config["database_sofia"] = sofia_database_def
 
     return config
