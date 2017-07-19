@@ -41,8 +41,6 @@ class CubeRegister:
     def __init__(self, config):
         self.config = config
         self.run_id = None
-        self.engine = None
-        self.connection = None
 
     @staticmethod
     def get_cube_data(cube_file):
@@ -65,36 +63,39 @@ class CubeRegister:
         :param cube_file:
         :return:
         """
-        CUBE = self.config["database_duchamp"]["CUBE"]
+        CUBE = self.config["database"]["CUBE"]
+        engine = create_engine(self.config["DB_LOGIN"])
+        connection = engine.connect()
 
-        filename = os.path.basename(cube_file)
-        p = filename.find('.')
-        filename = filename[:p]  # Strip off that .fits.gz
+        try:
+            filename = os.path.basename(cube_file)
+            p = filename.find('.')
+            filename = filename[:p]  # Strip off that .fits.gz
 
-        check = self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == filename, CUBE.c.run_id == self.run_id)))
-        result = check.fetchone()
+            check = connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == filename, CUBE.c.run_id == self.run_id)))
+            result = check.fetchone()
 
-        if not result:
-            data = self.get_cube_data(cube_file)  # Grab the cube data from the cube file.
+            if not result:
+                data = self.get_cube_data(cube_file)  # Grab the cube data from the cube file.
 
-            self.connection.execute(
-                    CUBE.insert(),
-                    cube_name=filename,
-                    progress=0,
-                    ra=data[0],
-                    declin=data[1],
-                    freq=data[2],
-                    run_id=self.run_id)
+                connection.execute(
+                        CUBE.insert(),
+                        cube_name=filename,
+                        progress=0,
+                        ra=data[0],
+                        declin=data[1],
+                        freq=data[2],
+                        run_id=self.run_id)
 
-            LOG.info('Cube {0} successfully registered'.format(filename))
+                LOG.info('Cube {0} successfully registered'.format(filename))
 
-        else:
-            # The cube is registered already
-            LOG.info('Cube {0} already registered in database'.format(filename))
+            else:
+                # The cube is registered already
+                LOG.info('Cube {0} already registered in database'.format(filename))
+        finally:
+            connection.close()
 
     def __call__(self, run_id):
-        self.engine = create_engine(self.config["DB_LOGIN"])
-        self.connection = self.engine.connect()
         self.run_id = run_id
 
         # Ensure everything is compressed in the cubes directory
@@ -115,15 +116,13 @@ class CubeRegister:
             LOG.exception('Database exception')
 
             return 1
-        finally:
-            self.connection.close()
 
         return 0
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('app_name', nargs='1', help='The name of the app to use.')
+    parser.add_argument('--app', type=str, required=True, help='The name of the app to use.')
     parser.add_argument('run_id', nargs='1', type=int, help='The run ID to register to.')
     args = vars(parser.parse_args())
 
@@ -131,7 +130,7 @@ def parse_args():
 
 if __name__ == '__main__':
     arguments = parse_args()
-    app_name = arguments['app_name']
+    app_name = arguments['app']
 
     cube_register = CubeRegister(get_config(app_name))
 

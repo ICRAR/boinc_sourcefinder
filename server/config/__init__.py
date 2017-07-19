@@ -139,4 +139,7 @@ def get_config(app):
     config["database_duchamp"] = duchamp_database_def
     config["database_sofia"] = sofia_database_def
 
+    # Set the database def for this module.
+    config["database"] = config["database_{0}".format(config["APP_NAME"])]
+
     return config
