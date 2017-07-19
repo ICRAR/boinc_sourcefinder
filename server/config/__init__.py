@@ -28,8 +28,8 @@ from os.path import exists, dirname, realpath, join
 from configobj import ConfigObj
 from utils.logger import config_logger
 
-from .database_boinc import boinc_database_def
-from .database_duchamp import duchamp_database_def
+from database_boinc import boinc_database_def
+from database_duchamp import duchamp_database_def
 
 LOG = config_logger(__name__)
 
