@@ -123,7 +123,7 @@ class CubeRegister:
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--app', type=str, required=True, help='The name of the app to use.')
-    parser.add_argument('run_id', nargs='1', type=int, help='The run ID to register to.')
+    parser.add_argument('run_id', type=int, help='The run ID to register to.')
     args = vars(parser.parse_args())
 
     return args
