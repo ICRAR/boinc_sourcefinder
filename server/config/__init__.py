@@ -36,10 +36,11 @@ LOG = config_logger(__name__)
 
 
 class ConfigItem:
-    def __init__(self, name, config_name, default):
+    def __init__(self, name, config_name, default, dtype=str):
         self.name = name
         self.config_name = config_name
         self.default = default
+        self.type = dtype
 
 config_entries = [
     ############### Database Settings ###############
@@ -54,10 +55,10 @@ config_entries = [
     ConfigItem("DIR_CUBE", "cubeDirectory", "/home/ec2-user/sf_cubes"),
     ConfigItem("DIR_BOINC_PROJECT_PATH", "boincPath", "/home/ec2-user/projects/duchamp"),
 
-    ConfigItem("FANOUT", "fanout", 1024),
+    ConfigItem("FANOUT", "fanout", 1024, int),
 
     ############### Work Generation Settings ###############
-    ConfigItem("BOINC_DB_NAME", "wgThreshold", 500),
+    ConfigItem("BOINC_DB_NAME", "wgThreshold", 500, int),
 
     ############### AMAZON SETTINGS ###############
     ConfigItem("BOINC_DB_NAME", "bucket", "icrar.sourcefinder.files"),
@@ -83,7 +84,7 @@ def read_config_file(filename, config_dict):
 
         for item in config_entries:
             if item.config_name in config_obj:
-                config_dict[item.name] = config_obj[item.config_name]
+                config_dict[item.name] = item.dtype(config_obj[item.config_name])
     else:
         # Create a default
         default = ConfigObj()
