@@ -245,7 +245,7 @@ if __name__ == '__main__':
 
     config = get_config(app_name)
 
-    sys.path.append(config["DIR_BOINC_PROJECT_PATH"]) # for pyboinc
+    os.chdir(config["DIR_BOINC_PROJECT_PATH"]) # for pyboinc
     # Need to import pyboinc here, as we need to know the project path before importing.
     py_boinc = importlib.import_module("py_boinc")
 
