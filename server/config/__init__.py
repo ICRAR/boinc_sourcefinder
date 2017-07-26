@@ -40,7 +40,7 @@ class ConfigItem:
         self.name = name
         self.config_name = config_name
         self.default = default
-        self.type = dtype
+        self.dtype = dtype
 
 config_entries = [
     ############### Database Settings ###############
