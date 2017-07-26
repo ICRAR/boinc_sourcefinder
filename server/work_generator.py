@@ -5,104 +5,239 @@
 import argparse
 import os
 import sys
+import importlib
+import hashlib
+import tarfile
+import shutil
 
-base_path = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
-
-from boinc_sourcefinder.server.utils import config_logger
-
-from boinc_sourcefinder.server.config import  BOINC_DB_LOGIN, DB_LOGIN, WG_THRESHOLD, DIR_BOINC_PROJECT_PATH
-
-sys.path.append(DIR_BOINC_PROJECT_PATH) # for pyboinc
-
+from config import get_config
+from utils.logger import config_logger
 from sqlalchemy.engine import create_engine
-from sqlalchemy import select, func
-import py_boinc
-from boinc_sourcefinder.server.database import RESULT
-from boinc_sourcefinder.server.Boinc import configxml
-from boinc_sourcefinder.server.database import CUBE
+from sqlalchemy import select
 
-from boinc_sourcefinder.server.duchamp.work_generator_mod import process_cube
+LOG = config_logger(__name__)
 
-LOGGER = config_logger(__name__)
-LOGGER.info('Starting work generation')
 
-ENGINE = create_engine(DB_LOGIN)
-connection = ENGINE.connect()
+class WorkGenerator:
+    """
+    Generates work units for a boinc app.
+    """
+    def __init__(self, config, py_boinc):
+        """
+        Create a new WorkGenerator
+        :param config: App config
+        :param py_boinc: The py_boinc module
+        :return:
+        """
+        self.config = config
+        self.py_boinc = py_boinc
+        self.download_dir = config["DIR_DOWNLOAD"]
+        self.fanout = config["FANOUT"]
+        self.engine = create_engine(config["DB_LOGIN"])
 
-# Generate work for every cube in the database that has progress set to 0, regardless of the run ID.
+    def get_pending_cubes(self, run_id):
+        """
+        Get a set of all cubes pending work unit generator
+        :param run_id: The run id to check, or None to check all run ids.
+        :return: SQLAlchemy result set of all cubes.
+        """
+        CUBE = self.config["database"]["CUBE"]
+
+        if run_id is not None:
+            # Check for registered cubes on the specified run ID
+            cube_query = select([CUBE]).where(CUBE.c.progress == 0 and CUBE.c.run_id == run_id)
+        else:
+            cube_query = select([CUBE]).where(CUBE.c.progress == 0)
+
+        return self.connection.execute(cube_query)
+
+    def get_cube_path(self, cube_name):
+        """
+        Gets the path of a cube name from the cube directory.
+        :param cube_name: Name of the cube
+        :return: Path of the cube in the cubes directory
+        """
+        cube_dir = self.config["DIR_CUBE"]
+
+        if not os.path.exists(cube_dir):
+            raise Exception("Cube directory {0} doesn't exist".format(cube_dir))
+
+        for item in os.listdir(cube_dir):
+            if item.startswith(cube_name):
+                return os.path.join(cube_dir, item)
+
+        return None
+
+    def get_download_path(self, filename):
+        """
+        Kevins code for hashing the download directory
+        :param filename: Filename to get the download path for
+        :return: Boinc download path for the provided filename
+        """
+        s = hashlib.md5(filename).hexdigest()[:8]
+        x = long(s, 16)
+
+        # Create the directory if needed
+        hash_dir_name = "%s/%x" % (self.download_dir, x % self.fanout)
+        if os.path.isfile(hash_dir_name):
+            pass
+        elif os.path.isdir(hash_dir_name):
+            pass
+        else:
+            os.mkdir(hash_dir_name)
+
+        return "%s/%x/%s" % (self.download_dir, x % self.fanout, filename)
+
+    def compress_parameters(self, run_id):
+        """
+        Compress all parameters associated with the given run ID
+        :param run_id: The run ID to get parameters for
+        :return: Name of the tarfile that contains the compressed parameters
+        """
+        app_name = self.config["APP_NAME"]
+        param_dir = self.config["DIR_PARAM"]
+        PARAMETER_RUN = self.config["database"]["PARAMETER_RUN"]
+        PARAMETER_FILE = self.config["database"]["PARAMETER_FILE"]
+
+        parameter_tar_file_name = "parameters_{0}_{1}.tar.gz".format(app_name, run_id)
+        parameter_tar_file_path = self.get_download_path(parameter_tar_file_name)
+
+        if not os.path.exists(parameter_tar_file_path):
+            # Need to compress the parameter files now as the tarfile doesn't exist
+            parameters = self.connection.execute(select([PARAMETER_RUN]).where(PARAMETER_RUN.c.run_id == run_id))
+
+            parameter_files = []  # Contains a list of parameter file names associated with the specified run
+            for parameter in parameters:
+                param_id = parameter['parameter_id']
+                name = self.connection.execute(select([PARAMETER_FILE.c.parameter_file_name]).
+                                               where(PARAMETER_FILE.c.parameter_id == param_id)).first()[0]
+
+                parameter_files.append(os.path.join(param_dir, name))
+
+            with tarfile.open(parameter_tar_file_path, "w:gz") as tar:
+                for parameter_file in parameter_files:
+                    # Don't compress with paths
+                    tar.add(parameter_file, os.path.join('parameter_files/', os.path.basename(parameter_file)))
+
+        return parameter_tar_file_name
+
+    def create_workunit(self, wu_name, wu_file_list):
+        """
+        Create a work unit in the Boinc DB
+        :param wu_name: The name of the work unit
+        :param wu_file_list: The files for the work unit
+        :return:
+        """
+        app_name = self.config["APP_NAME"]
+        template_in = "templates/{0}_in.xml".format(app_name)
+        template_out = "templates/{0}_out.xml".format(app_name)
+        additional_xml = "<credit>3.0f</credit>"
+
+        self.py_boinc.boinc_db_transaction_start()
+
+        success = py_boinc.boinc_create_work(
+                app_name=app_name,
+                min_quorom=2,
+                max_success_results=5,
+                max_error_results=5,
+                delay_bound=7 * 84600,
+                target_nresults=2,
+                wu_name=wu_name,
+                wu_template=template_in,
+                result_template=template_out,
+                size_class=-1,
+                priority=0,
+                opaque=0,
+                rsc_fpops_est=1e12,
+                rsc_fpops_bound=1e14,
+                rsc_memory_bound=1e8,
+                rsc_disk_bound=2000000048,
+                additional_xml=additional_xml,
+                list_input_files=wu_file_list)
+
+        if success != 0:
+            py_boinc.boinc_db_transaction_rollback()
+            raise Exception("Error writing to boinc database. boinc_create_work return value = {0}".format(success))
+
+        py_boinc.boinc_db_transaction_commit()
+
+    def process_cube(self, cube_row):
+        """
+        Processes a single cube from the app database
+        :param cube_row: The cube's database row
+        :return:
+        """
+        cube_name = cube_row["cube_name"]
+        cube_run_id = cube_row["run_id"]
+        cube_abs_path = self.get_cube_path(cube_name)
+
+        wu_name = "{0}_{1}".format(cube_run_id, cube_name)
+        wu_filename = wu_name + ".tar.gz"
+        wu_download_path = self.get_download_path(wu_filename)
+
+        # Copy the cube to the download directory
+        LOG.info("Copying {0} to {1}".format(cube_abs_path, wu_download_path))
+        shutil.copyfile(cube_abs_path, wu_download_path)
+
+        # Ensure the parameter file for this run exists
+        parameter_tar_file_name = self.compress_parameters(cube_run_id)
+        LOG.info("Parameter file is {0}".format(parameter_tar_file_name))
+
+        # Create the work unit
+        wu_file_list = [wu_filename, os.path.basename(parameter_tar_file_name)]
+
+        LOG.info("Creating work unit: {0}".format(wu_name))
+        self.create_workunit(wu_name, wu_file_list)
+
+    def __call__(self, run_id):
+        """
+        Run the work unit generator
+        :param run_id: The run ID to generate work for, or None to generate work for all run IDs.
+        :return:
+        """
+        LOG.info("Work generator started for app: {0}".format(self.config["APP_NAME"]))
+
+        self.connection = self.engine.connect()
+        success = self.py_boinc.boinc_db_open()
+        if success != 0:
+            LOG.error("Could not open BOINC db. Error code: {0}".format(success))
+            return
+
+        try:
+            for row in self.get_pending_cubes(run_id):
+                self.process_cube(row)
+
+        except Exception as e:
+            LOG.exception("Error processing cube: {0}".format(e.message))
+
+        finally:
+            self.connection.close()
+            self.py_boinc.boinc_db_close()
 
 
 def parse_args():
-    # Only one argument, which is the run ID
+    """
+    Parse arguments for the program.
+    :return: The arguments for the program.
+    """
     parser = argparse.ArgumentParser()
-    parser.add_argument('run_id', nargs='?', help='The run ID to register to', default=None)
+    parser.add_argument('--app', type=str, required=True, help='The name of the app to use.')
+    parser.add_argument('run_id', type=int, help='The run ID to register.')
     args = vars(parser.parse_args())
 
-    return args['run_id']
+    return args
 
-
-def check_threshold():
-    # Checks the current number of work units that have not been processed.
-
-    t_engine = create_engine(BOINC_DB_LOGIN) # to avoid confusion with the other variables these are prefixed with t
-    t_connection = t_engine.connect()
-
-    count = t_connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()[0]
-    t_connection.close()
-
-    LOGGER.info('Checking pending = {0} : threshold = {1}'.format(count, WG_THRESHOLD))
-
-    if count is None:  # in case of errors
-        return True
-
-    return count >= WG_THRESHOLD
-
-
-def main():
-
-    if check_threshold(): # true if we have enough already, false if we dont.
-        LOGGER.info('Nothing to do')
-    else:
-        boinc_config = configxml.ConfigFile(os.path.join(DIR_BOINC_PROJECT_PATH, 'config.xml')).read()
-        download_directory = boinc_config.config.download_dir
-        fanout = long(boinc_config.config.uldl_dir_fanout)
-
-        LOGGER.info('Download directory is {0} fanout is {1}'.format(download_directory, str(fanout)))
-
-        run_id = parse_args()
-
-        LOGGER.info('Opening BOINC DB')
-        os.chdir(DIR_BOINC_PROJECT_PATH)
-
-        ret_val = py_boinc.boinc_db_open()
-        if ret_val != 0:
-            LOGGER.info('Could not open BOINC DB, error = {0}'.format(ret_val))
-            exit(1)
-
-        # Check for registered cubes, ONLY ON OUR RUN ID!!
-
-        if run_id is not None:
-            # Check for registered cubes only for the specified run id.
-            cube_count = connection.execute(select([func.count(CUBE.c.cube_id)]).where(CUBE.c.progress == 0 and CUBE.c.run_id == run_id)).first()[0]
-            cubes = connection.execute(select([CUBE]).where(CUBE.c.progress == 0 and CUBE.c.run_id == run_id))
-        else:
-            # Check for all registered cubes
-            cube_count = connection.execute(select([func.count(CUBE.c.cube_id)]).where(CUBE.c.progress == 0)).first()[0]
-            cubes = connection.execute(select([CUBE]).where(CUBE.c.progress == 0))
-
-        if cube_count == 0:
-            if run_id is not None:
-                LOGGER.info('No pending cubes for run id {0}.'.format(run_id))
-            else:
-                LOGGER.info('No pending cubes.')
-        else:
-            # We have some cubes to process
-
-            for row in cubes:
-                process_cube(row, download_directory, fanout, connection)
-
-        py_boinc.boinc_db_close()
 
 if __name__ == '__main__':
-    main()
+    arguments = parse_args()
+    app_name = arguments['app']
+
+    config = get_config(app_name)
+
+    sys.path.append(config["DIR_BOINC_PROJECT_PATH"]) # for pyboinc
+    # Need to import pyboinc here, as we need to know the project path before importing.
+    py_boinc = importlib.import_module("py_boinc")
+
+    work_generator = WorkGenerator(config, py_boinc)
+
+    exit(work_generator(arguments['run_id']))
