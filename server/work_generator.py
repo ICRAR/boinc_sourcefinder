@@ -34,6 +34,7 @@ class WorkGenerator:
         self.download_dir = config["DIR_DOWNLOAD"]
         self.fanout = config["FANOUT"]
         self.engine = create_engine(config["DB_LOGIN"])
+        self.dont_insert = False
 
     def get_pending_cubes(self, run_id):
         """
@@ -133,6 +134,10 @@ class WorkGenerator:
         template_out = "templates/{0}_out.xml".format(app_name)
         additional_xml = "<credit>3.0f</credit>"
 
+        if self.dont_insert:
+            LOG.info("Not performing DB insert")
+            return
+
         self.py_boinc.boinc_db_transaction_start()
 
         success = py_boinc.boinc_create_work(
@@ -167,7 +172,10 @@ class WorkGenerator:
         :param cube_row: The cube's database row
         :return:
         """
+        CUBE = self.config["database"]["CUBE"]
+
         cube_name = cube_row["cube_name"]
+        cube_id = cube_row["cube_id"]
         cube_run_id = cube_row["run_id"]
         cube_abs_path = self.get_cube_path(cube_name)
 
@@ -188,14 +196,16 @@ class WorkGenerator:
 
         LOG.info("Creating work unit: {0}".format(wu_name))
         self.create_workunit(wu_name, wu_file_list)
+        self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_id).values(progress=1))  # Mark as in generated
 
-    def __call__(self, run_id):
+    def __call__(self, run_id, dont_insert):
         """
         Run the work unit generator
         :param run_id: The run ID to generate work for, or None to generate work for all run IDs.
         :return:
         """
         LOG.info("Work generator started for app: {0}".format(self.config["APP_NAME"]))
+        self.dont_insert = dont_insert
 
         self.connection = self.engine.connect()
         success = self.py_boinc.boinc_db_open()
@@ -222,6 +232,7 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--app', type=str, required=True, help='The name of the app to use.')
+    parser.add_argument('--dont_insert', action='store_true', help="Don't perform inserts in to the DB", default=False)
     parser.add_argument('run_id', type=int, help='The run ID to register.')
     args = vars(parser.parse_args())
 
@@ -240,4 +251,4 @@ if __name__ == '__main__':
 
     work_generator = WorkGenerator(config, py_boinc)
 
-    exit(work_generator(arguments['run_id']))
+    exit(work_generator(arguments['run_id'], arguments['dont_insert']))
