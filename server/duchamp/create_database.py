@@ -22,6 +22,7 @@
 #
 import sys
 from sqlalchemy import create_engine
+from ..config import get_config
 
 SQL = """
 DROP SCHEMA IF EXISTS {0};
@@ -127,8 +128,10 @@ CREATE TABLE IF NOT EXISTS {0}.`result` (
 """
 
 
-def create_database(schema_name, db_login_string):
-    engine = create_engine(db_login_string)
+def create_database(schema_name):
+    config = get_config()
+
+    engine = create_engine(config["BASE_DB_LOGIN"])
     connection = engine.connect()
     transaction = connection.begin()
 
@@ -139,8 +142,10 @@ def create_database(schema_name, db_login_string):
     connection.close()
 
 
-def destroy_database(schema_name, db_login_string):
-    engine = create_engine(db_login_string)
+def destroy_database(schema_name):
+    config = get_config()
+
+    engine = create_engine(config["BASE_DB_LOGIN"])
     connection = engine.connect()
     transaction = connection.begin()
 
@@ -151,12 +156,11 @@ def destroy_database(schema_name, db_login_string):
     connection.close()
 
 if __name__ == "__main__":
-
     if len(sys.argv) != 4:
         print "Not enough arguments"
-        print "{0} [create | destroy] schema_name login_string".format(sys.argv[0])
+        print "{0} [create | destroy] schema_name".format(sys.argv[0])
     else:
         if sys.argv[1] == "create":
-            create_database(sys.argv[2], sys.argv[3])
+            create_database(sys.argv[2])
         elif sys.argv[2] == "destroy":
-            destroy_database(sys.argv[2], sys.argv[3])
+            destroy_database(sys.argv[2])
