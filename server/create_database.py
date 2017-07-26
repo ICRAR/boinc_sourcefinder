@@ -7,8 +7,8 @@ from utils import module_import
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--app', type=str, required=True, help='The name of the app to use.')
-    parser.add_argument('action', type=str, choices=["create", "destroy"], required=True, help='The action to perform.')
-    parser.add_argument('schema', type=str, required=True, help="The schema name to use")
+    parser.add_argument('--action', type=str, choices=["create", "destroy"], required=True, help='The action to perform.')
+    parser.add_argument('--schema', type=str, required=True, help="The schema name to use")
     args = vars(parser.parse_args())
 
     return args
