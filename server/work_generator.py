@@ -214,14 +214,19 @@ class WorkGenerator:
             LOG.error("Could not open BOINC db. Error code: {0}".format(success))
             return
 
+        num_processed = 0
+
         try:
+
             for row in self.get_pending_cubes(run_id):
                 self.process_cube(row)
+                num_processed += 1
 
         except Exception as e:
             LOG.exception("Error processing cube: {0}".format(e.message))
 
         finally:
+            LOG.info("Cubes processed: {0}".format(num_processed))
             self.connection.close()
             self.py_boinc.boinc_db_close()
 
