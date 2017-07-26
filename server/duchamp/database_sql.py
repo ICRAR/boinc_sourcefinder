@@ -20,9 +20,6 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 #    MA 02111-1307  USA
 #
-import sys
-from sqlalchemy import create_engine
-from ..config import get_config
 
 SQL = """
 DROP SCHEMA IF EXISTS {0};
@@ -98,59 +95,18 @@ CREATE TABLE IF NOT EXISTS {0}.`result` (
   `cube_id`   BIGINT UNSIGNED    NOT NULL,
   `parameter_id` BIGINT UNSIGNED NOT NULL,
   `run_id` BIGINT UNSIGNED NOT NULL,
-
-  `id` INT,
-  `name` VARCHAR(200),
-  `x` FLOAT,
-  `y` FLOAT,
-  `z` FLOAT,
-  `x_geo` FLOAT,
-  `y_geo` FLOAT,
-  `z_geo` FLOAT,
-  `rms` FLOAT,
-  `rel` FLOAT,
-  `x_min` FLOAT,
-  `x_max` FLOAT,
-  `y_min` FLOAT,
-  `y_max` FLOAT,
-  `z_min` FLOAT,
-  `z_max` FLOAT,
-  `n_pix` FLOAT,
-  `n_los` FLOAT,
-  `n_chan` FLOAT,
-  `ra` FLOAT,
-  `dec` FLOAT,
-  `lon` FLOAT,
-  `lat` FLOAT,
-  `freq` FLOAT,
-  `velo` FLOAT,
-  `w20` FLOAT,
-  `w50` FLOAT,
-  `wm50` FLOAT,
-  `f_peak` FLOAT,
-  `f_int` FLOAT,
-  `f_wm50` FLOAT,
-  `ell_maj` FLOAT,
-  `ell_min` FLOAT,
-  `ell_pa` FLOAT,
-  `ell3s_maj` FLOAT,
-  `ell3s_min` FLOAT,
-  `ell3s_pa` FLOAT,
-  `kin_pa` FLOAT,
-  `bf_a` FLOAT,
-  `bf_b1` FLOAT,
-  `bf_b2` FLOAT,
-  `bf_c` FLOAT,
-  `bf_xe` FLOAT,
-  `bf_xp` FLOAT,
-  `bf_w` FLOAT,
-  `bf_chi2` FLOAT,
-  `bf_flag` FLOAT,
-  `bf_z` FLOAT,
-  `bf_w20` FLOAT,
-  `bf_w50` FLOAT,
-  `bf_f_peak` FLOAT,
-  `bf_f_int` FLOAT,
+  `RA` FLOAT NOT NULL,
+  `DEC` FLOAT NOT NULL,
+  `freq` FLOAT NOT NULL,
+  `w_50` FLOAT NOT NULL,
+  `w_20` FLOAT NOT NULL,
+  `w_FREQ` FLOAT NOT NULL,
+  `F_int` FLOAT NOT NULL,
+  `F_tot` FLOAT NOT NULL,
+  `F_peak` FLOAT NOT NULL,
+  `Nvoxel` FLOAT NOT NULL,
+  `Nchan` FLOAT NOT NULL,
+  `Nspatpix` FLOAT NOT NULL,
   `workunit_name` VARCHAR(200),
 
   PRIMARY KEY (`result_id`),
@@ -167,41 +123,3 @@ CREATE TABLE IF NOT EXISTS {0}.`result` (
 
 )  ENGINE = InnoDB;
 """
-
-
-def create_database(schema_name):
-    config = get_config()
-
-    engine = create_engine(config["BASE_DB_LOGIN"])
-    connection = engine.connect()
-    transaction = connection.begin()
-
-    sql = SQL.format(schema_name)
-    connection.execute(sql)
-
-    transaction.commit()
-    connection.close()
-
-
-def destroy_database(schema_name):
-    config = get_config()
-
-    engine = create_engine(config["BASE_DB_LOGIN"])
-    connection = engine.connect()
-    transaction = connection.begin()
-
-    sql = "DROP SCHEMA IF EXISTS {0};".format(schema_name)
-    connection.execute(sql)
-
-    transaction.commit()
-    connection.close()
-
-if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print "Not enough arguments"
-        print "{0} [create | destroy] schema_name".format(sys.argv[0])
-    else:
-        if sys.argv[1] == "create":
-            create_database(sys.argv[2])
-        elif sys.argv[2] == "destroy":
-            destroy_database(sys.argv[2])
