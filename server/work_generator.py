@@ -79,7 +79,7 @@ class WorkGenerator:
         x = long(s, 16)
 
         # Create the directory if needed
-        hash_dir_name = "%s/%x" % (self.download_dir, x % self.fanout)
+        hash_dir_name = os.path.join(self.download_dir, "%x" % (x % self.fanout))
         if os.path.isfile(hash_dir_name):
             pass
         elif os.path.isdir(hash_dir_name):
@@ -87,7 +87,8 @@ class WorkGenerator:
         else:
             os.mkdir(hash_dir_name)
 
-        return "%s/%x/%s" % (self.download_dir, x % self.fanout, filename)
+        # "%s/%x/%s" % (self.download_dir, x % self.fanout, filename)
+        return os.path.join(hash_dir_name, filename)
 
     def compress_parameters(self, run_id):
         """
