@@ -185,6 +185,8 @@ class WorkGenerator:
         wu_filename = wu_name + ".tar.gz"
         wu_download_path = self.get_download_path(wu_filename)
 
+        LOG.info("Start: {0}".format(cube_name))
+
         # Copy the cube to the download directory
         LOG.info("Copying: {0} to {1}".format(cube_abs_path, wu_download_path))
         shutil.copyfile(cube_abs_path, wu_download_path)
@@ -196,9 +198,11 @@ class WorkGenerator:
         # Create the work unit
         wu_file_list = [wu_filename, os.path.basename(parameter_tar_file_name)]
 
-        LOG.info("Creating work unit: {0}\n".format(wu_name))
+        LOG.info("Creating work unit: {0}".format(wu_name))
         self.create_workunit(wu_name, wu_file_list)
         self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_id).values(progress=1))  # Mark as generated
+
+        LOG.info("Finished: {0}\n".format(cube_name))
 
     def __call__(self, run_id, dont_insert):
         """
