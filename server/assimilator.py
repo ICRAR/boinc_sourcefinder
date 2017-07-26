@@ -44,13 +44,6 @@ LOG = config_logger(__name__)
 
 
 class Assimilator:
-    """
-    Use this class to create new pure-Python Assimilators.
-    To create a new assimilator:
-      1) call __init__ from the new child class' __init__ method
-      2) override the assimilate_handler method
-      3) add the standard if __name__ == "__main__" bootstrap (see end of this file)
-    """
 
     def __init__(self, args):
         # Be sure to call Assimilator.__init__(self) from child classes
