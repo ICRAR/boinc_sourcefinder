@@ -171,22 +171,24 @@ CREATE TABLE IF NOT EXISTS {0}.`result` (
 def create_database(schema_name, db_login_string):
     engine = create_engine(db_login_string)
     connection = engine.connect()
+    transaction = connection.begin()
 
     sql = SQL.format(schema_name)
-
     connection.execute(sql)
 
+    transaction.commit()
     connection.close()
 
 
 def destroy_database(schema_name, db_login_string):
     engine = create_engine(db_login_string)
     connection = engine.connect()
+    transaction = connection.begin()
 
     sql = "DROP SCHEMA IF EXISTS {0};".format(schema_name)
-
     connection.execute(sql)
 
+    transaction.commit()
     connection.close()
 
 if __name__ == "__main__":

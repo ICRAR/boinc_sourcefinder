@@ -54,6 +54,8 @@ config_entries = [
     ConfigItem("DIR_CUBE", "cubeDirectory", "/home/ec2-user/sf_cubes"),
     ConfigItem("DIR_BOINC_PROJECT_PATH", "boincPath", "/home/ec2-user/projects/duchamp"),
 
+    ConfigItem("FANOUT", "fanout", 1024),
+
     ############### Work Generation Settings ###############
     ConfigItem("BOINC_DB_NAME", "wgThreshold", 500),
 
@@ -61,6 +63,16 @@ config_entries = [
     ConfigItem("BOINC_DB_NAME", "bucket", "icrar.sourcefinder.files"),
 
     ConfigItem("APP_NAME", "appName", "sourcefinder")
+]
+
+extra_paths = [
+    ("DIR_APP_TEMPLATES", "app_templates/", "DIR_BOINC_PROJECT_PATH"),
+    ("DIR_VMS", "vm/", "DIR_BOINC_PROJECT_PATH"),
+    ("PROG_SIGN_EXECUTABLE", "bin/sign_executable", "DIR_BOINC_PROJECT_PATH"),
+    ("PROG_UPDATE_VERSIONS", "bin/update_versions", "DIR_BOINC_PROJECT_PATH"),
+    ("DIR_KEYS", "keys/", "DIR_BOINC_PROJECT_PATH"),
+    ("DIR_DOWNLOAD", "download/", "DIR_BOINC_PROJECT_PATH"),
+    ("DIR_LOG", "log_ip-10-0-131-204/", "DIR_BOINC_PROJECT_PATH")
 ]
 
 
@@ -87,7 +99,7 @@ def read_config_file(filename, config_dict):
     return config_dict
 
 
-def get_config(app):
+def get_config(app=None):
     """
     Returns the appropriate config for the given application
     The config for each application is stored in a file named "app.settings".
@@ -98,48 +110,41 @@ def get_config(app):
     """
 
     config = {}
-    config_file_name = join(dirname(realpath(__file__)), '{0}.settings'.format(app))
-    common_file_name = join(dirname(realpath(__file__)), 'common.settings'.format(app))
 
+    common_file_name = join(dirname(realpath(__file__)), 'common.settings'.format(app))
     # Copy the fields from common.settings first
     read_config_file(common_file_name, config)
-    # Copy from the settings for this app
-    read_config_file(config_file_name, config)
-
-    # Set up database connection string
-    config["DB_LOGIN"] = "mysql://" + \
-                         config['DB_USER_ID'] + ":" + \
-                         config['DB_PASSWORD'] + "@" + \
-                         config['DB_HOSTNAME'] + "/" + \
-                         config['DB_NAME']
-
-    config["BOINC_DB_LOGIN"] = "mysql://" + \
-                               config['DB_USER_ID'] + ":" + \
-                               config['DB_PASSWORD'] + "@" + \
-                               config['DB_HOSTNAME'] + "/" + \
-                               config['BOINC_DB_NAME']
-
-    # Add in the filesystem config
-    config["filesystem"] = {
-        'apps': '/home/ec2-user/projects/duchamp/apps/duchamp',
-        'app_templates': '/home/ec2-user/projects/duchamp/app_templates/',
-        'vms': '/home/ec2-user/projects/duchamp/vm/',
-        'sign_executable': '/home/ec2-user/projects/duchamp/bin/sign_executable',
-        'update_versions': '/home/ec2-user/projects/duchamp/bin/update_versions',
-        'keys': '/home/ec2-user/projects/duchamp/keys/',
-        'download': '/home/ec2-user/projects/duchamp/download/',
-        'project': '/home/ec2-user/projects/duchamp/',
-        'log': '/home/ec2-user/projects/duchamp/log_ip-10-0-131-204/',
-        'old_logs': '/home/ec2-user/old_logs/',
-        'validator_invalids': '/home/ec2-user/validator_invalids/'
-    }
 
     # Add in the database tables
     config["database_boinc"] = boinc_database_def
     config["database_duchamp"] = duchamp_database_def
     config["database_sofia"] = sofia_database_def
 
-    # Set the database def for this module.
-    config["database"] = config["database_{0}".format(config["APP_NAME"])]
+    if app is not None:
+        # Load app specific settings
+        config_file_name = join(dirname(realpath(__file__)), '{0}.settings'.format(app))
+        # Copy from the settings for this app
+        read_config_file(config_file_name, config)
+
+        config["DIR_APPS"] = join(config["DIR_BOINC_PROJECT_PATH"], "apps/{0}".format(app))
+
+        # Set the database def for this module.
+        config["database"] = config["database_{0}".format(config["APP_NAME"])]
+
+    base_db_login = "mysql://" + \
+                    config['DB_USER_ID'] + ":" + \
+                    config['DB_PASSWORD'] + "@" + \
+                    config['DB_HOSTNAME'] + "/"
+
+    # Set up database connection string
+    config["BASE_DB_LOGIN"] = base_db_login
+    config["DB_LOGIN"] = base_db_login + config['DB_NAME']
+    config["BOINC_DB_LOGIN"] = base_db_login + config['BOINC_DB_NAME']
+
+    config["DIR_OLD_LOGS"] = "/home/ec2-user/old_logs/"
+    config["DIR_VALIDATOR_INVALIDS"] = "/home/ec2-user/validator_invalids/"
+
+    for item in extra_paths:
+        config[item[0]] = join(config[item[2]], item[1])
 
     return config

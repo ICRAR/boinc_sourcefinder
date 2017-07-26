@@ -137,6 +137,6 @@ if __name__ == '__main__':
     arguments = parse_args()
     app_name = arguments['app']
 
-    cube_register = RunRegister(get_config(app_name))
+    run_register = RunRegister(get_config(app_name))
 
-    exit(cube_register(arguments['run_id']))
+    exit(run_register(arguments['run_id']))
