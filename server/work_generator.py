@@ -104,6 +104,7 @@ class WorkGenerator:
         parameter_tar_file_path = self.get_download_path(parameter_tar_file_name)
 
         if not os.path.exists(parameter_tar_file_path):
+            LOG.info("Creating parameter file {0}".format(parameter_tar_file_path))
             # Need to compress the parameter files now as the tarfile doesn't exist
             parameters = self.connection.execute(select([PARAMETER_RUN]).where(PARAMETER_RUN.c.run_id == run_id))
 
@@ -184,19 +185,19 @@ class WorkGenerator:
         wu_download_path = self.get_download_path(wu_filename)
 
         # Copy the cube to the download directory
-        LOG.info("Copying {0} to {1}".format(cube_abs_path, wu_download_path))
+        LOG.info("Copying: {0} to {1}".format(cube_abs_path, wu_download_path))
         shutil.copyfile(cube_abs_path, wu_download_path)
 
         # Ensure the parameter file for this run exists
         parameter_tar_file_name = self.compress_parameters(cube_run_id)
-        LOG.info("Parameter file is {0}".format(parameter_tar_file_name))
+        LOG.info("Using parameter file: {0}".format(parameter_tar_file_name))
 
         # Create the work unit
         wu_file_list = [wu_filename, os.path.basename(parameter_tar_file_name)]
 
-        LOG.info("Creating work unit: {0}".format(wu_name))
+        LOG.info("Creating work unit: {0}\n".format(wu_name))
         self.create_workunit(wu_name, wu_file_list)
-        self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_id).values(progress=1))  # Mark as in generated
+        self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_id).values(progress=1))  # Mark as generated
 
     def __call__(self, run_id, dont_insert):
         """
