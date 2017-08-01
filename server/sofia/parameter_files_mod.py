@@ -49,17 +49,17 @@ class ConfigItem:
         return iter(self.possible_values)
 
 SOFIA_CONFIG = [
-    ConfigItem("steps.doSubcube", ["false", "true"]),
+    ConfigItem("steps.doSubcube", "false"),
     ConfigItem("steps.doFlag", "false"),
-    ConfigItem("steps.doSmooth", "false"),
+    ConfigItem("steps.doSmooth", ["false", "true"]),
     ConfigItem("steps.doScaleNoise", "false"),
     ConfigItem("steps.doSCfind", "true"),
     ConfigItem("steps.doThreshold", "false"),
     ConfigItem("steps.doWavelet", "false"),
     ConfigItem("steps.doCNHI", "false"),
-    ConfigItem("steps.doMerge", "true"),
-    ConfigItem("steps.doReliability",  "false"),
-    ConfigItem("steps.doParameterise",  "false"),
+    ConfigItem("steps.doMerge", ["false", "true"]),
+    ConfigItem("steps.doReliability",  ["false", "true"]),
+    ConfigItem("steps.doParameterise",  ["false", "true"]),
     ConfigItem("steps.doWriteFilteredCube",  "false"),
     ConfigItem("steps.doWriteMask",  "false"),
     ConfigItem("steps.doWriteCat",  "true"),
