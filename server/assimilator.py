@@ -269,7 +269,6 @@ if __name__ == "__main__":
         exit(1)
 
     mod = module_import(MODULE, app_name)
-    LOG.debug("Loading module {0}.{1}".format(app_name, MODULE))
 
     if mod is None:
         LOG.error("Could not load module {0}.{1}".format(app_name, MODULE))

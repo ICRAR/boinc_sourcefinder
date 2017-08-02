@@ -35,4 +35,9 @@ if [ $? -ne 0 ]; then
 fi
 
 echo -- Launching Application
-# Do things here
+mkdir -p /root/shared/inputs # input files put here
+mkdir -p /root/shared/outputs # output files put here
+python run_sofia.py
+echo -- Application complete, shutting down.
+sleep 5
+shutdown -hP 0

@@ -25,16 +25,25 @@
 # Python script to run SoFiA on a fits file with multiple parameter files
 import os
 import time
-import logger
+import logging
+import logging.handlers
 import subprocess
+import gzip
+import tarfile
 
 file_system = {
-    'worker': '/root/shared/worker',
+    'sofia': '/root/SoFiA/sofia_pipeline.py',
     'shared': '/root/shared/',
     'inputs': '/root/shared/inputs',
+
+    'input_fits': '/root/shared/input.fits.gz',
+    'input_fits_decompressed': '/root/shared/input.fits',
+    'input_parameters': '/root/shared/parameters.tar.gz',
+
     'outputs': '/root/shared/outputs',
-    'completed_marker': '/root/completed',
-    'log_file': '/root/shared/log/Log.txt'
+    'outputs_compressed': '/root/shared/outputs.tar.gz',
+
+    'log_file': '/root/shared/Log.txt'
 }
 
 completed_file_name = 'output.tar.gz'
@@ -44,16 +53,18 @@ sofia_output_end = '_cat.ascii'
 sofia_input_start = 'supercube_run_'
 sofia_input_end = '_sofia.par'
 
-
-logger.basicConfig(filename=file_system['log_file'], level=logger.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+file_handler = logging.FileHandler(file_system['log_file'])
+file_handler.setFormatter(logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT))
+logging.getLogger().addHandler(file_handler)
 
 
 def get_complete_file_numbers():
-    return [
+    return {
         int(f[len(sofia_output_start):-len(sofia_output_end)])
         for f in os.listdir(file_system['outputs'])
         if f.startswith(sofia_output_start)
-    ]
+    }
 
 
 def get_input_file_numbers():
@@ -64,44 +75,107 @@ def get_input_file_numbers():
     ]
 
 
-def run_sofia(input_file):
-    logger.info('Running sofia for {0}...'.format(input_file))
+def run_sofia(inputs):
+    filename = inputs['name']
+    number = inputs['number']
+    output_filename = os.path.join(
+            file_system['outputs'],
+            (sofia_output_start + '{0}' + sofia_output_end).format(number)
+    )
+
+    logging.info('Running sofia for {0}...'.format(filename))
     start = time.time()
-    result = subprocess.call(['sofia_pipeline.py', input_file])
-    if result == 1:
-        logger.info("An error occured: code {0}".format(result))
+    try:
+        result = subprocess.call(['python', file_system['sofia'], filename])
+        if result == 1:
+            logging.info('An application error occurred: code {0}'.format(result))
+    except:
+        logging.exception('An exception occurred')
+
     end = time.time()
-    logger.info('Took {0}s'.format((end - start)))
-    pass
+    logging.info('Took {0}s'.format((end - start)))
+
+    # Now, to ensure the program has an output file for this specific parameter,
+    # check if SoFiA generated an output file. If not, generate a fake one ourselves.
+    if not os.path.exists(output_filename):
+        with open(output_filename, 'w') as f:
+            f.write("!!! No sources found for {0}".format(filename))
 
 
 def combine_outputs():
-    pass
+    # Compress all results together for returning to the server
+    outputs = os.listdir(file_system['outputs'])
+
+    with tarfile.open(file_system['outputs_compressed'], 'w:gz') as outputs_compressed:
+        for f in outputs:
+            outputs_compressed.add(os.path.join(file_system['outputs'], f), f)  # Store in tar as basename only
+
+        outputs_compressed.add(file_system['log_file'], 'Log.txt')
 
 
-def create_shutdown_trigger():
-    pass
+def unzip_if_needed():
+    """
+    The parameter files should be stored in /root/shared/.
+    They should be unzipped and moved to /root/shared/inputs/.
+    The input.fits file should be decompressed and left in /root/shared
+    :return:
+    """
+    # Assume that if there are files in /root/shared/inputs that we've decompressed the parameter files correctly
+    parameter_files = os.listdir(file_system['inputs'])
+    if len(parameter_files) == 0:
+        # Parameter files need to be unzipped
+        with tarfile.open(file_system['input_parameters'], 'r') as parameters:
+            logging.info("Extracing parameters...")
+            parameters.extractall(file_system['inputs'])
+    else:
+        logging.info("Parameter files exist.")
+
+    # Simply check for the existence of input.fits
+    if not os.path.exists(file_system['input_fits_decompressed']):
+        # input.fits.gz needs to be decompressed
+        with gzip.open(file_system['input_fits'], 'r') as input_fits:
+            with open(file_system['input_fits_decompressed'], 'w') as input_fits_decompressed:
+                logging.info("Extracting input file...")
+                input_fits_decompressed.write(input_fits.read())
+    else:
+        logging.info("Input file exists.")
 
 
 if __name__ == "__main__":
-    # Get list of output files
-    completed_file_numbers = set(get_complete_file_numbers())
-    # Get list of input files
-    input_file_numbers = get_input_file_numbers()
+    try_count = 10
 
-    # Determine which files need to be processed
-    fmt = sofia_input_start + '{0}' + sofia_input_end
-    inputs_to_do = [
-        fmt.format(f)
-        for f in input_file_numbers
-        if f not in completed_file_numbers
-    ]
+    while try_count:
+        try:
+            # Unzip the input files if needed
+            unzip_if_needed()
 
-    # Process each file
-    for item in inputs_to_do:
-        run_sofia(item)
+            # Get list of output files
+            completed_file_numbers = get_complete_file_numbers()
+            # Get list of input files
+            input_file_numbers = get_input_file_numbers()
 
-    # Combine output files in to one
-    combine_outputs()
-    # Create shutdown trigger
-    create_shutdown_trigger()
+            # Determine which files need to be processed
+            fmt = sofia_input_start + '{0}' + sofia_input_end
+            inputs_to_do = [
+                {"name": fmt.format(f), "number": f}
+                for f in input_file_numbers
+                if f not in completed_file_numbers
+            ]
+
+            logging.info("Files to run: {0}".format([f["name"] for f in inputs_to_do]))
+
+            # Process each file
+            for item in inputs_to_do:
+                item['name'] = os.path.join(file_system['inputs'], item['name'])
+                run_sofia(item)
+
+            # Combine output files in to one
+            combine_outputs()
+            break
+        except:
+            logging.exception("Exception in main")
+            try_count -= 1
+
+    if try_count == 0:
+        logging.info("{0} exceptions encountered. Exiting...".format(try_count))
+        combine_outputs()  # Just dump the Log.txt file and exit

@@ -29,6 +29,9 @@ import itertools
 
 LOG = config_logger(__name__)
 
+INPUT_FILE = "/root/shared/input.fits"
+OUTPUT_DIR = "/root/shared/output/"
+
 
 class ConfigItem:
     def __init__(self, name, possible_values):
@@ -69,7 +72,7 @@ SOFIA_CONFIG = [
     ConfigItem("steps.doDebug", "false"),
     ConfigItem("steps.doOptical", "false"),
 
-    ConfigItem("import.inFile", "Input.fits"),
+    ConfigItem("import.inFile", INPUT_FILE),
     ConfigItem("import.weightsFile", ""),
     ConfigItem("import.maskFile", ""),
     ConfigItem("import.weightsFunction", ""),
@@ -154,7 +157,7 @@ SOFIA_CONFIG = [
 
     ConfigItem("writeCat.overwrite", "true"),
     ConfigItem("writeCat.compress", "false"),
-    ConfigItem("writeCat.outputDir", "/shared/output"),
+    ConfigItem("writeCat.outputDir", OUTPUT_DIR),
     ConfigItem("writeCat.basename", "sofia_output_{0}"),
     ConfigItem("writeCat.writeASCII", "true"),
     ConfigItem("writeCat.writeXML", "false"),

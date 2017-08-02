@@ -21,7 +21,11 @@
 #    MA 02111-1307  USA
 #
 
-import os, errno, tarfile, importlib
+import os
+import errno
+import tarfile
+import importlib
+import shutil
 from logger import config_logger
 
 LOG = config_logger(__name__)
@@ -57,9 +61,13 @@ def retry_on_exception(function, exception, num_retries):
 def make_path(path):
     try:
         os.makedirs(path)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
+    except OSError as e:
+        if e.errno != errno.EEXIST:
             raise
+
+
+def remove_path(path):
+    shutil.rmtree(path)
 
 
 def extract_tar(tar, path):
