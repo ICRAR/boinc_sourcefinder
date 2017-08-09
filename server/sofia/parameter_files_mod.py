@@ -24,8 +24,8 @@
 """
 Module to generate parameter files for Sofia
 """
-from utils.logger import config_logger
 import itertools
+from utils.logger import config_logger
 
 LOG = config_logger(__name__)
 

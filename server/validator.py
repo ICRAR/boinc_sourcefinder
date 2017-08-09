@@ -35,7 +35,7 @@ from config import get_config
 from utils import module_import, make_path, remove_path
 from utils.logger import config_logger
 
-MODULE = "parameter_files_mod"
+MODULE = "validator_mod"
 LOG = config_logger(__name__)
 
 
@@ -66,7 +66,7 @@ def init_validate(module, config, arguments):
     InitValidator = module.get_init_validator(Validator)
     validator = InitValidator(config)
 
-    return validator(arguments['file1'])
+    return validator(arguments['file'])
 
 
 def compare_validate(module, config, arguments):
