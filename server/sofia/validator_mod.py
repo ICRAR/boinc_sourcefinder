@@ -25,6 +25,16 @@
 Validator implementation for SoFiA
 """
 
+# Validate on:
+
+# Init
+# Number of parameters returned (ensure they match the number registered in the db)
+# Ensure each parameter file contains either the !!! as its first line, or # SoFia catalogue
+
+# Compare
+# Compare contents of each returned parameter file. Ensure each !!! parameter file match, and ensure # SoFia catalogue
+#   matches in each.
+
 
 def get_init_validator(BaseValidator):
 

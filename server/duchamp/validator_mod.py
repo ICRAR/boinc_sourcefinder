@@ -234,7 +234,7 @@ def get_compare_validator(BaseValidator):
         def __call__(self, file1, file2):
             self.working_file1 = file1
             self.working_file2 = file2
-            reason = None # Reason why validation failed
+            reason = None  # Reason why validation failed
             LOG.info("Validate workunit files: {0} and {1}".format(self.working_file1, self.working_file2))
 
             try:
