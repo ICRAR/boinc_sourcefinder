@@ -76,6 +76,15 @@ def extract_tar(tar, path):
         tf.extractall(path)
 
 
+def run_id_from_result_name(result_name):
+    underscore = result_name.find('_')
+
+    try:
+        return int(result_name[0:underscore])
+    except ValueError:
+        raise Exception('Malformed result name {0}\n'.format(result_name))
+
+
 def module_import(module_name, app_name):
     LOG.debug("Loading module {0}.{1}".format(app_name, module_name))
     import_path = app_name + '.' + module_name

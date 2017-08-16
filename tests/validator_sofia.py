@@ -24,18 +24,18 @@ import os
 import unittest
 import subprocess
 
-INIT_FAIL_PATH = 'validator_tests/init/fail/'
-INIT_SUCCEED_PATH = 'validator_tests/init/succeed/'
-COMPARE_FAIL_PATH = 'validator_tests/compare/fail/'
-COMPARE_SUCCEED_PATH = 'validator_tests/compare/succeed/'
+INIT_FAIL_PATH = 'validator_tests/sofia/init/fail/'
+INIT_SUCCEED_PATH = 'validator_tests/sofia/init/succeed/'
+COMPARE_FAIL_PATH = 'validator_tests/sofia/compare/fail/'
+COMPARE_SUCCEED_PATH = 'validator_tests/sofia/compare/succeed/'
 
 
 def run_init(filename):
-    return subprocess.call(['../server/duchamp/validator_duchamp_init.sh', filename])
+    return subprocess.call(['../server/sofia/validator_sofia_init.sh', filename, "0", "--test"])
 
 
 def run_compare(filename1, filename2):
-    return subprocess.call(['../server/duchamp/validator_duchamp_compare.sh', filename1, filename2])
+    return subprocess.call(['../server/sofia/validator_sofia_compare.sh', filename1, filename2, "--test"])
 
 
 class ValidatorTest(unittest.TestCase):
@@ -53,18 +53,16 @@ class ValidatorTest(unittest.TestCase):
             self.assertEqual(1, run_init(f), "File {0} fails".format(f))
 
     def test_compare_succeed(self):
-        file1 = os.path.join(COMPARE_FAIL_PATH, "10_askap_cube_20_18_22_0")
-        file2 = os.path.join(COMPARE_FAIL_PATH, "10_askap_cube_20_18_22_2")
+        file1 = os.path.join(COMPARE_FAIL_PATH, "fail1.tar.gz")
+        file2 = os.path.join(COMPARE_FAIL_PATH, "fail2.tar.gz")
 
         self.assertEqual(0, run_compare(file1, file2), "File {0} compared to file {1} succeeds".format(file1, file2))
 
     def test_compare_fail(self):
-        file1 = os.path.join(COMPARE_FAIL_PATH, "10_askap_cube_20_18_22_0")
-        file2 = os.path.join(COMPARE_FAIL_PATH, "10_askap_cube_20_18_22_1")
-        file3 = os.path.join(COMPARE_FAIL_PATH, "10_askap_cube_20_18_22_2")
+        file1 = os.path.join(COMPARE_FAIL_PATH, "succeed1.tar.gz")
+        file2 = os.path.join(COMPARE_FAIL_PATH, "succeed2.tar.gz")
 
         self.assertEqual(1, run_compare(file1, file2), "File {0} compared to file {1} fails".format(file1, file2))
-        self.assertEqual(1, run_compare(file2, file3), "File {0} compared to file {1} fails".format(file2, file3))
 
 
 if __name__ == '__main__':

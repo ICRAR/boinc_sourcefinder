@@ -24,136 +24,79 @@
 """
 Parses SoFiA output files
 """
-
 import sys
+import xml.etree.ElementTree as ET
+
+
+def save_csv(results, filename):
+    # First, confirm the headers are all the same
+    with_results = [result for result in results if result.has_data]
+
+    with open(filename, 'w') as f:
+        if len(with_results) == 0:
+            # No data at all
+            f.write("No sources\n")
+        else:
+            # Write out data
+            # Confirm all headings are the same
+            first_result = with_results[0]
+            for result in with_results[1:]:
+                if result.headings != first_result.headings:
+                    raise Exception("Headings don't match for all results")
+                if result.types != first_result.types:
+                    raise Exception("Types don't match for all results")
+
+            f.write('parameter_number,{0}\n'.format(','.join(first_result.headings)))
+            f.write('int,{0}\n'.format(','.join(first_result.types)))
+
+            for result in results:
+                for line in result.data:
+                    f.write('{0},{1}\n'.format(result.parameter_number, ','.join(line)))
 
 
 class SofiaResult:
-    def __init__(self, data):
+    def __init__(self, parameter_number, data):
+        self.parameter_number = parameter_number
         self.raw_data = data
-        self.token_gen = self._get_token(self.raw_data)
-        self.token = None
+        self.has_data = False
+        self.parse_error = None
 
         self.headings = []
         self.types = []
         self.data = []
 
-        self.parse_error = None
-        self.has_data = False
-
         self._parse()
 
-    @staticmethod
-    def _get_token(data):
-        curr_token = ""
-        for char in data:
+    def _parse_xml(self):
+        root = ET.fromstring(self.raw_data)
+        self._parse_xml_headings(root)
+        self._parse_xml_data(root)
 
-            if char == ' ':
-                if len(curr_token) > 0:
-                    yield curr_token
-                    curr_token = ""
-            elif char == '\n':
-                if len(curr_token) > 0:
-                    yield curr_token
-                curr_token = ""
-                yield '\n'  # Ensure we yield the \n char!
-            else:
-                curr_token += char
+    def _parse_xml_headings(self, root):
+        table = root.find("RESOURCE").find("TABLE")
+        fields = table.findall("FIELD")
 
-        if len(curr_token) > 0:
-            yield curr_token
-        yield None
+        for field in fields:
+            name = field.get("name")
+            type = field.get("datatype")
 
-    @staticmethod
-    def _is_number(token):
-        try:
-            float(token)
-            return True
-        except ValueError:
-            return False
+            self.headings.append(name)
+            self.types.append(type)
 
-    @staticmethod
-    def _is_int(token):
-        try:
-            int(token)
-            return True
-        except ValueError:
-            return False
+    def _parse_xml_data(self, root):
+        table = root.find("RESOURCE").find("TABLE").find("DATA").find("TABLEDATA")
+        fields = table.findall("TR")
 
-    def _next_token(self):
-        self.token = next(self.token_gen)
-
-    def _check_no_results(self):
-        return self.token.startswith('!!!')
-
-    def _parse_comment(self):
-        if self.token.startswith('#'):
-            while self.token is not None and not self.token.endswith('\n'):
-                self._next_token()
-
-            if self.token.endswith('\n'):
-                self._next_token()  # Step over the new line
-
-    def _parse_line(self, array):
-        if self.token == "#":
-            self._next_token()  # Skip the # at the start
-
-        while self.token is not None and not self.token.endswith('\n'):
-            array.append(self.token)
-            self._next_token()
-
-        if self.token.endswith('\n'):
-            self._next_token()  # Step over the new line
-
-    def _parse_data(self):
-        line = []
-        heading_index = 0
-
-        while self.token is not None and not self.token.endswith('\n'):
-
-            if self.headings[heading_index] == "name":
-                # Need to parse multiple tokens for the name.
-                combined_token = self.token
-
-                self._next_token()
-                while not self._is_number(self.token):
-                    combined_token += ' {0}'.format(self.token)
-                    self._next_token()
-
-                line.append(combined_token)
-
-            if self._is_int(self.token):
-                line.append(int(self.token))
-            else:
-                line.append(float(self.token))
-
-            self._next_token()
-            heading_index += 1
-
-        # Step over the \n
-        if self.token is not None and self.token.endswith('\n'):
-            self._next_token()
-
-        if len(line) > 0:
-            self.data.append(line)
-            return True
-        else:
-            return False
+        for field in fields:
+            entry = []
+            elements = field.findall("TD")
+            for element in elements:
+                entry.append(element.text)
+            self.data.append(entry)
 
     def _parse(self):
         try:
-            self._next_token()
-
-            if self._check_no_results():
-                return
-
-            self._parse_comment()  # Skip the first line
-            self._parse_line(self.headings)  # Parse out the header
-            self._parse_line(self.types)  # Parse the data types
-            self._parse_comment()  # Skip the data indexes
-
-            while self._parse_data():
-                pass
+            self._parse_xml()
 
             self.has_data = True
         except Exception as e:
@@ -163,7 +106,7 @@ class SofiaResult:
 if __name__ == '__main__':
     with open(sys.argv[1], 'r') as f:
 
-        result = SofiaResult(f.read())
+        result = SofiaResult(0, f.read())
 
         if result.parse_error:
             print "Parse error: {0}".format(result.parse_error)
@@ -173,5 +116,7 @@ if __name__ == '__main__':
 
             for data in result.data:
                 print data
+
+            save_csv([result], "saved.csv")
         else:
             print "No data"

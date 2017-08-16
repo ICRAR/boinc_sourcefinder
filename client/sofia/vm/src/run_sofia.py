@@ -30,6 +30,7 @@ import logging.handlers
 import subprocess
 import gzip
 import tarfile
+import xml.etree.ElementTree as ET
 
 file_system = {
     'sofia': '/root/SoFiA/sofia_pipeline.py',
@@ -48,7 +49,7 @@ file_system = {
 
 completed_file_name = 'output.tar.gz'
 sofia_output_start = 'sofia_output_'
-sofia_output_end = '_cat.ascii'
+sofia_output_end = '_cat.xml'
 
 sofia_input_start = 'supercube_run_'
 sofia_input_end = '_sofia.par'
@@ -59,11 +60,87 @@ file_handler.setFormatter(logging.Formatter('%(asctime)-15s:' + logging.BASIC_FO
 logging.getLogger().addHandler(file_handler)
 
 
+def save_csv(results, filename):
+    # First, confirm the headers are all the same
+    with_results = [result for result in results if result.has_data]
+
+    with open(filename, 'w') as f:
+        if len(with_results) == 0:
+            # No data at all
+            f.write("No sources\n")
+        else:
+            # Write out data
+            # Confirm all headings are the same
+            first_result = with_results[0]
+            for result in with_results[1:]:
+                if result.headings != first_result.headings:
+                    raise Exception("Headings don't match for all results")
+                if result.types != first_result.types:
+                    raise Exception("Types don't match for all results")
+
+            f.write('parameter_number,{0}\n'.format(','.join(first_result.headings)))
+            f.write('int,{0}\n'.format(','.join(first_result.types)))
+
+            for result in results:
+                for line in result.data:
+                    f.write('{0},{1}\n'.format(result.parameter_number, ','.join(line)))
+
+
+class SofiaResult:
+    def __init__(self, parameter_number, data):
+        self.parameter_number = parameter_number
+        self.raw_data = data
+        self.has_data = False
+        self.parse_error = None
+
+        self.headings = []
+        self.types = []
+        self.data = []
+
+        self._parse()
+
+    def _parse_xml(self):
+        root = ET.fromstring(self.raw_data)
+        self._parse_xml_headings(root)
+        self._parse_xml_data(root)
+
+    def _parse_xml_headings(self, root):
+        table = root.find("RESOURCE").find("TABLE")
+        fields = table.findall("FIELD")
+
+        for field in fields:
+            name = field.get("name")
+            type = field.get("datatype")
+
+            self.headings.append(name)
+            self.types.append(type)
+
+    def _parse_xml_data(self, root):
+        table = root.find("RESOURCE").find("TABLE").find("DATA").find("TABLEDATA")
+        fields = table.findall("TR")
+
+        for field in fields:
+            entry = []
+            elements = field.findall("TD")
+            for element in elements:
+                entry.append(element.text)
+            self.data.append(entry)
+
+    def _parse(self):
+        try:
+            self._parse_xml()
+
+            self.has_data = True
+        except Exception as e:
+            self.parse_error = e.message
+            return
+
+
 def get_complete_file_numbers():
     return {
         int(f[len(sofia_output_start):-len(sofia_output_end)])
         for f in os.listdir(file_system['outputs'])
-        if f.startswith(sofia_output_start)
+        if f.startswith(sofia_output_start) and f.endswith(sofia_output_end)
     }
 
 
@@ -71,7 +148,7 @@ def get_input_file_numbers():
     return [
         int(f[len(sofia_input_start):-len(sofia_input_end)])
         for f in os.listdir(file_system['inputs'])
-        if f.startswith(sofia_input_start)
+        if f.startswith(sofia_input_start) and f.endswith(sofia_input_end)
     ]
 
 
@@ -84,9 +161,13 @@ def run_sofia(inputs):
     )
 
     logging.info('Running sofia for {0}...'.format(filename))
+    out = "{0}.out".format(output_filename)
+    err = "{0}.err".format(output_filename)
     start = time.time()
     try:
-        result = subprocess.call(['python', file_system['sofia'], filename])
+        with open(out, 'a') as stdout, open(err, 'a') as stderr:
+            result = subprocess.call(['python', file_system['sofia'], filename], stdout=stdout, stderr=stderr)
+
         if result == 1:
             logging.info('An application error occurred: code {0}'.format(result))
     except:
@@ -95,22 +176,37 @@ def run_sofia(inputs):
     end = time.time()
     logging.info('Took {0}s'.format((end - start)))
 
-    # Now, to ensure the program has an output file for this specific parameter,
-    # check if SoFiA generated an output file. If not, generate a fake one ourselves.
-    if not os.path.exists(output_filename):
-        with open(output_filename, 'w') as f:
-            f.write("!!! No sources found for {0}".format(filename))
+    shared_path = os.path.join(file_system['shared'], (sofia_output_start + '{0}' + sofia_output_end).format(number))
+    if os.path.exists(shared_path):
+        # SoFiA decided to put the file in this directory instead. Move it
+        logging.info("SoFiA output file placed in the wrong directory. Moving it...")
+        os.rename(shared_path, output_filename)
 
 
 def combine_outputs():
     # Compress all results together for returning to the server
     outputs = os.listdir(file_system['outputs'])
+    results = []
 
+    # Work out which files are results and process them
+    for output in outputs:
+        if output.endswith(".xml"):
+            with open(os.path.join(file_system['outputs'], output), 'r') as f:
+                parameter_number = int(output[len(sofia_output_start):-len(sofia_output_end)])
+                result = SofiaResult(parameter_number, f.read())
+                results.append(result)
+
+    # Save a CSV of the results
+    csv_filename = os.path.join(file_system['outputs'], 'data_collection.csv')
+    save_csv(results, os.path.join(csv_filename))
+
+    # Return everything in the output folder, as well as the logs.
     with tarfile.open(file_system['outputs_compressed'], 'w:gz') as outputs_compressed:
         for f in outputs:
             outputs_compressed.add(os.path.join(file_system['outputs'], f), f)  # Store in tar as basename only
 
         outputs_compressed.add(file_system['log_file'], 'Log.txt')
+        outputs_compressed.add(csv_filename, 'data_collection.csv')
 
 
 def unzip_if_needed():
@@ -153,6 +249,9 @@ if __name__ == "__main__":
             completed_file_numbers = get_complete_file_numbers()
             # Get list of input files
             input_file_numbers = get_input_file_numbers()
+
+            logging.info("Completed: {0}".format(completed_file_numbers))
+            logging.info("Inputs: {0}".format(input_file_numbers))
 
             # Determine which files need to be processed
             fmt = sofia_input_start + '{0}' + sofia_input_end

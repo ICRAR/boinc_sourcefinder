@@ -24,23 +24,100 @@
 """
 Validator implementation for SoFiA
 """
+import os
+from utils import run_id_from_result_name
+from utils.logger import config_logger
+from utils.csv_compare import CSVCompare
+from sqlalchemy.engine import create_engine
+from sqlalchemy import select, func
+
+LOG = config_logger(__name__)
 
 # Validate on:
 
 # Init
 # Number of parameters returned (ensure they match the number registered in the db)
-# Ensure each parameter file contains either the !!! as its first line, or # SoFia catalogue
+# Ensure the CSV contains "No sources\n" or starts with "parameter_number"
 
 # Compare
-# Compare contents of each returned parameter file. Ensure each !!! parameter file match, and ensure # SoFia catalogue
-#   matches in each.
+# Compare the contents of the CSV files in the same way as duchamp.
+
+# Others are optional, but we need these two
+OUTPUT_FILES = ['data_collection.csv', 'Log.txt']
 
 
 def get_init_validator(BaseValidator):
 
     class InitValidator(BaseValidator):
-        def __call__(self, file1):
-            pass
+
+        def get_parameter_count(self, result_id):
+            RESULT = self.config["database_boinc"]["RESULT"]
+            PARAMETER_RUN = self.config["database"]["PARAMETER_RUN"]
+            # Get the run ID from the BOINC DB's result name
+            engine = create_engine(self.config["BOINC_DB_LOGIN"])
+            connection = engine.connect()
+            try:
+                result = select([RESULT]).where(RESULT.c.id == result_id).first()
+                run_id = run_id_from_result_name(result['name'])
+            finally:
+                connection.close()
+
+            # Get the set of parameters from the sofia db.
+            engine = create_engine(self.config["DB_LOGIN"])
+            connection = engine.connect()
+            try:
+                return select([func.count(PARAMETER_RUN)]).where(PARAMETER_RUN.c.run_id == run_id).first()[0]
+            finally:
+                connection.close()
+
+        def check_output_files(self, file_directory, result_id):
+            # Check that data collection.csv and log.txt are present
+            files = os.listdir(file_directory)
+
+            LOG.info("Files provided: {0}".format(files))
+
+            for f in OUTPUT_FILES:
+                if f not in files:
+                    # Required file is missing.
+                    return False
+
+            # Check that the number of parameters for this file is correct.
+            file_count = 0
+            if self.test_mode:
+                # In test mode we don't want to access the DB, so just use a hard coded value.
+                parameter_count = 4
+            else:
+                parameter_count = self.get_parameter_count(result_id)
+
+            for f in files:
+                if f.endswith("_cat.xml.out"):  # Name of the stdout files. These are present for each parameter set run.
+                    file_count += 1
+
+            LOG.info("Parameter count: {0}, File count: {1}".format(parameter_count, file_count))
+
+            return file_count == parameter_count
+
+        @staticmethod
+        def check_csv(file_directory):
+            # Check that the csv file either starts with "parameter_number" or "No sources"
+            csv_path = os.path.join(file_directory, "data_collection.csv")
+
+            with open(csv_path, 'r') as f:
+                data = f.read()
+
+                if data.startswith("No sources\n") or data.startswith("parameter_number"):
+                    return True
+
+            return False
+
+        def validate(self, file_directory, result_id):
+            if not self.check_output_files(file_directory, result_id):
+                return "Issue with output files"
+
+            elif not self.check_csv(file_directory):
+                return "Issue with CSV"
+
+            return None
 
     return InitValidator
 
@@ -48,7 +125,16 @@ def get_init_validator(BaseValidator):
 def get_compare_validator(BaseValidator):
 
     class CompareValidator(BaseValidator):
-        def __call__(self, file1, file2):
-            pass
+        def validate(self, file1_directory, file2_directory):
+            file1_path = os.path.join(file1_directory, 'data_collection.csv')
+            file2_path = os.path.join(file2_directory, 'data_collection.csv')
+            with open(file1_path, 'r') as file1, open(file2_path, 'r') as file2:
+                csv_compare_1 = CSVCompare(file1)
+                csv_compare_2 = CSVCompare(file2)
+
+            if not csv_compare_1 == csv_compare_2:
+                return csv_compare_1.reason
+
+            return None
 
     return CompareValidator

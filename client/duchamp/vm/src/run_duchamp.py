@@ -464,6 +464,5 @@ def build_output_csv(directory):
 
     dirstack.pop()
 
-'''WHERE ALL THE BUSINESS OCCURS''' # business has two s' on the end
-
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()

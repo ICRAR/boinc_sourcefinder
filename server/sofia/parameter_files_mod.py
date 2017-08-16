@@ -54,18 +54,18 @@ class ConfigItem:
 SOFIA_CONFIG = [
     ConfigItem("steps.doSubcube", "false"),
     ConfigItem("steps.doFlag", "false"),
-    ConfigItem("steps.doSmooth", ["false", "true"]),
+    ConfigItem("steps.doSmooth", "false"),
     ConfigItem("steps.doScaleNoise", "false"),
     ConfigItem("steps.doSCfind", "true"),
-    ConfigItem("steps.doThreshold", "false"),
-    ConfigItem("steps.doWavelet", "false"),
+    ConfigItem("steps.doThreshold", ["false", "true"]),
+    ConfigItem("steps.doWavelet", ["false", "true"]),
     ConfigItem("steps.doCNHI", "false"),
-    ConfigItem("steps.doMerge", ["false", "true"]),
-    ConfigItem("steps.doReliability",  ["false", "true"]),
-    ConfigItem("steps.doParameterise",  ["false", "true"]),
-    ConfigItem("steps.doWriteFilteredCube",  "false"),
-    ConfigItem("steps.doWriteMask",  "false"),
-    ConfigItem("steps.doWriteCat",  "true"),
+    ConfigItem("steps.doMerge", "true"),
+    ConfigItem("steps.doReliability", "true"),
+    ConfigItem("steps.doParameterise", "true"),
+    ConfigItem("steps.doWriteFilteredCube", "false"),
+    ConfigItem("steps.doWriteMask", "false"),
+    ConfigItem("steps.doWriteCat", "true"),
     ConfigItem("steps.doMom0", "false"),
     ConfigItem("steps.doMom1", "false"),
     ConfigItem("steps.doCubelets", "false"),
@@ -159,8 +159,8 @@ SOFIA_CONFIG = [
     ConfigItem("writeCat.compress", "false"),
     ConfigItem("writeCat.outputDir", OUTPUT_DIR),
     ConfigItem("writeCat.basename", "sofia_output_{0}"),
-    ConfigItem("writeCat.writeASCII", "true"),
-    ConfigItem("writeCat.writeXML", "false"),
+    ConfigItem("writeCat.writeASCII", "false"),
+    ConfigItem("writeCat.writeXML", "true"),
     ConfigItem("writeCat.writeSQL", "false"),
     ConfigItem("writeCat.parameters", "['*']")
 ]
@@ -177,8 +177,6 @@ def get_parameter_file_generator(base_class):
 
             for config in itertools.product(*SOFIA_CONFIG):
                 filename = 'supercube_run_{0}_sofia.par'.format(file_count)
-                file_count += 1
-
                 config_string = "# SoFiA Config for sourcefinder: {0}\n".format(filename)
 
                 for idx, field in enumerate(config):
@@ -192,6 +190,8 @@ def get_parameter_file_generator(base_class):
                     config_string += "{0}   =   {1}\n".format(SOFIA_CONFIG[idx].name, output)
 
                 items.append((filename, config_string))
+
+                file_count += 1
 
             return items
 
