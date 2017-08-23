@@ -26,9 +26,11 @@ import errno
 import tarfile
 import importlib
 import shutil
+import hashlib
 from logger import config_logger
 
 LOG = config_logger(__name__)
+EXTRACT_DIRECTORY_BASE = "/tmp/sourcefinder_{0}"
 
 
 class DirStack:
@@ -87,6 +89,22 @@ def run_id_from_result_name(result_name):
         return int(result_name[0:underscore])
     except ValueError:
         raise Exception('Malformed result name {0}\n'.format(result_name))
+
+
+def get_temp_directory(filename):
+    raw_hash = hashlib.md5(filename).hexdigest()[:8]
+    directory_name = EXTRACT_DIRECTORY_BASE.format(long(raw_hash, 16))
+
+    make_path(directory_name)
+
+    return directory_name
+
+
+def free_temp_directory(filename):
+    raw_hash = hashlib.md5(filename).hexdigest()[:8]
+    directory_name = EXTRACT_DIRECTORY_BASE.format(long(raw_hash, 16))
+
+    remove_path(directory_name)
 
 
 def module_import(module_name, app_name):

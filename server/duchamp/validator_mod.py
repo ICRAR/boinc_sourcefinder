@@ -48,9 +48,6 @@ def get_init_validator(BaseValidator):
 
             LOG.info("Files provided: {0}".format(files))
 
-            if len(files) != len(OUTPUT_FILES):
-                return False
-
             if set(files) != set(OUTPUT_FILES.values()):
                 return False
 

@@ -24,8 +24,8 @@
 import boto3
 
 
-def get_file_upload_key(workunit_name, file_name):
-    return '{0}/{1}'.format(workunit_name, file_name)
+def get_file_upload_key(app_name, workunit_name, file_name):
+    return '{0}/{1}/{2}'.format(app_name, workunit_name, file_name)
 
 
 class S3Helper:

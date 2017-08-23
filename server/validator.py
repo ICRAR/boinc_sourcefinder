@@ -28,32 +28,14 @@ Validator base for Sourcefinder apps
 import argparse
 import os
 import sys
-import hashlib
 import shutil
 
 from config import get_config
-from utils import module_import, make_path, remove_path, extract_tar
+from utils import module_import, extract_tar, get_temp_directory, free_temp_directory
 from utils.logger import config_logger
 
 MODULE = "validator_mod"
 LOG = config_logger(__name__)
-EXTRACT_DIRECTORY_BASE = "/tmp/tmp_output_{0}"
-
-
-def get_temp_directory(filename):
-    hash = hashlib.md5(filename).hexdigest()[:8]
-    directory_name = EXTRACT_DIRECTORY_BASE.format(long(hash, 16))
-
-    make_path(directory_name)
-
-    return directory_name
-
-
-def free_temp_directory(filename):
-    hash = hashlib.md5(filename).hexdigest()[:8]
-    directory_name = EXTRACT_DIRECTORY_BASE.format(long(hash, 16))
-
-    remove_path(directory_name)
 
 
 class InitValidator:

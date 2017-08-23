@@ -31,23 +31,74 @@ from utils.amazon import S3Helper, get_file_upload_key
 from utils import retry_on_exception, extract_tar, get_temp_directory, free_temp_directory
 
 LOG = config_logger(__name__)
-
-COMPLETED_WU_PATH = '/home/ec2-user/completed_workunits'
-COMPLETED_RESULT_PATH = '/home/ec2-user/completed_results'
+RESULT_COLUMNS = [
+    "id",
+    "name",
+    "x",
+    "y",
+    "z",
+    "x_geo",
+    "y_geo",
+    "z_geo",
+    "rms",
+    "rel",
+    "x_min",
+    "x_max",
+    "y_min",
+    "y_max",
+    "z_min",
+    "z_max",
+    "n_pix",
+    "n_los",
+    "n_chan",
+    "ra",
+    "dec",
+    "lon",
+    "lat",
+    "freq",
+    "velo",
+    "w20",
+    "w50",
+    "wm50",
+    "f_peak",
+    "f_int",
+    "f_wm50",
+    "ell_maj",
+    "ell_min",
+    "ell_pa",
+    "ell3s_maj",
+    "ell3s_min",
+    "ell3s_pa",
+    "kin_pa",
+    "bf_a",
+    "bf_b1",
+    "bf_b2",
+    "bf_c",
+    "bf_xe",
+    "bf_xp",
+    "bf_w",
+    "bf_chi2",
+    "bf_flag",
+    "bf_z",
+    "bf_w20",
+    "bf_w50",
+    "bf_f_peak",
+    "bf_f_int"
+]
 
 
 def get_assimilator(AssimilatorBase):
 
-    class DuchampAssimilator(AssimilatorBase):
+    class SofiaAssimilator(AssimilatorBase):
 
         def process_result(self, wu, result_file, cube_info):
             """
-
             :param wu:
             :param result_file:
             :param cube_info:
             :return:
             """
+
             LOG.info("Processing result {0}\n", result_file)
 
             try:
@@ -58,9 +109,8 @@ def get_assimilator(AssimilatorBase):
                 # Extract the result file
                 extract_directory = get_temp_directory(result_file)
                 extract_tar(result_file, extract_directory)
-                output_directory = os.path.join(extract_directory, 'outputs')
 
-                self.store_data(wu.name, cube_info, output_directory)
+                self.store_data(wu.name, cube_info, extract_directory)
 
             except Exception as e:
                 LOG.error("Error processing work unit: {0}\n".format(e.message))
@@ -72,41 +122,44 @@ def get_assimilator(AssimilatorBase):
             return 0
 
         def store_data(self, wu_name, cube_info, output_directory):
+            """
+            :param wu_name:
+            :param cube_info:
+            :param output_directory:
+            :return:
+            """
+
             RESULT = self.config['database']['RESULT']
             CUBE = self.config['database']['CUBE']
             csv_file = os.path.join(output_directory, 'data_collection.csv')
 
             with open(csv_file) as open_csv_file:
-                csv_reader = csv.DictReader(open_csv_file)
 
-                for row in csv_reader:
-                    transaction = self.connection.begin()
-                    try:
-                        self.connection.execute(
-                                RESULT.insert(),
-                                cube_id=cube_info.id,
-                                parameter_id=int(row['ParameterNumber']),
-                                run_id=cube_info.run_id,
-                                RA=row['RA'],
-                                DEC=row['DEC'],
-                                freq=row['freq'],
-                                w_50=row['w_50'],
-                                w_20=row['w_20'],
-                                w_FREQ=row['w_FREQ'],
-                                F_int=row['F_int'],
-                                F_tot=row['F_tot'],
-                                F_peak=row['F_peak'],
-                                Nvoxel=row['Nvoxel'],
-                                Nchan=row['Nchan'],
-                                Nspatpix=row['Nspatpix'],
-                                workunit_name=wu_name  # Reference in to the boinc DB and in to the s3 file system.
-                        )
-                        transaction.commit()
-                        LOG.info('Successfully loaded work unit {0} in to the database\n'.format(wu_name))
-                    except Exception as e:
-                        LOG.error('Exception while loading CSV in to the database {0}\n'.format(e.message))
-                        transaction.rollback()
-                        return 1  # try again later
+                has_results = not open_csv_file.read().startswith("No sources")
+
+                if has_results:
+                    csv_reader = csv.DictReader(open_csv_file)
+
+                    for row_count, row in enumerate(csv_reader):
+                        if row_count == 0:
+                            continue  # Skip the first row, as it just contains type information
+
+                        transaction = self.connection.begin()
+                        try:
+                            table_insert = {column: row[column] for column in RESULT_COLUMNS if column in row}
+                            table_insert["cube_id"] = cube_info.id
+                            table_insert["parameter_id"] = int(row['parameter_number'])
+                            table_insert["run_id"] = cube_info.run_id
+                            table_insert["workunit_name"] = wu_name
+
+                            self.connection.execute(RESULT.insert(), **table_insert)
+
+                            transaction.commit()
+                            LOG.info('Successfully loaded work unit {0} in to the database\n'.format(wu_name))
+                        except Exception as e:
+                            LOG.error('Exception while loading CSV in to the database {0}\n'.format(e.message))
+                            transaction.rollback()
+                            return 1  # try again later
 
                 retry_on_exception(lambda: (
                     self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_info.id).values(progress=2))
@@ -121,4 +174,4 @@ def get_assimilator(AssimilatorBase):
 
                 s3.file_upload(path, key)
 
-    return DuchampAssimilator
+    return SofiaAssimilator
