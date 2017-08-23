@@ -26,10 +26,6 @@ import csv
 class CSVCompare:
 
     def __init__(self, csv_data):
-
-        self.cells = None
-        self.rows = None
-
         self.threshold = 0.0001
 
         self.reason = None  # Reason why the last compare failed
@@ -37,12 +33,26 @@ class CSVCompare:
 
         # Load the CSV rows.
         csv_reader = csv.DictReader(csv_data)
-        self.cells = [a for r in csv_reader for a in r.values()]
         self.rows = [r for r in csv_reader]
+        self.cell_count = sum([len(c) for c in self.rows])
+
+    @staticmethod
+    def _to_float(cell):
+        try:
+            return float(cell)
+        except ValueError:
+            return None
 
     def _compare_cells(self, row1, row2):
         for cell1, cell2 in zip(row1, row2):
-            if abs(float(cell1) - float(cell2)) > self.threshold:
+            float1 = self._to_float(cell1)
+            float2 = self._to_float(cell2)
+
+            if float1 is None and float2 is None:
+                continue  # Skip comparing these
+            elif float1 is None or float2 is None:
+                return False
+            elif abs(float1 - float2) > self.threshold:
                 return False
         return True
 
@@ -52,7 +62,7 @@ class CSVCompare:
         for my_row in self.rows:
             found = False
             for other_row in other.rows:
-                if self._compare_cells(my_row, other_row):
+                if self._compare_cells(my_row.values(), other_row.values()):
                     found = True
                     break
 
@@ -75,10 +85,10 @@ class CSVCompare:
                 self.reason = "Other object is incorrect type"
             elif len(self.rows) != len(other.rows):
                 self.reason = "Length of rows differs: {0} to {1}".format(len(self.rows), len(other.rows))
-            elif len(self.cells) != len(other.cells):
-                self.reason = "Length of cells differs: {0}, to {1}".format(len(self.cells), len(other.cells))
+            elif self.cell_count != other.cell_count:
+                self.reason = "Length of cells differs: {0}, to {1}".format(self.cell_count, other.cell_count)
             elif not self.compare(other):
-                self.reason = "Row {0} doesn't match other".format(self.unmatching_row)
+                self.reason = "Row doesn't have matching row in other: \n {0}".format(self.unmatching_row)
 
         except Exception as e:
             self.reason = "Exception: {0}".format(e.message)

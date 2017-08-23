@@ -53,16 +53,19 @@ class ValidatorTest(unittest.TestCase):
             self.assertEqual(1, run_init(f), "File {0} fails".format(f))
 
     def test_compare_succeed(self):
-        file1 = os.path.join(COMPARE_FAIL_PATH, "fail1.tar.gz")
-        file2 = os.path.join(COMPARE_FAIL_PATH, "fail2.tar.gz")
+        file1 = os.path.join(COMPARE_SUCCEED_PATH, "succeed1.tar.gz")
+        file2 = os.path.join(COMPARE_SUCCEED_PATH, "succeed2.tar.gz")
 
         self.assertEqual(0, run_compare(file1, file2), "File {0} compared to file {1} succeeds".format(file1, file2))
 
     def test_compare_fail(self):
-        file1 = os.path.join(COMPARE_FAIL_PATH, "succeed1.tar.gz")
-        file2 = os.path.join(COMPARE_FAIL_PATH, "succeed2.tar.gz")
+        file1 = os.path.join(COMPARE_FAIL_PATH, "fail1.tar.gz")
+        file2 = os.path.join(COMPARE_FAIL_PATH, "fail2.tar.gz")
+        file3 = os.path.join(COMPARE_FAIL_PATH, "fail3.tar.gz")
+        file4 = os.path.join(COMPARE_FAIL_PATH, "fail4.tar.gz")
 
         self.assertEqual(1, run_compare(file1, file2), "File {0} compared to file {1} fails".format(file1, file2))
+        self.assertEqual(1, run_compare(file3, file4), "File {0} compared to file {1} fails".format(file3, file4))
 
 
 if __name__ == '__main__':

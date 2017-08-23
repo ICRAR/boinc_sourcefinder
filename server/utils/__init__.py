@@ -67,7 +67,11 @@ def make_path(path):
 
 
 def remove_path(path):
-    shutil.rmtree(path)
+    try:
+        shutil.rmtree(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
 
 def extract_tar(tar, path):
