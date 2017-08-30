@@ -67,7 +67,7 @@ class Assimilator:
     """
 
     """
-    def __init__(self, args):
+    def __init__(self, config, args):
         """
 
         :param args:
@@ -79,7 +79,8 @@ class Assimilator:
         boinc_db.WU_ERROR_NO_CANONICAL_RESULT = 32
 
         # initialize member vars
-        self.config = None
+        self.boinc_config = None
+        self.config = config
         self.STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
         self.caught_sig_int = False
         self.pass_count = 0
@@ -159,9 +160,9 @@ class Assimilator:
         bucket in the path returned.
         """
         name = re.search('<file_name>(.*)</file_name>', result.xml_doc_in).group(1)
-        fanout = int(self.config.uldl_dir_fanout)
+        fanout = int(self.boinc_config.uldl_dir_fanout)
         hashed = self.filename_hash(name, fanout)
-        updir = self.config.upload_dir
+        updir = self.boinc_config.upload_dir
         result = os.path.join(updir, hashed, name)
         return result
 
@@ -359,7 +360,7 @@ class Assimilator:
         parse_args() is called, the xml config file is loaded and
         the SIGINT signal is hooked to the sigint_handler method.
         """
-        self.config = configxml.default_config().config
+        self.boinc_config = configxml.default_config().config
 
         # retrieve app where name = app.name
         database.connect()
