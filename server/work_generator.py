@@ -142,7 +142,7 @@ class WorkGenerator:
             with tarfile.open(parameter_tar_file_path, "w:gz") as tar:
                 for parameter_file in parameter_files:
                     # Don't compress with paths
-                    tar.add(parameter_file, os.path.join('parameter_files/', os.path.basename(parameter_file)))
+                    tar.add(parameter_file, os.path.basename(parameter_file))
 
         return parameter_tar_file_name
 
