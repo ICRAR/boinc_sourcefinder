@@ -117,6 +117,7 @@ class AppSetup:
         # We assume that the app folder has already been set up correctly
 
         folders = os.listdir(app_path)
+        vm_name = os.path.basename(vm_path)
 
         # Sign the vm
         sign_filename = self.sign_file(vm_path)
@@ -127,18 +128,18 @@ class AppSetup:
 
             folder = os.path.join(app_path, folder)
 
-            LOG.info("Making link between {0} and {1}".format(vm_path, os.path.join(folder, os.path.basename(vm_path))))
+            LOG.info("Making link between {0} and {1}".format(vm_path, os.path.join(folder, vm_name)))
 
-            if os.path.exists(os.path.join(folder, sys.argv[2])):
-                os.unlink(os.path.join(folder, sys.argv[2]))
+            if os.path.exists(os.path.join(folder, vm_name)):
+                os.unlink(os.path.join(folder, vm_name))
 
-            os.link(vm_path, os.path.join(folder, sys.argv[2]))
+            os.link(vm_path, os.path.join(folder, vm_name))
 
             # Sign it
             print "Copying vm signature in to {0}".format(folder)
             shutil.copy(sign_filename, folder)
 
-        download_vm_path = os.path.join(self.config['DIR_DOWNLOAD'], sys.argv[2])
+        download_vm_path = os.path.join(self.config['DIR_DOWNLOAD'], vm_name)
         if os.path.exists(download_vm_path):
             os.remove(download_vm_path)
         if os.path.exists(download_vm_path + '.gz'):
@@ -163,7 +164,7 @@ class AppSetup:
             dstatck.push()
             os.chdir(self.config['DIR_DOWNLOAD'])
 
-            os.system('gzip < {0} > {0}.gz'.format(sys.argv[2]))
+            os.system('gzip < {0} > {0}.gz'.format(vm_name))
             dstatck.pop()
 
 
