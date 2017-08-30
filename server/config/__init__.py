@@ -127,7 +127,7 @@ def get_config(app=None):
 
     # Add in the database tables
     config["database_boinc"] = boinc_database_def
-    config["database_duchamp"] = duchamp_database_def
+    config["database_sourcefinder"] = duchamp_database_def
     config["database_sofia"] = sofia_database_def
 
     if app is not None:
