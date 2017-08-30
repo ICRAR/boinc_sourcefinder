@@ -478,8 +478,10 @@ if __name__ == "__main__":
     assimilator = DerivedAssimilator(get_config(app_name), arguments)
 
     if arguments['flat'] is not None:
+        LOG.info("Running flat file assimilator...")
         result = assimilator.run_flat(arguments['flat'])
     else:
+        LOG.info("Running normal assimilator...")
         result = assimilator.run()
 
     sys.exit(result)
