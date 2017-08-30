@@ -32,8 +32,8 @@ import argparse
 import sys
 from subprocess import Popen, PIPE
 from config import get_config
-from utils import DirStack
-from utils.logger import config_logger
+from ..utils import DirStack
+from ..utils.logger import config_logger
 
 LOG = config_logger(__name__)
 
