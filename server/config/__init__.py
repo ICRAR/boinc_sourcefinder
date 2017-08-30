@@ -42,6 +42,17 @@ class ConfigItem:
         self.default = default
         self.dtype = dtype
 
+
+class ConfigPath:
+    def __init__(self, name, path_format, *args):
+        self.name = name
+        self.path_format = path_format
+        self.format_args = args
+
+    def get_path(self, d):
+        actual_args = [d[a] for a in self.format_args]  # Look up the args in the given dictionary
+        return self.path_format.format(*actual_args)
+
 config_entries = [
     ############### Database Settings ###############
     ConfigItem("DB_USER_ID", "databaseUserid", "root"),
@@ -57,9 +68,6 @@ config_entries = [
 
     ConfigItem("FANOUT", "fanout", 1024, int),
 
-    ############### Work Generation Settings ###############
-    ConfigItem("BOINC_DB_NAME", "wgThreshold", 500, int),
-
     ############### AMAZON SETTINGS ###############
     ConfigItem("S3_BUCKET_NAME", "bucket", "icrar.sourcefinder.files"),
 
@@ -67,13 +75,14 @@ config_entries = [
 ]
 
 extra_paths = [
-    ("DIR_APP_TEMPLATES", "app_templates/", "DIR_BOINC_PROJECT_PATH"),
-    ("DIR_VMS", "vm/", "DIR_BOINC_PROJECT_PATH"),
-    ("PROG_SIGN_EXECUTABLE", "bin/sign_executable", "DIR_BOINC_PROJECT_PATH"),
-    ("PROG_UPDATE_VERSIONS", "bin/update_versions", "DIR_BOINC_PROJECT_PATH"),
-    ("DIR_KEYS", "keys/", "DIR_BOINC_PROJECT_PATH"),
-    ("DIR_DOWNLOAD", "download/", "DIR_BOINC_PROJECT_PATH"),
-    ("DIR_LOG", "log_ip-10-0-131-204/", "DIR_BOINC_PROJECT_PATH")
+    ConfigPath("DIR_APP", "{0}/apps/{1}", "DIR_BOINC_PROJECT_PATH", "APP_NAME"),
+    ConfigPath("DIR_APP_TEMPLATES", "{0}/app_templates/{1}", "DIR_BOINC_PROJECT_PATH", "APP_NAME"),
+    ConfigPath("DIR_VMS", "{0}/vm", "DIR_BOINC_PROJECT_PATH"),
+    ConfigPath("PROG_SIGN_EXECUTABLE", "{0}/bin/sign_executable", "DIR_BOINC_PROJECT_PATH"),
+    ConfigPath("PROG_UPDATE_VERSIONS", "{0}/bin/update_versions", "DIR_BOINC_PROJECT_PATH"),
+    ConfigPath("DIR_KEYS", "{0}/keys", "DIR_BOINC_PROJECT_PATH"),
+    ConfigPath("DIR_DOWNLOAD", "{0}/download", "DIR_BOINC_PROJECT_PATH"),
+    ConfigPath("DIR_LOG", "{0}/log_ip-10-0-131-204", "DIR_BOINC_PROJECT_PATH")
 ]
 
 
@@ -146,6 +155,6 @@ def get_config(app=None):
     config["DIR_VALIDATOR_INVALIDS"] = "/home/ec2-user/validator_invalids/"
 
     for item in extra_paths:
-        config[item[0]] = join(config[item[2]], item[1])
+        config[item.name] = item.get_path(config)
 
     return config
