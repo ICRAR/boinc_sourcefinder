@@ -57,7 +57,7 @@ def get_init_validator(BaseValidator):
             engine = create_engine(self.config["BOINC_DB_LOGIN"])
             connection = engine.connect()
             try:
-                result = select([RESULT]).where(RESULT.c.id == result_id).first()
+                result = connection.execute(select([RESULT]).where(RESULT.c.id == result_id)).first()
                 run_id = run_id_from_result_name(result['name'])
             finally:
                 connection.close()
@@ -66,7 +66,7 @@ def get_init_validator(BaseValidator):
             engine = create_engine(self.config["DB_LOGIN"])
             connection = engine.connect()
             try:
-                return select([func.count(PARAMETER_RUN)]).where(PARAMETER_RUN.c.run_id == run_id).first()[0]
+                return connection.execute(select([func.count(PARAMETER_RUN)]).where(PARAMETER_RUN.c.run_id == run_id)).first()[0]
             finally:
                 connection.close()
 
