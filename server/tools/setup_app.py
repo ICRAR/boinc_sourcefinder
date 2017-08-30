@@ -31,7 +31,7 @@ import subprocess
 import argparse
 import sys
 from subprocess import Popen, PIPE
-from config import get_config
+from ..config import get_config
 from ..utils import DirStack
 from ..utils.logger import config_logger
 
