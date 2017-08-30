@@ -139,7 +139,7 @@ def get_config(app=None):
         config["DIR_APPS"] = join(config["DIR_BOINC_PROJECT_PATH"], "apps/{0}".format(app))
 
         # Set the database def for this module.
-        config["database"] = config["database_{0}".format(config["APP_NAME"])]
+        config["database"] = config["database_{0}".format(config["DB_NAME"])]
 
     base_db_login = "mysql://" + \
                     config['DB_USER_ID'] + ":" + \
