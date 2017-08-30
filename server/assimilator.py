@@ -379,8 +379,7 @@ class Assimilator:
                 workdone = self.do_pass(app)
                 database.close()
                 if not workdone:
-                    # clogging up the log file and I want to see other debug messages
-                    # self.logDebug("Sleeping for {0}\n".format(self.sleep_interval))
+                    LOG.info("No work, sleeping for {0}...\n".format(self.sleep_interval))
                     time.sleep(self.sleep_interval)
 
         return 0
