@@ -127,7 +127,7 @@ class AppSetup:
 
             folder = os.path.join(app_path, folder)
 
-            LOG.info("Making link between {0} and {1}".format(vm_path, os.path.join(folder, sys.argv[2])))
+            LOG.info("Making link between {0} and {1}".format(vm_path, os.path.join(folder, os.path.basename(vm_path))))
 
             if os.path.exists(os.path.join(folder, sys.argv[2])):
                 os.unlink(os.path.join(folder, sys.argv[2]))
