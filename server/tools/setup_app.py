@@ -30,10 +30,13 @@ import shutil
 import subprocess
 import argparse
 import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from subprocess import Popen, PIPE
-from ..config import get_config
-from ..utils import DirStack
-from ..utils.logger import config_logger
+from config import get_config
+from utils import DirStack
+from utils.logger import config_logger
 
 LOG = config_logger(__name__)
 
