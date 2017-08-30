@@ -66,7 +66,7 @@ def get_init_validator(BaseValidator):
             engine = create_engine(self.config["DB_LOGIN"])
             connection = engine.connect()
             try:
-                return connection.execute(select([func.count(PARAMETER_RUN)]).where(PARAMETER_RUN.c.run_id == run_id)).first()[0]
+                return connection.execute(select([func.count(PARAMETER_RUN.c.run_id)]).where(PARAMETER_RUN.c.run_id == run_id)).first()[0]
             finally:
                 connection.close()
 
