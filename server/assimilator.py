@@ -379,7 +379,7 @@ class Assimilator:
                 workdone = self.do_pass(app)
                 database.close()
                 if not workdone:
-                    LOG.info("No work, sleeping for {0}...\n".format(self.sleep_interval))
+                    # LOG.info("No work, sleeping for {0}...\n".format(self.sleep_interval))
                     time.sleep(self.sleep_interval)
 
         return 0
