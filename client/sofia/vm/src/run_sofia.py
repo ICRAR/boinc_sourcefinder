@@ -31,6 +31,7 @@ import subprocess
 import gzip
 import tarfile
 import xml.etree.ElementTree as ET
+from threading import Timer
 
 file_system = {
     'sofia': '/root/SoFiA/sofia_pipeline.py',
@@ -50,9 +51,12 @@ file_system = {
 completed_file_name = 'output.tar.gz'
 sofia_output_start = 'sofia_output_'
 sofia_output_end = '_cat.xml'
+sofia_output_end_complete_marker = '_cat.xml.complete'
 
 sofia_input_start = 'supercube_run_'
 sofia_input_end = '_sofia.par'
+
+process_timeout_seconds = 30 * 60 * 60  # 30 mins
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 file_handler = logging.FileHandler(file_system['log_file'])
@@ -60,7 +64,36 @@ file_handler.setFormatter(logging.Formatter('%(asctime)-15s:' + logging.BASIC_FO
 logging.getLogger().addHandler(file_handler)
 
 
+def run_with_timeout(timeout_seconds, *args, **kwargs):
+    """
+    Runs a subprocess with a timeout (seconds)
+    :param timeout_seconds: The timeout in seconds
+    :param args: args for Popen
+    :param kwargs: kwargs for Popen
+    :return:
+    """
+    def process_kill(ps):
+        ps.kill()
+        logging.info("Process timeout after {0} seconds".format(timeout_seconds))
+
+    process = subprocess.Popen(*args, **kwargs)
+
+    timer = Timer(timeout_seconds, process_kill, [process])
+
+    try:
+        timer.start()
+        return process.wait()
+    finally:
+        timer.cancel()
+
+
 def save_csv(results, filename):
+    """
+    Saves a CSV file containing the provided SofiaResults.
+    :param results: Results to save.
+    :param filename: CSV file to save to.
+    :return:
+    """
     # First, confirm the headers are all the same
     with_results = [result for result in results if result.has_data]
 
@@ -87,6 +120,10 @@ def save_csv(results, filename):
 
 
 class SofiaResult:
+    """
+    Parses a result from a sofia XML result file
+    """
+
     def __init__(self, parameter_number, data):
         self.parameter_number = parameter_number
         self.raw_data = data
@@ -137,14 +174,22 @@ class SofiaResult:
 
 
 def get_complete_file_numbers():
+    """
+    Returns the numbers of all completed files
+    :return:
+    """
     return {
-        int(f[len(sofia_output_start):-len(sofia_output_end)])
+        int(f[len(sofia_output_start):-len(sofia_output_end_complete_marker)])
         for f in os.listdir(file_system['outputs'])
-        if f.startswith(sofia_output_start) and f.endswith(sofia_output_end)
+        if f.startswith(sofia_output_start) and f.endswith(sofia_output_end_complete_marker)
     }
 
 
 def get_input_file_numbers():
+    """
+    Returns the numbers of all input files
+    :return:
+    """
     return [
         int(f[len(sofia_input_start):-len(sofia_input_end)])
         for f in os.listdir(file_system['inputs'])
@@ -153,6 +198,11 @@ def get_input_file_numbers():
 
 
 def run_sofia(inputs):
+    """
+    Runs sofia on the given list of input files
+    :param inputs: List of input files to run
+    :return:
+    """
     filename = inputs['name']
     number = inputs['number']
     output_filename = os.path.join(
@@ -163,13 +213,19 @@ def run_sofia(inputs):
     logging.info('Running sofia for {0}...'.format(filename))
     out = "{0}.out".format(output_filename)
     err = "{0}.err".format(output_filename)
+    complete_marker = "{0}.complete".format(output_filename)
     start = time.time()
     try:
         with open(out, 'a') as stdout, open(err, 'a') as stderr:
-            result = subprocess.call(['python', file_system['sofia'], filename], stdout=stdout, stderr=stderr)
+            result = run_with_timeout(process_timeout_seconds, ['python', file_system['sofia'], filename], stdout=stdout, stderr=stderr)
 
         if result == 1:
             logging.info('An application error occurred: code {0}'.format(result))
+
+        # Write a simple marker file to specify that this file has been completed
+        with open(complete_marker, 'w') as marker:
+            marker.write("Complete")
+
     except:
         logging.exception('An exception occurred')
 
@@ -184,9 +240,16 @@ def run_sofia(inputs):
 
 
 def combine_outputs():
+    """
+    Combines all existing sofia output files in to one CSV.
+    :return:
+    """
     # Compress all results together for returning to the server
-    outputs = os.listdir(file_system['outputs'])
+    # Skip the '.complete' files.
+    outputs = [f for f in os.listdir(file_system['outputs']) if not f.endswith('.complete')]
     results = []
+
+    logging.info("Combining outputs...")
 
     # Work out which files are results and process them
     for output in outputs:
@@ -221,7 +284,7 @@ def unzip_if_needed():
     if len(parameter_files) == 0:
         # Parameter files need to be unzipped
         with tarfile.open(file_system['input_parameters'], 'r') as parameters:
-            logging.info("Extracing parameters...")
+            logging.info("Extracting parameters...")
             parameters.extractall(file_system['inputs'])
     else:
         logging.info("Parameter files exist.")
@@ -278,3 +341,5 @@ if __name__ == "__main__":
     if try_count == 0:
         logging.info("{0} exceptions encountered. Exiting...".format(try_count))
         combine_outputs()  # Just dump the Log.txt file and exit
+
+    logging.info("All done.")

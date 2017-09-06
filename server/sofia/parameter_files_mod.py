@@ -59,7 +59,7 @@ SOFIA_CONFIG = [
     ConfigItem("steps.doSCfind", "true"),
     ConfigItem("steps.doThreshold", ["false", "true"]),
     ConfigItem("steps.doWavelet", ["false", "true"]),
-    ConfigItem("steps.doCNHI", ["false", "true"]),
+    ConfigItem("steps.doCNHI", "false"),
     ConfigItem("steps.doMerge", "true"),
     ConfigItem("steps.doReliability", "true"),
     ConfigItem("steps.doParameterise", "true"),
