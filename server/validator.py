@@ -75,10 +75,10 @@ class InitValidator:
             free_temp_directory(self.working_file)
 
         if reason is None:
-            LOG.info("Workunit file is valid")
+            LOG.info("Workunit file is valid\n")
             return 0
         else:
-            LOG.info("Workunit file is not valid. Reason: {0}".format(reason))
+            LOG.info("Workunit file is not valid. Reason: {0}\n".format(reason))
             self.copy_to_invalid()
             return 1
 
@@ -126,10 +126,10 @@ class CompareValidator:
             free_temp_directory(self.working_file2)
 
         if reason is None:
-            LOG.info("Workunit files are valid")
+            LOG.info("Workunit files are valid\n")
             return 0
         else:
-            LOG.info("Workunit files are not valid. Reason: {0}".format(reason))
+            LOG.info("Workunit files are not valid. Reason: {0}\n".format(reason))
             self.copy_to_invalid()
             return 1
 
