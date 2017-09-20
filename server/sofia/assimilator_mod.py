@@ -99,7 +99,7 @@ def get_assimilator(AssimilatorBase):
             :return:
             """
 
-            LOG.info("Processing result {0}\n", result_file)
+            LOG.info("Processing result {0}".format(result_file))
 
             try:
                 if cube_info.cube['progress'] == 2:
@@ -119,6 +119,8 @@ def get_assimilator(AssimilatorBase):
             finally:
                 free_temp_directory(result_file)
 
+            LOG.info("Completed result {0}\n".format(result_file))
+
             return 0
 
         def store_data(self, wu_name, cube_info, output_directory):
@@ -133,6 +135,8 @@ def get_assimilator(AssimilatorBase):
             CUBE = self.config['database']['CUBE']
             csv_file = os.path.join(output_directory, 'data_collection.csv')
 
+            LOG.info("Storing data...")
+
             with open(csv_file) as open_csv_file:
 
                 has_results = not open_csv_file.read().startswith("No sources")
@@ -140,12 +144,13 @@ def get_assimilator(AssimilatorBase):
                 if has_results:
                     csv_reader = csv.DictReader(open_csv_file)
 
-                    for row_count, row in enumerate(csv_reader):
-                        if row_count == 0:
-                            continue  # Skip the first row, as it just contains type information
+                    transaction = self.connection.begin()
+                    try:
+                        for row_count, row in enumerate(csv_reader):
 
-                        transaction = self.connection.begin()
-                        try:
+                            if row_count == 0:
+                                continue  # Skip the first row, as it just contains type information
+
                             table_insert = {column: row[column] for column in RESULT_COLUMNS if column in row}
                             table_insert["cube_id"] = cube_info.id
                             table_insert["parameter_id"] = int(row['parameter_number'])
@@ -154,12 +159,16 @@ def get_assimilator(AssimilatorBase):
 
                             self.connection.execute(RESULT.insert(), **table_insert)
 
-                            transaction.commit()
-                            LOG.info('Successfully loaded work unit {0} in to the database\n'.format(wu_name))
-                        except Exception as e:
-                            LOG.error('Exception while loading CSV in to the database {0}\n'.format(e.message))
-                            transaction.rollback()
-                            return 1  # try again later
+                        transaction.commit()
+                    except Exception as e:
+                        LOG.error('Exception while loading CSV in to the database {0}\n'.format(e.message))
+                        transaction.rollback()
+                        return 1  # try again later
+
+                    LOG.info('Successfully loaded work unit {0} in to the database\n'.format(wu_name))
+
+                else:
+                    LOG.info("No sources in result.")
 
                 retry_on_exception(lambda: (
                     self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_info.id).values(progress=2))
