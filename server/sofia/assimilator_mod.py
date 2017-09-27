@@ -103,7 +103,7 @@ def get_assimilator(AssimilatorBase):
 
             try:
                 if cube_info.cube['progress'] == 2:
-                    LOG.info('Cube {0} already has results!\n'.format(cube_info.name))
+                    LOG.info('Cube {0} already has results!'.format(cube_info.name))
                     return 0
 
                 # Extract the result file
@@ -113,7 +113,7 @@ def get_assimilator(AssimilatorBase):
                 self.store_data(wu.name, cube_info, extract_directory)
 
             except Exception as e:
-                LOG.error("Error processing work unit: {0}\n".format(e.message))
+                LOG.error("Error processing work unit: {0}".format(e.message))
                 return 1  # try again later
 
             finally:
@@ -140,6 +140,7 @@ def get_assimilator(AssimilatorBase):
             with open(csv_file) as open_csv_file:
 
                 has_results = not open_csv_file.read().startswith("No sources")
+                open_csv_file.seek(0)
 
                 if has_results:
                     csv_reader = csv.DictReader(open_csv_file)
@@ -160,13 +161,12 @@ def get_assimilator(AssimilatorBase):
                             self.connection.execute(RESULT.insert(), **table_insert)
 
                         transaction.commit()
+                        LOG.info('Successfully loaded work unit {0} in to the database'.format(wu_name))
+
                     except Exception as e:
-                        LOG.error('Exception while loading CSV in to the database {0}\n'.format(e.message))
+                        LOG.error('Exception while loading CSV in to the database {0}'.format(e.message))
                         transaction.rollback()
                         return 1  # try again later
-
-                    LOG.info('Successfully loaded work unit {0} in to the database\n'.format(wu_name))
-
                 else:
                     LOG.info("No sources in result.")
 

@@ -48,11 +48,11 @@ def get_assimilator(AssimilatorBase):
             :param cube_info:
             :return:
             """
-            LOG.info("Processing result {0}\n", result_file)
+            LOG.info("Processing result {0}", result_file)
 
             try:
                 if cube_info.cube['progress'] == 2:
-                    LOG.info('Cube {0} already has results!\n'.format(cube_info.name))
+                    LOG.info('Cube {0} already has results!'.format(cube_info.name))
                     return 0
 
                 # Extract the result file
@@ -102,9 +102,9 @@ def get_assimilator(AssimilatorBase):
                                 workunit_name=wu_name  # Reference in to the boinc DB and in to the s3 file system.
                         )
                         transaction.commit()
-                        LOG.info('Successfully loaded work unit {0} in to the database\n'.format(wu_name))
+                        LOG.info('Successfully loaded work unit {0} in to the database'.format(wu_name))
                     except Exception as e:
-                        LOG.error('Exception while loading CSV in to the database {0}\n'.format(e.message))
+                        LOG.error('Exception while loading CSV in to the database {0}'.format(e.message))
                         transaction.rollback()
                         return 1  # try again later
 

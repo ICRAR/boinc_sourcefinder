@@ -148,10 +148,10 @@ class Assimilator:
 
         for f in files:
             if os.path.exists(f):
-                LOG.info("Copying: {0}\n".format(f))
+                LOG.info("Copying: {0}".format(f))
                 shutil.copy(f, where)
             else:
-                LOG.info("Not copying {0}. Doesn't exist\n".format(f))
+                LOG.info("Not copying {0}. Doesn't exist".format(f))
 
     def get_file_path(self, result):
         """
@@ -204,7 +204,7 @@ class Assimilator:
         try:
             run_id = int(wu_name[0:underscore])
         except ValueError:
-            raise Exception('Malformed WU name {0}\n'.format(wu_name))
+            raise Exception('Malformed WU name {0}'.format(wu_name))
 
         cube_name = wu_name[underscore + 1:]
 
@@ -212,7 +212,7 @@ class Assimilator:
         cube = self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()
 
         if cube is None:
-            raise Exception("Can't find cube {0}\n".format(cube_name))
+            raise Exception("Can't find cube {0}".format(cube_name))
 
         return CubeInfo(run_id, cube_name, cube)
 
@@ -228,17 +228,17 @@ class Assimilator:
         self.connection = self.engine.connect()
 
         try:
-            LOG.info('Starting assimilate handler for work unit: {0}\n'.format(wu.id))
+            LOG.info('Starting assimilate handler for work unit: {0}'.format(wu.id))
 
             if not wu.canonical_result:
-                LOG.info('No canonical result for wu: {0}\n'.format(wu.id))
+                LOG.info('No canonical result for wu: {0}'.format(wu.id))
                 return 0
 
             canonical_result_file = self.get_file_path(canonical_result)
             cube_info = self.get_cube_info(wu.name)
 
             if not os.path.isfile(canonical_result_file):
-                LOG.info('Canonical result file doesnt exist\n')
+                LOG.info('Canonical result file doesnt exist')
                 return 0
 
             retval = self.process_result(wu, canonical_result_file, cube_info)
@@ -323,7 +323,7 @@ class Assimilator:
                 did_something = True
 
             canonical_result = None
-            LOG.debug("[{0}] assimilating: state={1}\n".format(wu.name, wu.assimilate_state))
+            LOG.debug("[{0}] assimilating: state={1}".format(wu.name, wu.assimilate_state))
             results = database.Results.find(workunit=wu)
 
             # look for canonical result for workunit in results
