@@ -64,6 +64,7 @@ version_xml = """<version>
     <api_version>7.5.0</api_version>
 </version>"""
 
+
 class AppTemplateSetup:
     def __init__(self, config):
         self.config = config
@@ -86,6 +87,8 @@ class AppTemplateSetup:
             with open(version_path, "w") as f:
                 f.write(version_xml.format(app_name, args["vm_name"], vbox_job_file))
 
+        return 0
+
 
 def parse_args():
     """
@@ -106,4 +109,4 @@ if __name__ == "__main__":
 
     app_setup = AppTemplateSetup(config)
 
-    return app_setup(arguments)
+    exit(app_setup(arguments))
