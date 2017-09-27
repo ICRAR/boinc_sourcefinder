@@ -24,6 +24,7 @@
 
 """
 Initialise / update BOINC applications.
+Call this after app templates have been made with make_app_templates.py
 """
 import os
 import shutil
