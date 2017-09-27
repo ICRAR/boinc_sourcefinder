@@ -147,12 +147,9 @@ def get_assimilator(AssimilatorBase):
 
                     transaction = self.connection.begin()
                     try:
-                        for row_count, row in enumerate(csv_reader):
+                        for row in csv_reader:
 
-                            if row_count == 0:
-                                continue  # Skip the first row, as it just contains type information
-
-                            table_insert = {column: row[column] for column in RESULT_COLUMNS if column in row}
+                            table_insert = {column: (row[column] if row[column] != "null" else None) for column in RESULT_COLUMNS if column in row}
                             table_insert["cube_id"] = cube_info.id
                             table_insert["parameter_id"] = int(row['parameter_number'])
                             table_insert["run_id"] = cube_info.run_id

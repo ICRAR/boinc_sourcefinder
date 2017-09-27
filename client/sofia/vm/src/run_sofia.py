@@ -24,6 +24,7 @@
 
 # Python script to run SoFiA on a fits file with multiple parameter files
 import os
+import csv
 import time
 import logging
 import logging.handlers
@@ -32,6 +33,62 @@ import gzip
 import tarfile
 import xml.etree.ElementTree as ET
 from threading import Timer
+
+RESULT_COLUMNS = [
+    "parameter_number",
+    "id",
+    "name",
+    "x",
+    "y",
+    "z",
+    "x_geo",
+    "y_geo",
+    "z_geo",
+    "rms",
+    "rel",
+    "x_min",
+    "x_max",
+    "y_min",
+    "y_max",
+    "z_min",
+    "z_max",
+    "n_pix",
+    "n_los",
+    "n_chan",
+    "ra",
+    "dec",
+    "lon",
+    "lat",
+    "freq",
+    "velo",
+    "w20",
+    "w50",
+    "wm50",
+    "f_peak",
+    "f_int",
+    "f_wm50",
+    "ell_maj",
+    "ell_min",
+    "ell_pa",
+    "ell3s_maj",
+    "ell3s_min",
+    "ell3s_pa",
+    "kin_pa",
+    "bf_a",
+    "bf_b1",
+    "bf_b2",
+    "bf_c",
+    "bf_xe",
+    "bf_xp",
+    "bf_w",
+    "bf_chi2",
+    "bf_flag",
+    "bf_z",
+    "bf_w20",
+    "bf_w50",
+    "bf_f_peak",
+    "bf_f_int"
+]
 
 file_system = {
     'sofia': '/root/SoFiA/sofia_pipeline.py',
@@ -97,26 +154,27 @@ def save_csv(results, filename):
     # First, confirm the headers are all the same
     with_results = [result for result in results if result.has_data]
 
+    # Write out the common header
+    # Write out the values for each item in the header
     with open(filename, 'w') as f:
         if len(with_results) == 0:
             # No data at all
             f.write("No sources\n")
         else:
-            # Write out data
-            # Confirm all headings are the same
-            first_result = with_results[0]
-            for result in with_results[1:]:
-                if result.headings != first_result.headings:
-                    raise Exception("Headings don't match for all results")
-                if result.types != first_result.types:
-                    raise Exception("Types don't match for all results")
+            writer = csv.DictWriter(f, RESULT_COLUMNS, restval="null")
 
-            f.write('parameter_number,{0}\n'.format(','.join(first_result.headings)))
-            f.write('int,{0}\n'.format(','.join(first_result.types)))
-
+            writer.writeheader()
             for result in results:
                 for line in result.data:
-                    f.write('{0},{1}\n'.format(result.parameter_number, ','.join(line)))
+                    row = {}
+                    for column in RESULT_COLUMNS:
+                        if column in line:
+                            row[column] = line[column]
+                        else:
+                            row[column] = "null"
+                    row["parameter_number"] = result.parameter_number
+
+                    writer.writerow(row)
 
 
 class SofiaResult:
@@ -130,9 +188,9 @@ class SofiaResult:
         self.has_data = False
         self.parse_error = None
 
-        self.headings = []
-        self.types = []
-        self.data = []
+        self.headings = []  # Each heading from the XML file. In order.
+        self.types = []  # Type of data for each heading
+        self.data = []  # List of dictionaries, with heading: value pairs.
 
         self._parse()
 
@@ -157,10 +215,10 @@ class SofiaResult:
         fields = table.findall("TR")
 
         for field in fields:
-            entry = []
+            entry = {}
             elements = field.findall("TD")
-            for element in elements:
-                entry.append(element.text)
+            for element_idx, element in enumerate(elements):
+                entry[self.headings[element_idx]] = element.text
             self.data.append(entry)
 
     def _parse(self):
