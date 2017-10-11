@@ -251,6 +251,8 @@ class Assimilator:
 
                 self.copy_files(files, result_path)
 
+            LOG.info("Completed assimilate handler\n")
+
         finally:
             self.connection.close()
 

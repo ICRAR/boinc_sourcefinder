@@ -120,7 +120,7 @@ def get_assimilator(AssimilatorBase):
                 # This checks if the folder even exists before trying to remove it.
                 free_temp_directory(result_file)
 
-            LOG.info("Completed result {0}\n".format(result_file))
+            LOG.info("Completed result {0}".format(result_file))
 
             return 0
 
