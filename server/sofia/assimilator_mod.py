@@ -117,6 +117,7 @@ def get_assimilator(AssimilatorBase):
                 return 1  # try again later
 
             finally:
+                # This checks if the folder even exists before trying to remove it.
                 free_temp_directory(result_file)
 
             LOG.info("Completed result {0}\n".format(result_file))
@@ -172,12 +173,18 @@ def get_assimilator(AssimilatorBase):
                 ), OperationalError, 1)  # This fails sometimes for some reason. Just retry it once
 
             # Copy everything in to an S3 bucket.
-            for upload_file in os.listdir(output_directory):
-                s3 = S3Helper(self.config["S3_BUCKET_NAME"])
+            try:
+                for upload_file in os.listdir(output_directory):
+                    s3 = S3Helper(self.config["S3_BUCKET_NAME"])
 
-                path = os.path.join(output_directory, upload_file)
-                key = get_file_upload_key(self.config["APP_NAME"], wu_name, upload_file)
+                    path = os.path.join(output_directory, upload_file)
+                    key = get_file_upload_key(self.config["APP_NAME"], wu_name, upload_file)
 
-                s3.file_upload(path, key)
+                    s3.file_upload(path, key)
+            except Exception as e:
+                # If there's an upload error, don't try re-uploading, just leave it. The data is stored on the server
+                # and in the database anyway.
+                LOG.error('Exception while uploading results to S3: {0}'.format(e.message))
+
 
     return SofiaAssimilator

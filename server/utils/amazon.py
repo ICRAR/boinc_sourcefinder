@@ -22,6 +22,11 @@
 #
 
 import boto3
+import logging
+
+# Disable verbose logging from boto
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
+logging.getLogger('boto3').setLevel(logging.CRITICAL)
 
 
 def get_file_upload_key(app_name, workunit_name, file_name):

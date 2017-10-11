@@ -72,7 +72,7 @@ def remove_path(path):
     try:
         shutil.rmtree(path)
     except OSError as e:
-        if e.errno != errno.EEXIST:
+        if e.errno != errno.ENOENT:
             raise
 
 
@@ -104,7 +104,10 @@ def free_temp_directory(filename):
     raw_hash = hashlib.md5(filename).hexdigest()[:8]
     directory_name = EXTRACT_DIRECTORY_BASE.format(long(raw_hash, 16))
 
-    remove_path(directory_name)
+    try:
+        remove_path(directory_name)
+    except:
+        pass  # Best effort cleanup. If we don't remove it, whatever, it's in the tmp directory anyway.
 
 
 def module_import(module_name, app_name):

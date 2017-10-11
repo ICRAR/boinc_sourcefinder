@@ -30,6 +30,7 @@ class CSVCompare:
 
         self.reason = None  # Reason why the last compare failed
         self.unmatching_row = None  # The row that didn't match
+        self.unmatching_cell = None  # The cell that didn't match
 
         # Load the CSV rows.
         csv_reader = csv.DictReader(csv_data)
@@ -43,17 +44,24 @@ class CSVCompare:
         except ValueError:
             return None
 
-    def _compare_cells(self, row1, row2):
-        for cell1, cell2 in zip(row1, row2):
+    def _compare_cells(self, other, my_row, their_row):
+        count = 0
+
+        for cell1, cell2 in zip(my_row, their_row):
             float1 = self._to_float(cell1)
             float2 = self._to_float(cell2)
 
             if float1 is None and float2 is None:
                 continue  # Skip comparing these
             elif float1 is None or float2 is None:
+                self.unmatching_cell = count
+                other.unmatching_cell = count
                 return False
             elif abs(float1 - float2) > self.threshold:
+                self.unmatching_cell = count
+                other.unmatching_cell = count
                 return False
+            count += 1
         return True
 
     def compare(self, other):
@@ -62,7 +70,7 @@ class CSVCompare:
         for my_row in self.rows:
             found = False
             for other_row in other.rows:
-                if self._compare_cells(my_row.values(), other_row.values()):
+                if self._compare_cells(other, my_row.values(), other_row.values()):
                     found = True
                     break
 
@@ -93,4 +101,15 @@ class CSVCompare:
         except Exception as e:
             self.reason = "Exception: {0}".format(e.message)
 
+        other.reason = self.reason
+
         return self.reason is None
+
+if __name__ == "__main__":
+    import sys
+    with open(sys.argv[1], 'r') as csv1, open(sys.argv[2], 'r') as csv2:
+        compare1 = CSVCompare(csv1)
+        compare2 = CSVCompare(csv2)
+
+        if not compare1 == compare2:
+            print compare1.reason
