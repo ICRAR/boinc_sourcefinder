@@ -176,14 +176,14 @@ def get_parameter_file_generator(base_class):
                 config_string = "# SoFiA Config for sourcefinder: {0}\n".format(filename)
 
                 for idx, field in enumerate(config):
-                    field_format = SOFIA_CONFIG[idx].name
+                    field_format = SOFIA_CONFIG[idx].format
                     output = field
 
                     if field_format.startswith("writeCat.basename"):
                         # Set an incrementing number for the output file name.
                         output = field.format(file_count)
 
-                    config_string += "{0}\n".format(SOFIA_CONFIG[idx].format.format(output))
+                    config_string += "{0}\n".format(field_format.format(output))
 
                 items.append((filename, config_string))
 
