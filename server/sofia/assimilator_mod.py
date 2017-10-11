@@ -174,6 +174,7 @@ def get_assimilator(AssimilatorBase):
 
             # Copy everything in to an S3 bucket.
             try:
+                LOG.info("Uploading result files to S3 bucket: {0}".format(self.config["S3_BUCKET_NAME"]))
                 for upload_file in os.listdir(output_directory):
                     s3 = S3Helper(self.config["S3_BUCKET_NAME"])
 
