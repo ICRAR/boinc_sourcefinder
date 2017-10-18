@@ -35,7 +35,7 @@ import time
 import argparse
 
 from config import get_config
-from utils import module_import
+from utils import module_import, split_wu_name
 from utils.logger import config_logger
 from sqlalchemy import create_engine, select, and_
 from Boinc import database, boinc_db, boinc_project_path, configxml
@@ -199,14 +199,7 @@ class Assimilator:
         """
         CUBE = self.config['database']['CUBE']
 
-        underscore = wu_name.find('_')
-
-        try:
-            run_id = int(wu_name[0:underscore])
-        except ValueError:
-            raise Exception('Malformed WU name {0}'.format(wu_name))
-
-        cube_name = wu_name[underscore + 1:]
+        _, run_id, cube_name = split_wu_name(wu_name)
 
         # First column is the cube ID
         cube = self.connection.execute(select([CUBE]).where(and_(CUBE.c.cube_name == cube_name, CUBE.c.run_id == run_id))).first()

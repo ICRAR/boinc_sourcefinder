@@ -25,7 +25,7 @@
 Validator implementation for SoFiA
 """
 import os
-from utils import run_id_from_result_name
+from utils import split_wu_name
 from utils.logger import config_logger
 from utils.csv_compare import CSVCompare
 from sqlalchemy.engine import create_engine
@@ -58,7 +58,7 @@ def get_init_validator(BaseValidator):
             connection = engine.connect()
             try:
                 result = connection.execute(select([RESULT]).where(RESULT.c.id == result_id)).first()
-                run_id = run_id_from_result_name(result['name'])
+                _, run_id, _ = split_wu_name(result['name'])
             finally:
                 connection.close()
 

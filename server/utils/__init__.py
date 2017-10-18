@@ -82,13 +82,49 @@ def extract_tar(tar, path):
         tf.extractall(path)
 
 
-def run_id_from_result_name(result_name):
-    underscore = result_name.find('_')
+def form_wu_name(app_name, run_id, cube_name):
+    """
+    The wu name format uses the following formatting style:
+    "app_name"_"run_id"_"cube_name"
+    The first underscore marks the end of the app name.
+    The second marks the end of the run id.
+    After the second, the cube name can contain as many underscores as it likes.
+    :param app_name: Name of the app
+    :param run_id: Run ID for the workunit
+    :param cube_name: Cube name for the workunit
+    :return:
+    """
+    # Sanity check app_name
+    if isinstance(app_name, basestring) and "_" in app_name:
+        raise Exception("App name contains underscore!")
+
+    return "{0}_{1}_{2}".format(app_name, run_id, cube_name)
+
+
+def split_wu_name(wu_name):
+    """
+    Splits a work unit name in to an app_name, run_id and cube_name tuple.
+    This will also work on result names, returning a slightly different cube name
+    (with a _1, _2 etc. at the end based on the result)
+    :param wu_name: The work unit name
+    :return: tuple containing the app name, run id and cube name
+    """
 
     try:
-        return int(result_name[0:underscore])
-    except ValueError:
-        raise Exception('Malformed result name {0}\n'.format(result_name))
+        underscore1 = wu_name.find('_')
+        underscore2 = wu_name.find('_', underscore1 + 1)
+
+        if underscore1 == -1 or underscore2 == -1:
+            raise Exception("Bad underscores")
+
+        app_name = wu_name[0:underscore1]
+        run_id = int(wu_name[underscore1 + 1:underscore2])
+        cube_name = wu_name[underscore2 + 1:]
+
+    except Exception as e:
+        raise Exception('Malformed WU name: {0}. {1}'.format(wu_name, e.message))
+
+    return app_name, run_id, cube_name
 
 
 def get_temp_directory(filename):

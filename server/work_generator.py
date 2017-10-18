@@ -32,6 +32,7 @@ import hashlib
 import tarfile
 import shutil
 
+from utils import form_wu_name
 from config import get_config
 from utils.logger import config_logger
 from sqlalchemy.engine import create_engine
@@ -197,13 +198,14 @@ class WorkGenerator:
         :return:
         """
         CUBE = self.config["database"]["CUBE"]
+        app_name = self.config["APP_NAME"]
 
         cube_name = cube_row["cube_name"]
         cube_id = cube_row["cube_id"]
         cube_run_id = cube_row["run_id"]
         cube_abs_path = self.get_cube_path(cube_name)
 
-        wu_name = "{0}_{1}".format(cube_run_id, cube_name)
+        wu_name = form_wu_name(app_name, cube_run_id, cube_name)
         wu_filename = wu_name + ".tar.gz"
         wu_download_path = self.get_download_path(wu_filename)
 
