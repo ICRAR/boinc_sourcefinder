@@ -26,6 +26,7 @@ Module to generate parameter files for Sofia
 """
 import itertools
 from utils.logger import config_logger
+from . import PARAMETERS_STRING
 
 LOG = config_logger(__name__)
 
@@ -160,7 +161,7 @@ SOFIA_CONFIG = [
     ConfigItem("writeCat.writeASCII = {0}", "false"),
     ConfigItem("writeCat.writeXML = {0}", "true"),
     ConfigItem("writeCat.writeSQL = {0}", "false"),
-    ConfigItem("writeCat.parameters = {0}", "['*']")
+    ConfigItem("writeCat.parameters = {0}", "[{0}]".format(PARAMETERS_STRING))
 ]
 
 

@@ -29,62 +29,9 @@ from utils.logger import config_logger
 from sqlalchemy.exc import OperationalError
 from utils.amazon import S3Helper, get_file_upload_key
 from utils import retry_on_exception, extract_tar, get_temp_directory, free_temp_directory
+from . import PARAMETERS as RESULT_COLUMNS
 
 LOG = config_logger(__name__)
-RESULT_COLUMNS = [
-    "id",
-    "name",
-    "x",
-    "y",
-    "z",
-    "x_geo",
-    "y_geo",
-    "z_geo",
-    "rms",
-    "rel",
-    "x_min",
-    "x_max",
-    "y_min",
-    "y_max",
-    "z_min",
-    "z_max",
-    "n_pix",
-    "n_los",
-    "n_chan",
-    "ra",
-    "dec",
-    "lon",
-    "lat",
-    "freq",
-    "velo",
-    "w20",
-    "w50",
-    "wm50",
-    "f_peak",
-    "f_int",
-    "f_wm50",
-    "ell_maj",
-    "ell_min",
-    "ell_pa",
-    "ell3s_maj",
-    "ell3s_min",
-    "ell3s_pa",
-    "kin_pa",
-    "bf_a",
-    "bf_b1",
-    "bf_b2",
-    "bf_c",
-    "bf_xe",
-    "bf_xp",
-    "bf_w",
-    "bf_chi2",
-    "bf_flag",
-    "bf_z",
-    "bf_w20",
-    "bf_w50",
-    "bf_f_peak",
-    "bf_f_int"
-]
 
 
 def get_assimilator(AssimilatorBase):

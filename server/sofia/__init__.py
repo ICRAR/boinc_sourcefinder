@@ -20,3 +20,64 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 #    MA 02111-1307  USA
 #
+
+PARAMETERS = [
+    "id",
+    "name",
+    "x",
+    "y",
+    "z",
+    "x_geo",
+    "y_geo",
+    "z_geo",
+    "rms",
+    "rel",
+    "x_min",
+    "x_max",
+    "y_min",
+    "y_max",
+    "z_min",
+    "z_max",
+    "n_pix",
+    "n_los",
+    "n_chan",
+    "ra",
+    "dec",
+    "lon",
+    "lat",
+    "freq",
+    "velo",
+    "w20",
+    "w50",
+    # "wm50",
+    "f_peak",
+    "f_int",
+    # "f_wm50",
+    "ell_maj",
+    "ell_min",
+    "ell_pa",
+    "ell3s_maj",
+    "ell3s_min",
+    "ell3s_pa",
+    "kin_pa",
+    "bf_a",
+    "bf_b1",
+    "bf_b2",
+    "bf_c",
+    "bf_xe",
+    "bf_xp",
+    "bf_w",
+    "bf_chi2",
+    "bf_flag",
+    "bf_z",
+    "bf_w20",
+    "bf_w50",
+    "bf_f_peak",
+    "bf_f_int"
+]
+
+PARAMETERS_STRING = ""
+for idx, parameter in enumerate(PARAMETERS):
+    PARAMETERS_STRING += "'{0}'".format(parameter)
+    if idx < len(PARAMETERS) - 1:
+        PARAMETERS_STRING += ", "
