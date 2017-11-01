@@ -27,9 +27,11 @@ import os
 
 from utils.logger import config_logger
 from sqlalchemy.exc import OperationalError
+from sqlalchemy import select
 from utils.amazon import S3Helper, get_file_upload_key
 from utils import retry_on_exception, extract_tar, get_temp_directory, free_temp_directory
 from . import PARAMETERS as RESULT_COLUMNS
+from . import form_parameter_file_name
 
 LOG = config_logger(__name__)
 
@@ -81,6 +83,7 @@ def get_assimilator(AssimilatorBase):
 
             RESULT = self.config['database']['RESULT']
             CUBE = self.config['database']['CUBE']
+            PARAMETER_FILE = self.config['database']['PARAMETER_FILE']
             csv_file = os.path.join(output_directory, 'data_collection.csv')
 
             LOG.info("Storing data...")
@@ -97,9 +100,17 @@ def get_assimilator(AssimilatorBase):
                     try:
                         for row in csv_reader:
 
+                            # The parameter_number row from the CSV refers to the number found in the parameter file name
+                            # e.g. supercube_run_0_sofia.par
+                            # We should form a full parameter file name here, and search the DB for its ID.
+                            parameter_file_name = form_parameter_file_name(int(row['parameter_number']))
+                            # Look up the parameter ID in the DB
+                            parameter_entry = self.connection.execute(select([PARAMETER_FILE]).where(PARAMETER_FILE.c.parameter_file_name == parameter_file_name))
+                            id = parameter_entry.fetchone()['parameter_id']
+
                             table_insert = {column: (row[column] if row[column] != "null" else None) for column in RESULT_COLUMNS if column in row}
                             table_insert["cube_id"] = cube_info.id
-                            table_insert["parameter_id"] = int(row['parameter_number'])
+                            table_insert["parameter_id"] = int(id)
                             table_insert["run_id"] = cube_info.run_id
                             table_insert["workunit_name"] = wu_name
 

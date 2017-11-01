@@ -26,7 +26,7 @@ Module to generate parameter files for Sofia
 """
 import itertools
 from utils.logger import config_logger
-from . import PARAMETERS_STRING
+from . import PARAMETERS_STRING, form_parameter_file_name
 
 LOG = config_logger(__name__)
 
@@ -173,7 +173,7 @@ def get_parameter_file_generator(base_class):
             items = []
 
             for file_count, config in enumerate(itertools.product(*SOFIA_CONFIG)):
-                filename = 'supercube_run_{0}_sofia.par'.format(file_count)
+                filename = form_parameter_file_name(file_count)
                 config_string = "# SoFiA Config for sourcefinder: {0}\n".format(filename)
 
                 for idx, field in enumerate(config):

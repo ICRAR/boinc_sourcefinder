@@ -81,3 +81,17 @@ for idx, parameter in enumerate(PARAMETERS):
     PARAMETERS_STRING += "'{0}'".format(parameter)
     if idx < len(PARAMETERS) - 1:
         PARAMETERS_STRING += ", "
+
+
+PARAMETER_FILE_START = 'supercube_run_'
+PARAMETER_FILE_END = '_sofia.par'
+
+
+def form_parameter_file_name(id):
+    return '{0}{1}{2}'.format(PARAMETER_FILE_START,
+                              id,
+                              PARAMETER_FILE_END)
+
+
+def split_parameter_file_name(name):
+    return int(name[len(PARAMETER_FILE_START):-len(PARAMETER_FILE_END)])
