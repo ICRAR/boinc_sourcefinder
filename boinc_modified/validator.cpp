@@ -808,7 +808,7 @@ void usage(char* name) {
 // For use by project-supplied routines check_set() and check_pair()
 //
 int debug_level=0;
-double credit_multiplier = 1.0; // Sourcefinder: Added credit multiplier to temporarily add a credit multiplier to given credits.
+extern double credit_multiplier; // Sourcefinder: Added credit multiplier to temporarily add a credit multiplier to given credits.
 
 int main(int argc, char** argv) {
     int i, retval;

@@ -927,7 +927,7 @@ double vec_min(vector<double>& v) {
     return x;
 }
 
-extern double credit_multiplier; // Sourcefinder
+double credit_multiplier = 1.0; // Sourcefinder
 
 // Called by validator when canonical result has been selected.
 // For each valid result in the list:
