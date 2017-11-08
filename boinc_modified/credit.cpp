@@ -927,6 +927,8 @@ double vec_min(vector<double>& v) {
     return x;
 }
 
+extern double credit_multiplier; // Sourcefinder
+
 // Called by validator when canonical result has been selected.
 // For each valid result in the list:
 // - calculate a peak FLOP count (PFC) and a "mode" that indicates
@@ -1027,8 +1029,6 @@ int assign_credit_set(
         x = pegged_average(normal, wu_estimated_pfc(wu, app));
         break;
     }
-
-    extern double credit_multiplier; // Sourcefinder
 
     x *= COBBLESTONE_SCALE * credit_multiplier; // Sourcefinder
     if (config.debug_credit) {
