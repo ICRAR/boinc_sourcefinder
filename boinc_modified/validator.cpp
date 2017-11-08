@@ -864,7 +864,7 @@ int main(int argc, char** argv) {
             wu_id = atoi(argv[++i]);
             one_pass = true;
         } else if (is_arg(argv[i], "credit_multiplier")) { // Sourcefinder
-            credit_multiplier = atod(argv[++i]);           // Sourcefinder
+            credit_multiplier = atof(argv[++i]);           // Sourcefinder
         } else {
             // unknown arg - pass to handler
             argv[j++] = argv[i];
