@@ -74,7 +74,8 @@ def get_init_validator(BaseValidator):
             # Check that data collection.csv and log.txt are present
             files = os.listdir(file_directory)
 
-            LOG.info("Files provided: {0}".format(files))
+            # Too many files to print.
+            # LOG.info("Files provided: {0}".format(files))
 
             for f in OUTPUT_FILES:
                 if f not in files:
