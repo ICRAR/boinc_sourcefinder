@@ -29,7 +29,7 @@ import argparse
 
 from config import get_config
 from utils.logger import config_logger
-from sqlalchemy import create_engine, select, func
+from sqlalchemy import create_engine, select
 
 LOG = config_logger(__name__)
 

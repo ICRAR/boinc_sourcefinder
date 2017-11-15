@@ -211,10 +211,11 @@ class WorkGenerator:
 
         LOG.info("Start: {0}".format(cube_name))
 
-        # Copy the cube to the download directory
+        # Link the cube to the download directory
         if not os.path.exists(wu_download_path):
             LOG.info("Copying: {0} to {1}".format(cube_abs_path, wu_download_path))
-            shutil.copyfile(cube_abs_path, wu_download_path)
+            os.symlink(cube_abs_path, wu_download_path)
+            # shutil.copyfile(cube_abs_path, wu_download_path)
         else:
             LOG.info("Cube already exists in download folder")
 

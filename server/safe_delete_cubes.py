@@ -80,6 +80,9 @@ class CubeDeleteEntry:
         self.progresses.append(progress)
         self.symlink_paths.append(path)
 
+    def __str__(self):
+        return "{0}: {1}, {2}".format(self.cube_path, self.progresses, self.symlink_paths)
+
 
 class CubeDeleter:
     def __init__(self, config, app_name):
@@ -121,6 +124,7 @@ class CubeDeleter:
             cubes = self.connection.execute(select([CUBE]))
             delete_entries = self.create_delete_entries(cubes)
             for entry in delete_entries:
+                print entry
                 if entry.can_delete():
                     if dont_delete:
                         print "Would remove: {0}".format(entry.cube_path)
@@ -142,6 +146,8 @@ if __name__ == '__main__':
     arguments = parse_args()
     app_name = arguments['app']
     dont_delete = arguments['dont_delete']
+
+    print arguments
 
     config = get_config(app_name)
 
