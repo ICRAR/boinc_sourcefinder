@@ -160,7 +160,7 @@ def parse_args():
     # e.g. 4 1 means "this run contains the first quarter of all parameters.
     args = vars(parser.parse_args())
 
-    if args['part'] > args['divisions'] or args['part'] < 0:
+    if args['part'] >= args['divisions'] or args['part'] < 0:
         print "Invalid part. Must be lower than divisions and greater than 0."
         exit(1)
 
