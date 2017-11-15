@@ -107,6 +107,7 @@ class CubeDeleter:
 
             if cube_name not in delete_entries:
                 delete_entry = CubeDeleteEntry(cube_path)
+                delete_entries[cube_name] = delete_entry
             else:
                 delete_entry = delete_entries[cube_name]
 
