@@ -212,8 +212,11 @@ class WorkGenerator:
         LOG.info("Start: {0}".format(cube_name))
 
         # Copy the cube to the download directory
-        LOG.info("Copying: {0} to {1}".format(cube_abs_path, wu_download_path))
-        shutil.copyfile(cube_abs_path, wu_download_path)
+        if not os.path.exists(wu_download_path):
+            LOG.info("Copying: {0} to {1}".format(cube_abs_path, wu_download_path))
+            shutil.copyfile(cube_abs_path, wu_download_path)
+        else:
+            LOG.info("Cube already exists in download folder")
 
         # Ensure the parameter file for this run exists
         parameter_tar_file_name = self.compress_parameters(cube_run_id)
