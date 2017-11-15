@@ -161,7 +161,7 @@ def parse_args():
     args = vars(parser.parse_args())
 
     if args['part'] >= args['divisions'] or args['part'] < 0:
-        print "Invalid part. Must be lower than divisions and greater than 0."
+        print "Invalid part. Must be lower than divisions and at least 0."
         exit(1)
 
     return args
