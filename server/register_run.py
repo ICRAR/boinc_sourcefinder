@@ -89,7 +89,7 @@ class RunRegister:
         start = part * division_size
         end = start + division_size
 
-        if part == divisions:
+        if part == divisions - 1:
             end += size % divisions
 
         return [p for p in parameter_ids[start:end] if p not in exists]
