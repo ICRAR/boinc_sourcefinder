@@ -80,7 +80,7 @@ class RunRegister:
                      for item
                      in self.connection.execute(select([PARAMETER_RUN.c.parameter_id]).where(PARAMETER_RUN.c.run_id == run_id)))
 
-        parameter_ids = [p for p in self.connection.execute(select([PARAMETER_FILE.c.parameter_id]))]
+        parameter_ids = [int(p['parameter_id']) for p in self.connection.execute(select([PARAMETER_FILE.c.parameter_id]))]
 
         # Divide the total number of parameter files up in to segments, then pull out the segment we're going to use
         size = len(parameter_ids)
