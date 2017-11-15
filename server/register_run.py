@@ -101,7 +101,7 @@ class RunRegister:
         :param parameter_ids: The parameter IDs to register
         :return:
         """
-        PARAMETER_RUN = self.config["database"]["PARAMETER_FILE"]
+        PARAMETER_RUN = self.config["database"]["PARAMETER_RUN"]
 
         transaction = self.connection.begin()
 
