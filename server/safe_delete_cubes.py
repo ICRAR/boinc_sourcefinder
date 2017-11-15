@@ -103,7 +103,7 @@ class CubeDeleter:
             progress = cube["progress"]
             run_id = cube["run_id"]
             symlink = form_wu_name(self.app_name, run_id, cube_name)
-            cube_path = os.path.join(self.config["DIR_CUBE"], cube_name, ".fits")
+            cube_path = os.path.join(self.config["DIR_CUBE"], cube_name + ".fits")
 
             if cube_name not in delete_entries:
                 delete_entry = CubeDeleteEntry(cube_path)
@@ -126,7 +126,6 @@ class CubeDeleter:
             print "Cube count: {0}".format(len(cubes))
             delete_entries = self.create_delete_entries(cubes)
             for entry in delete_entries:
-                print entry
                 if entry.can_delete():
                     if dont_delete:
                         print "Would remove: {0}".format(entry.cube_path)
