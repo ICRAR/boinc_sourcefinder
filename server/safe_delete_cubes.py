@@ -121,7 +121,8 @@ class CubeDeleter:
 
         try:
             # Look through all cubes
-            cubes = self.connection.execute(select([CUBE]))
+            cubes = [c for c in self.connection.execute(select([CUBE]))]
+            print "Cube count: {0}".format(len(cubes))
             delete_entries = self.create_delete_entries(cubes)
             for entry in delete_entries:
                 print entry
