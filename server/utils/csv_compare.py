@@ -34,7 +34,7 @@ class CSVCompare:
 
         # Load the CSV rows.
         csv_reader = csv.DictReader(csv_data)
-        self.rows = [r for r in csv_reader]
+        self.rows = sorted(csv_reader, key=lambda d: (float(d['parameter_number']), float(d['id'])))
         self.cell_count = sum([len(c) for c in self.rows])
 
     @staticmethod
@@ -67,15 +67,9 @@ class CSVCompare:
     def compare(self, other):
         self.unmatching_row = None
         # Search for a matching rows. All of my rows must match with one of their rows.
-        for my_row in self.rows:
-            found = False
-            for other_row in other.rows:
-                if self._compare_cells(other, my_row.values(), other_row.values()):
-                    found = True
-                    break
-
-            if not found:
-                self.unmatching_row = my_row
+        for i, (my_row, other_row) in enumerate(zip(self.rows, other.rows)):
+            if not self._compare_cells(other, my_row.values(), other_row.values()):
+                self.unmatching_row = i + 2  # 1 for heading, 1 for zero indexing.
                 return False
 
         return True
@@ -96,7 +90,9 @@ class CSVCompare:
             elif self.cell_count != other.cell_count:
                 self.reason = "Length of cells differs: {0}, to {1}".format(self.cell_count, other.cell_count)
             elif not self.compare(other):
-                self.reason = "Row doesn't have matching row in other: \n {0}".format(self.unmatching_row)
+                self.reason = "Sorted CSVs don't match at row {0}\n{1}\n{2}".format(self.unmatching_row,
+                                                                                    self.rows[self.unmatching_row],
+                                                                                    other.rows[self.unmatching_row])
 
         except Exception as e:
             self.reason = "Exception: {0}".format(e.message)
