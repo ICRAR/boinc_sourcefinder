@@ -141,7 +141,7 @@ def get_assimilator(AssimilatorBase):
                     tf.add(os.path.join(output_directory, upload_file), upload_file)
 
             LOG.info("Adding tar file {0} to upload queue...".format(tarname))
-            key = get_file_upload_key(self.config["APP_NAME"], wu_name, tarname)
+            key = get_file_upload_key(self.config["APP_NAME"], wu_name, os.path.basename(tarname))
             self.queue_file_upload(tarname, key)
 
 
