@@ -24,6 +24,7 @@
 
 import csv
 import os
+import tarfile
 
 from utils.logger import config_logger
 from sqlalchemy.exc import OperationalError
@@ -132,11 +133,16 @@ def get_assimilator(AssimilatorBase):
 
             # Queue files for upload
             upload_files = os.listdir(output_directory)
-            for upload_file in upload_files:
-                path = os.path.join(output_directory, upload_file)
-                key = get_file_upload_key(self.config["APP_NAME"], wu_name, upload_file)
-                self.queue_file_upload(path, key)
+            LOG.info("Compressing {0} files for upload...".format(len(upload_files)))
 
-            LOG.info("Queueing {0} files for upload...".format(len(upload_files)))
+            tarname = os.path.join(output_directory, "archive.tar.gz")
+            with tarfile.open(tarname, 'w:gz') as tf:
+                for upload_file in upload_files:
+                    tf.add(os.path.join(output_directory, upload_file), upload_file)
+
+            LOG.info("Adding tar file {0} to upload queue...".format(tarname))
+            key = get_file_upload_key(self.config["APP_NAME"], wu_name, tarname)
+            self.queue_file_upload(tarname, key)
+
 
     return SofiaAssimilator
