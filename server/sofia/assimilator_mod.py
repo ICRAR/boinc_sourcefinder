@@ -131,9 +131,12 @@ def get_assimilator(AssimilatorBase):
                 ), OperationalError, 1)  # This fails sometimes for some reason. Just retry it once
 
             # Queue files for upload
-            for upload_file in os.listdir(output_directory):
+            upload_files = os.listdir(output_directory)
+            for upload_file in upload_files:
                 path = os.path.join(output_directory, upload_file)
                 key = get_file_upload_key(self.config["APP_NAME"], wu_name, upload_file)
                 self.queue_file_upload(path, key)
+
+            LOG.info("Queueing {0} files for upload...".format(len(upload_files)))
 
     return SofiaAssimilator

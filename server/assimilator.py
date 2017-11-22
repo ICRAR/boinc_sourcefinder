@@ -47,6 +47,7 @@ LOG = config_logger(__name__)
 COMPLETED_RESULT_PATH = '/home/ec2-user/completed_results'
 FILE_UPLOAD_STAGING_PATH = '/home/ec2-user/s3_upload_staging'
 MAX_FILE_UPLOAD_NAME_COUNT = 1000
+FILE_UPLOAD_CHECKIN = 10
 
 
 class FileUploadJob:
@@ -63,6 +64,7 @@ class FileUploadJob:
             os.remove(self.local_path)
         except Exception as e:
             LOG.error("Failed to upload file: {0}. {1}".format(self.local_path, e.message))
+
 
 class CubeInfo:
     """
@@ -124,15 +126,14 @@ class Assimilator:
         """
 
         if self.caught_sig_int:
-            LOG.debug("Caught SIGINT")
+            LOG.info("Caught SIGINT")
             return True
 
-        try:
-            open(self.STOP_TRIGGER_FILENAME, 'r')
-            LOG.debug("Found stop trigger")
+        if os.path.exists(self.STOP_TRIGGER_FILENAME):
+            LOG.info("Found stop trigger")
             return True
-        except IOError:
-            return False
+
+        return False
 
     def sigint_handler(self, sig, stack):
         """
@@ -373,6 +374,10 @@ class Assimilator:
             if self.one_pass_N_WU > 0 and n > self.one_pass_N_WU:
                 return did_something
 
+            if n % FILE_UPLOAD_CHECKIN == 0:
+                # Report how the file uploader is going
+                LOG.info("File upload report: {0} uploads pending".format(self.upload_job_queue.qsize()))
+
             # only mark as dirty if the database is modified
             if self.update_db:
                 did_something = True
@@ -438,12 +443,14 @@ class Assimilator:
 
                 if workdone is None:
                     # Indicates that the stop trigger was fired and we should quit.
+                    LOG.info("Stop trigger fired, exiting main loop...")
                     break
 
                 if not workdone:
                     # LOG.info("No work, sleeping for {0}...\n".format(self.sleep_interval))
                     time.sleep(self.sleep_interval)
 
+        LOG.info("Finishing upload queue: {0} entries".format(self.upload_job_queue.qsize()))
         self.upload_job_queue.join()
 
         return 0

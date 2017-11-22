@@ -52,14 +52,14 @@ class Consumer(Process):
         Sit in a loop
         """
         while True:
-            LOGGER.info('Getting a task')
+            # LOGGER.info('Getting a task')
             next_task = self._queue.get()
             if next_task is None:
                 # Poison pill means shutdown this consumer
                 LOGGER.info('Exiting consumer')
                 self._queue.task_done()
                 return
-            LOGGER.info('Executing the task')
+            # LOGGER.info('Executing the task')
             # noinspection PyBroadException
             try:
                 next_task()
