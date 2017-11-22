@@ -26,12 +26,12 @@
 Deletes cubes from the sf_cubes directory safely once all runs are done processing the cube
 """
 import os
-import shutil
 import argparse
 
 from config import get_config
 from utils import form_wu_name
 from sqlalchemy import create_engine, select
+
 
 class CubeDeleteEntry:
     """

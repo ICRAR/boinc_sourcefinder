@@ -35,15 +35,34 @@ import time
 import argparse
 
 from config import get_config
-from utils import module_import, split_wu_name
+from utils import module_import, split_wu_name, make_path
+from utils.job import JobQueue, Consumer
 from utils.logger import config_logger
+from utils.amazon import S3Helper
 from sqlalchemy import create_engine, select, and_
 from Boinc import database, boinc_db, boinc_project_path, configxml
 
 MODULE = "assimilator_mod"
 LOG = config_logger(__name__)
 COMPLETED_RESULT_PATH = '/home/ec2-user/completed_results'
+FILE_UPLOAD_STAGING_PATH = '/home/ec2-user/s3_upload_staging'
+MAX_FILE_UPLOAD_NAME_COUNT = 1000
 
+
+class FileUploadJob:
+    def __init__(self, bucket_name, local_path, remote_path):
+        self.bucket_name = bucket_name
+        self.local_path = local_path
+        self.remote_path = remote_path
+
+    def __call__(self, *args, **kwargs):
+        try:
+            # Upload the file, then remove the local copy.
+            s3 = S3Helper(self.bucket_name)
+            s3.file_upload(self.local_path, self.remote_path)
+            os.remove(self.local_path)
+        except Exception as e:
+            LOG.error("Failed to upload file: {0}. {1}".format(self.local_path, e.message))
 
 class CubeInfo:
     """
@@ -91,6 +110,7 @@ class Assimilator:
         self.one_pass_N_WU = args['one_pass_N_WU']
         self.appname = args['app']
         self.sleep_interval = args['sleep_interval']
+        self.upload_job_queue = JobQueue(args['processes'])
 
         self.engine = None
         self.connection = None
@@ -102,15 +122,17 @@ class Assimilator:
            1) if the SIGINT signal is received
            2) if the stop trigger file is present
         """
+
+        if self.caught_sig_int:
+            LOG.debug("Caught SIGINT")
+            return True
+
         try:
             open(self.STOP_TRIGGER_FILENAME, 'r')
-        except IOError:
-            if self.caught_sig_int:
-                LOG.debug("Caught SIGINT")
-                sys.exit(1)
-        else:
             LOG.debug("Found stop trigger")
-            sys.exit(1)
+            return True
+        except IOError:
+            return False
 
     def sigint_handler(self, sig, stack):
         """
@@ -209,9 +231,39 @@ class Assimilator:
 
         return CubeInfo(run_id, cube_name, cube)
 
+    def queue_file_upload(self, local_path, remote_path):
+        """
+        Queues a file for uploading to amazon.
+        :param local_path:
+        :param remote_path:
+        :return:
+        """
+        # Move the file to an uploads folder, ensure the filename is unique
+        make_path(FILE_UPLOAD_STAGING_PATH)
+
+        basename = os.path.basename(local_path)
+        file_upload_path = os.path.join(FILE_UPLOAD_STAGING_PATH, basename)
+
+        count = 0
+        while os.path.exists(file_upload_path):
+            if count > MAX_FILE_UPLOAD_NAME_COUNT:
+                LOG.error("Hit max file upload name count when trying to upload: {0}".format(local_path))
+                # Ok something is severely wrong, we'll have to upload the file directly.
+                job = FileUploadJob(self.config['S3_BUCKET_NAME'], local_path, remote_path)
+                job()
+                return
+
+            file_upload_path = os.path.join(FILE_UPLOAD_STAGING_PATH, "{0}_{1}".format(count, basename))
+            count += 1
+
+        # Move the file over to this path
+        shutil.move(local_path, file_upload_path)
+
+        # We have a local path and a remote path, so queue the upload job properly
+        self.upload_job_queue.put(FileUploadJob(self.config['S3_BUCKET_NAME'], file_upload_path, remote_path))
+
     def assimilate_handler(self, wu, results, canonical_result):
         """
-
         :param wu:
         :param results:
         :param canonical_result:
@@ -291,17 +343,25 @@ class Assimilator:
 
         did_something = False
         # check for stop trigger
-        self.check_stop_trigger()
+        if self.check_stop_trigger():
+            return None
         self.pass_count += 1
         n = 0
 
         units = database.Workunits.find(app=app, assimilate_state=boinc_db.ASSIMILATE_READY)
 
-        # self.logDebug("pass %d, units %d\n", self.pass_count, len(units))
+        LOG.debug("pass {0}, units {1}\n".format(self.pass_count, len(units)))
+
+        # For threading the assimilator, it'd be a simple matter of building a job queue here
+        # and placing each of the work units on to the job queue
 
         # look for workunits with correct appid and
         # assimilate_state==ASSIMILATE_READY
         for wu in units:
+
+            if self.check_stop_trigger():
+                return None
+
             # if the user has turned on the WU mod flag, adhere to it
             if self.wu_id_mod > 0:
                 if wu.id % self.wu_id_mod != self.wu_id_remainder:
@@ -364,6 +424,8 @@ class Assimilator:
 
         signal.signal(signal.SIGINT, self.sigint_handler)
 
+        self.upload_job_queue.start()
+
         # do one pass or execute main loop
         if self.one_pass:
             self.do_pass(app)
@@ -373,9 +435,16 @@ class Assimilator:
                 database.connect()
                 workdone = self.do_pass(app)
                 database.close()
+
+                if workdone is None:
+                    # Indicates that the stop trigger was fired and we should quit.
+                    break
+
                 if not workdone:
                     # LOG.info("No work, sleeping for {0}...\n".format(self.sleep_interval))
                     time.sleep(self.sleep_interval)
+
+        self.upload_job_queue.join()
 
         return 0
 
@@ -458,6 +527,7 @@ def parse_args():
     parser.add_argument('--one_pass_N_WU', type=int, default=0, help='Process this many work units.')
     parser.add_argument('--mod', type=int, default=0, help='Only process work units with this mod remainder.')
     parser.add_argument('--flat', type=str, default=None, help='Run the assimilator on this file, rather than on pending results')
+    parser.add_argument('--processes', type=int, default=1, help='Number of processes to handle file uploads with.')
     args = vars(parser.parse_args())
 
     return args

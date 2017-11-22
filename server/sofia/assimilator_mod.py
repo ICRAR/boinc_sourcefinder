@@ -28,7 +28,7 @@ import os
 from utils.logger import config_logger
 from sqlalchemy.exc import OperationalError
 from sqlalchemy import select
-from utils.amazon import S3Helper, get_file_upload_key
+from utils.amazon import get_file_upload_key
 from utils import retry_on_exception, extract_tar, get_temp_directory, free_temp_directory
 from . import PARAMETERS as RESULT_COLUMNS
 from . import form_parameter_file_name
@@ -130,20 +130,10 @@ def get_assimilator(AssimilatorBase):
                     self.connection.execute(CUBE.update().where(CUBE.c.cube_id == cube_info.id).values(progress=2))
                 ), OperationalError, 1)  # This fails sometimes for some reason. Just retry it once
 
-            # Copy everything in to an S3 bucket.
-            try:
-                LOG.info("Uploading result files to S3 bucket: {0}".format(self.config["S3_BUCKET_NAME"]))
-                for upload_file in os.listdir(output_directory):
-                    s3 = S3Helper(self.config["S3_BUCKET_NAME"])
-
-                    path = os.path.join(output_directory, upload_file)
-                    key = get_file_upload_key(self.config["APP_NAME"], wu_name, upload_file)
-
-                    s3.file_upload(path, key)
-            except Exception as e:
-                # If there's an upload error, don't try re-uploading, just leave it. The data is stored on the server
-                # and in the database anyway.
-                LOG.error('Exception while uploading results to S3: {0}'.format(e.message))
-
+            # Queue files for upload
+            for upload_file in os.listdir(output_directory):
+                path = os.path.join(output_directory, upload_file)
+                key = get_file_upload_key(self.config["APP_NAME"], wu_name, upload_file)
+                self.queue_file_upload(path, key)
 
     return SofiaAssimilator
