@@ -81,7 +81,7 @@ class CubeDeleteEntry:
         :return:
         """
         self.progresses.append(progress)
-        if os.path.islink(path):
+        if os.path.exists(path):
             self.symlink_paths.append(path)
 
     def __str__(self):
