@@ -130,6 +130,7 @@ class CubeDeleter:
                     if dont_delete:
                         print "Would remove: {0}".format(entry.cube_path)
                     else:
+                        print "Deleting: {0}".format(entry.cube_path)
                         entry.delete()
         finally:
             self.connection.close()
