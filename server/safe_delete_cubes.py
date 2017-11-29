@@ -63,13 +63,13 @@ class CubeDeleteEntry:
         for filename in self.symlink_paths:
             try:
                 os.unlink(filename)
-            except:
-                pass
+            except Exception as e:
+                print "Error unlinking {0}".format(e.message)
 
         try:
             os.remove(self.cube_path)
-        except:
-            pass
+        except Exception as e:
+            print "Error deleting {0}".format(e.message)
 
     def add(self, progress, path):
         """
