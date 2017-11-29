@@ -27,6 +27,7 @@ Deletes cubes from the sf_cubes directory safely once all runs are done processi
 """
 import os
 import argparse
+import hashlib
 
 from config import get_config
 from utils import form_wu_name
@@ -63,6 +64,8 @@ class CubeDeleteEntry:
         for filename in self.symlink_paths:
             try:
                 os.unlink(filename)
+                # Boinc places an MD5 file in there too.
+                os.remove(filename + ".md5")
             except Exception as e:
                 print "Error unlinking {0}".format(e.message)
 
@@ -93,7 +96,30 @@ class CubeDeleter:
         self.config = config
         self.engine = None
         self.connection = None
+        self.download_dir = config["DIR_DOWNLOAD"]
+        self.fanout = config["FANOUT"]
         self.app_name = app_name
+
+    def get_download_path(self, filename):
+        """
+        Kevins code for hashing the download directory
+        :param filename: Filename to get the download path for
+        :return: Boinc download path for the provided filename
+        """
+        s = hashlib.md5(filename).hexdigest()[:8]
+        x = long(s, 16)
+
+        # Create the directory if needed
+        hash_dir_name = os.path.join(self.download_dir, "%x" % (x % self.fanout))
+        if os.path.isfile(hash_dir_name):
+            pass
+        elif os.path.isdir(hash_dir_name):
+            pass
+        else:
+            os.mkdir(hash_dir_name)
+
+        # "%s/%x/%s" % (self.download_dir, x % self.fanout, filename)
+        return os.path.join(hash_dir_name, filename)
 
     def create_delete_entries(self, cubes):
         delete_entries = {}
@@ -102,8 +128,10 @@ class CubeDeleter:
             cube_name = cube["cube_name"]
             progress = cube["progress"]
             run_id = cube["run_id"]
-            symlink = form_wu_name(self.app_name, run_id, cube_name)
-            cube_path = os.path.join(self.config["DIR_CUBE"], cube_name + ".fits")
+            symlink = form_wu_name(self.app_name, run_id, cube_name) + ".tar.gz"
+            cube_path = os.path.join(self.config["DIR_CUBE"], cube_name + ".fits.gz")
+
+            symlink = self.get_download_path(symlink)
 
             if cube_name not in delete_entries:
                 delete_entry = CubeDeleteEntry(cube_path)
@@ -128,7 +156,7 @@ class CubeDeleter:
             for entry in delete_entries:
                 if entry.can_delete():
                     if dont_delete:
-                        print "Would remove: {0}".format(entry.cube_path)
+                        print "Would remove: {0}".format(entry)
                     else:
                         print "Deleting: {0}".format(entry.cube_path)
                         entry.delete()
