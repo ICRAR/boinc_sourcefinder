@@ -125,7 +125,7 @@ class DatabaseExporter:
                 name = parameter["parameter_file_name"]
                 if name not in results_parameters:
                     # Get the contents of this file
-                    with open(os.path.join(path, name), 'w') as f:
+                    with open(os.path.join(path, name), 'r') as f:
                         contents = f.read()
 
                     self.results_connection.execute(PARAMETERS.insert(),
