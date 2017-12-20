@@ -116,7 +116,7 @@ class DatabaseExporter:
         # Set of parameters in the app's db
         parameters = self.connection.execute(select([PARAMETER_FILE]))
         # Set of parameters that already exist in the results DB
-        results_parameters = set(item["name"] for item in self.results_connection.execute(select[PARAMETERS]))
+        results_parameters = set(item["name"] for item in self.results_connection.execute(select([PARAMETERS])))
 
         # Go through each parameter in the app's db and add it to
         # the results DB if it doesn't already exist there
