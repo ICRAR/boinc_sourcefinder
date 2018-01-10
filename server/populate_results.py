@@ -46,8 +46,8 @@ MODULE = "populate_results_mod"
 class ResultsPopulator:
     def __init__(self, config, args):
         self.config = config
-        self.category = args.category
-        self.run_ids = args.run_ids
+        self.category = args["category"]
+        self.run_ids = args["run_ids"]
 
         self.engine = None
         self.connection = None
