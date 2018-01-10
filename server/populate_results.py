@@ -70,11 +70,13 @@ class ResultsPopulator:
             filename = f['parameter_file_name']
             path = os.path.join(self.config["DIR_PARAM"], filename)
 
+            print path
+
             with open(path, 'r') as parameter_file:
                 data = parameter_file.read()
 
             if self.connection_result.execute(select([PARAMETERS]).where(PARAMETERS.c.name == filename)).fetchone() is None:
-                print "Adding parameter {0} to database. Size: {1}".format(filename, data)
+                print "Adding parameter {0} to database. Size: {1}".format(filename, len(data))
                 self.connection_result.execute(PARAMETERS.insert(), name=filename, category_id=self.category_id, text=data)
 
 
