@@ -100,7 +100,7 @@ class ResultsPopulator:
         self.connection = engine.connect()
         self.connection_result = engine_result.connect()
 
-        category = self.connection_result.execute(select([CATEGORY]).where(CATEGORY.c.name == self.config["category"])).fetchone()
+        category = self.connection_result.execute(select([CATEGORY]).where(CATEGORY.c.name == self.category)).fetchone()
 
         if category is None:
             raise Exception('Invalid category provided.')
