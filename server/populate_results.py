@@ -66,6 +66,8 @@ class ResultsPopulator:
         """
         PARAMETER_FILE = self.config["database"]["PARAMETER_FILE"]
 
+        print "Loading parameters"
+
         for f in self.connection.execute(select([distinct(PARAMETER_FILE.c.parameter_file_name)])):
             # Insert parameters that don't already exist in the results DB.
             filename = f['parameter_file_name']
@@ -85,6 +87,8 @@ class ResultsPopulator:
         :return:
         """
         CUBE = self.config["database"]["CUBE"]
+
+        print "Loading cubes"
 
         for c in self.connection.execute(select([CUBE]).where(CUBE.c.run_id in self.run_ids and CUBE.c.progress == 2)):
             # These are all cubes that are within the specified run IDs and have been completed
@@ -114,6 +118,8 @@ class ResultsPopulator:
             raise Exception('Invalid category provided.')
 
         self.category_id = category["id"]
+
+        print "Run IDs: {0}".format(self.run_ids)
 
         self._load_parameter_files()
         self._load_cubes()
