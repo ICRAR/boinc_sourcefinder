@@ -43,6 +43,7 @@ from sqlalchemy import create_engine, select, distinct
 MODULE = "populate_results_mod"
 PARAMETERS = results_db["PARAMETERS"]
 CATEGORY = results_db["CATEGORY"]
+CUBELET = results_db["CUBELET"]
 
 
 class ResultsPopulator:
@@ -70,8 +71,6 @@ class ResultsPopulator:
             filename = f['parameter_file_name']
             path = os.path.join(self.config["DIR_PARAM"], filename)
 
-            print path
-
             with open(path, 'r') as parameter_file:
                 data = parameter_file.read()
 
@@ -79,14 +78,21 @@ class ResultsPopulator:
                 print "Adding parameter {0} to database. Size: {1}".format(filename, len(data))
                 self.connection_result.execute(PARAMETERS.insert(), name=filename, category_id=self.category_id, text=data)
 
-
     def _load_cubes(self):
         """
         Get all cubes in the specified runs that have a progress of 2. (Completed cubes)
         Load each in to the results database.
         :return:
         """
-        pass
+        CUBE = self.config["database"]["CUBE"]
+
+        for c in self.connection.execute(select([CUBE]).where(CUBE.c.run_id in self.run_ids and CUBE.c.progress == 2)):
+            # These are all cubes that are within the specified run IDs and have been completed
+            name = c["cube_name"]
+
+            if self.connection_result.execute(select([CUBELET]).where(CUBELET.c.name == name)).fetchone() is None:
+                print "Adding cube {0} to database.".format(name)
+                self.connection_result.execute(CUBELET.insert(), name=name, category_id=self.category_id, ra=c["ra"], dec=c["declin"], freq=c["freq"])
 
     def _load_results(self):
         """
