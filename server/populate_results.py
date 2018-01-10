@@ -49,8 +49,8 @@ class ResultsPopulator:
         self.category = args["category"]
         self.run_ids = args["run_ids"]
 
-        self.engine = None
         self.connection = None
+        self.connection_result = None
 
         pass
 
@@ -71,9 +71,9 @@ class ResultsPopulator:
             with open(path, 'r') as parameter_file:
                 data = parameter_file.read()
 
-            if not self.connection.execute(select([PARAMETERS]).where(PARAMETERS.c.name == filename)).fetchone():
+            if not self.connection_result.execute(select([PARAMETERS]).where(PARAMETERS.c.name == filename)).fetchone():
                 print "Adding parameter {0} to database".format(filename)
-                self.connection.execute(PARAMETERS.insert(), name=filename, text=data)
+                self.connection_result.execute(PARAMETERS.insert(), name=filename, text=data)
 
 
     def _load_cubes(self):
@@ -92,8 +92,10 @@ class ResultsPopulator:
         pass
 
     def __call__(self):
-        self.engine = create_engine(self.config['DB_LOGIN'])
-        self.connection = self.engine.connect()
+        engine = create_engine(self.config['DB_LOGIN'])
+        engine_result = create_engine(self.config["BASE_DB_LOGIN"] + 'sourcefinder_results')
+        self.connection = engine.connect()
+        self.connection_result = engine_result.connect()
 
         self._load_parameter_files()
         self._load_cubes()
