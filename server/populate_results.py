@@ -90,13 +90,16 @@ class ResultsPopulator:
 
         print "Loading cubes"
 
-        for c in self.connection.execute(select([CUBE]).where(CUBE.c.run_id in self.run_ids and CUBE.c.progress == 2)):
-            # These are all cubes that are within the specified run IDs and have been completed
-            name = c["cube_name"]
+        for r in self.run_ids:
+            print "Run ID: {0}".format(r)
 
-            if self.connection_result.execute(select([CUBELET]).where(CUBELET.c.name == name)).fetchone() is None:
-                print "Adding cube {0} to database.".format(name)
-                self.connection_result.execute(CUBELET.insert(), name=name, category_id=self.category_id, ra=c["ra"], dec=c["declin"], freq=c["freq"])
+            for c in self.connection.execute(select([CUBE]).where(CUBE.c.run_id == r and CUBE.c.progress == 2)):
+                # These are all cubes that are within the specified run IDs and have been completed
+                name = c["cube_name"]
+
+                if self.connection_result.execute(select([CUBELET]).where(CUBELET.c.name == name)).fetchone() is None:
+                    print "Adding cube {0} to database.".format(name)
+                    self.connection_result.execute(CUBELET.insert(), name=name, category_id=self.category_id, ra=c["ra"], dec=c["declin"], freq=c["freq"])
 
     def _load_results(self):
         """
