@@ -140,6 +140,8 @@ class ResultsPopulator:
             try:
                 result_parameter_id = self._get_result_parameter_id(result["parameter_id"])
 
+                print "Loading result {0}".format(result["result_id"])
+
                 if self.connection_result.execute(select([SOURCE]).where(SOURCE.c.original_id == result["result_id"])) is None:
                     self.connection_result.execute(SOURCE.insert(),
                                                    cubelet_id=cube_id,
