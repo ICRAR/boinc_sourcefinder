@@ -72,6 +72,7 @@ class ResultsPopulator:
                 data = parameter_file.read()
 
             if not self.connection.execute(select([PARAMETERS]).where(PARAMETERS.c.name == filename)).fetchone():
+                print "Adding parameter {0} to database".format(filename)
                 self.connection.execute(PARAMETERS.insert(), name=filename, text=data)
 
 
