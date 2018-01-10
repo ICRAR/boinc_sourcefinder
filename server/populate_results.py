@@ -125,9 +125,9 @@ class ResultsPopulator:
                 else:
                     cube_insert["id"] = existing_cube["id"]
 
-                self._load_results(cube_insert)
+                self._load_results(cube["cube_id"], cube_insert)
 
-    def _load_results(self, cube):
+    def _load_results(self, original_cube_id, cube):
         """
         Get all results for cubes in the specified runs that have a progress of 2. (Results for cubes).
         Load each in to the results database.
@@ -137,7 +137,7 @@ class ResultsPopulator:
 
         print "Loading results for {0}".format(cube["name"])
 
-        for result in self.connection.execute(select([RESULT]).where(RESULT.c.cube_id == cube_id)):
+        for result in self.connection.execute(select([RESULT]).where(RESULT.c.cube_id == original_cube_id)):
             # Get the parameters associated with this result
             try:
                 result_parameter_id = self._get_result_parameter_id(result["parameter_id"])
