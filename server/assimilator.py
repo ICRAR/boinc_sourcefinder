@@ -539,6 +539,7 @@ def parse_args():
 
     return args
 
+
 if __name__ == "__main__":
     arguments = parse_args()
     app_name = arguments['app']

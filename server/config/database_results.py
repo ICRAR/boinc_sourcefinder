@@ -50,7 +50,7 @@ PARAMETERS = Table('parameters', DUCHAMP_METADATA,
 
 SOURCE = Table('source', DUCHAMP_METADATA,
                Column('id', BigInteger, primary_key=True),
-               Column('category_id', BigInteger, ForeignKey('category.id')),
+               Column('cubelet_id', BigInteger, ForeignKey('cubelet.id')),
                Column('parameters_id', BigInteger, ForeignKey('parameters.id')),
                Column('ra', Float),
                Column('dec', Float),
