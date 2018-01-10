@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS category (
 ) ENGINE = InnoDB;
 
 INSERT INTO category (id, name) VALUES (0, '10MB Duchamp');
-INSERT INTO category (id, name) VALUES (0, '10MB SoFiA');
-INSERT INTO category (id, name) VALUES (0, '100MB SoFiA');
+INSERT INTO category (id, name) VALUES (1, '10MB SoFiA');
+INSERT INTO category (id, name) VALUES (2, '100MB SoFiA');
 
 # Stores info for each cubelet.
 CREATE TABLE IF NOT EXISTS cubelet (
@@ -54,10 +54,13 @@ CREATE TABLE IF NOT EXISTS cubelet (
 # Stores info for each parameter set.
 CREATE TABLE IF NOT EXISTS parameters (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  category_id BIGINT UNSIGNED NOT NULL,
   name VARCHAR(64),
   text VARCHAR(4096),
 
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  FOREIGN KEY (category_id)
+    REFERENCES category(id)
 ) ENGINE = InnoDB;
 
 # Stores each found source.

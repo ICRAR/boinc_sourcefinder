@@ -41,6 +41,8 @@ from utils import module_import
 from sqlalchemy import create_engine, select, distinct
 
 MODULE = "populate_results_mod"
+PARAMETERS = results_db["PARAMETERS"]
+CATEGORY = results_db["CATEGORY"]
 
 
 class ResultsPopulator:
@@ -51,6 +53,7 @@ class ResultsPopulator:
 
         self.connection = None
         self.connection_result = None
+        self.category_id = None
 
         pass
 
@@ -61,7 +64,6 @@ class ResultsPopulator:
         :return:
         """
         PARAMETER_FILE = self.config["database"]["PARAMETER_FILE"]
-        PARAMETERS = results_db["PARAMETERS"]
 
         for f in self.connection.execute(select([distinct(PARAMETER_FILE.c.parameter_file_name)])):
             # Insert parameters that don't already exist in the results DB.
@@ -71,9 +73,9 @@ class ResultsPopulator:
             with open(path, 'r') as parameter_file:
                 data = parameter_file.read()
 
-            if not self.connection_result.execute(select([PARAMETERS]).where(PARAMETERS.c.name == filename)).fetchone():
-                print "Adding parameter {0} to database".format(filename)
-                self.connection_result.execute(PARAMETERS.insert(), name=filename, text=data)
+            if self.connection_result.execute(select([PARAMETERS]).where(PARAMETERS.c.name == filename)).fetchone() is None:
+                print "Adding parameter {0} to database. Size: {1}".format(filename, data)
+                self.connection_result.execute(PARAMETERS.insert(), name=filename, category_id=self.category_id, text=data)
 
 
     def _load_cubes(self):
@@ -92,10 +94,18 @@ class ResultsPopulator:
         pass
 
     def __call__(self):
+
         engine = create_engine(self.config['DB_LOGIN'])
         engine_result = create_engine(self.config["BASE_DB_LOGIN"] + 'sourcefinder_results')
         self.connection = engine.connect()
         self.connection_result = engine_result.connect()
+
+        category = self.connection_result.execute(select([CATEGORY]).where(CATEGORY.c.name == self.config.category)).fetchone()
+
+        if category is None:
+            raise Exception('Invalid category provided.')
+
+        self.category_id = category["id"]
 
         self._load_parameter_files()
         self._load_cubes()
