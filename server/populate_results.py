@@ -135,6 +135,8 @@ class ResultsPopulator:
         RESULT = self.config["database"]["RESULT"]
         cube_id = cube["id"]
 
+        print "Loading results for {0}".format(cube["name"])
+
         for result in self.connection.execute(select([RESULT]).where(RESULT.c.cube_id == cube_id)):
             # Get the parameters associated with this result
             try:
