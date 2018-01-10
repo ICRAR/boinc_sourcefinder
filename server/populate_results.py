@@ -107,7 +107,7 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--app', type=str, required=True, help='The name of the app to read data from.')
-    parser.add_argument('--category', action=int, help='The output category to import data to.')
+    parser.add_argument('--category', type=int, help='The output category to import data to.')
     parser.add_argument('--run_ids', type=int, nargs="*", help='The run IDs to get data for.')
     args = vars(parser.parse_args())
 
