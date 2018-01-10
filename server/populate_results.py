@@ -38,7 +38,7 @@ import argparse
 from config import get_config
 from config.database_results import result_database_def as results_db
 from utils import module_import
-from sqlalchemy import create_engine, select, distinct
+from sqlalchemy import create_engine, select, distinct, and_
 
 MODULE = "populate_results_mod"
 PARAMETERS = results_db["PARAMETERS"]
@@ -105,7 +105,7 @@ class ResultsPopulator:
         for run_id in self.run_ids:
             print "Run ID: {0}".format(run_id)
 
-            for cube in self.connection.execute(select([CUBE]).where(CUBE.c.run_id == run_id and CUBE.c.progress == 2)):
+            for cube in self.connection.execute(select([CUBE]).where(and_(CUBE.c.run_id == run_id, CUBE.c.progress == 2))):
                 # These are all cubes that are within the specified run IDs and have been completed
                 cube_insert = {
                     "name": cube["cube_name"],
