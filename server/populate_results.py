@@ -107,20 +107,18 @@ class ResultsPopulator:
 
             for cube in self.connection.execute(select([CUBE]).where(CUBE.c.run_id == run_id and CUBE.c.progress == 2)):
                 # These are all cubes that are within the specified run IDs and have been completed
-                name = cube["cube_name"]
-
                 cube_insert = {
-                    "name": name,
+                    "name": cube["cube_name"],
                     "category_id": self.category_id,
                     "ra": cube["ra"],
                     "dec": cube["declin"],
                     "freq": cube["freq"]
                 }
 
-                existing_cube = self.connection_result.execute(select([CUBELET]).where(CUBELET.c.name == name)).fetchone()
+                existing_cube = self.connection_result.execute(select([CUBELET]).where(CUBELET.c.name == cube["cube_name"])).fetchone()
 
                 if existing_cube is None:
-                    print "Adding cube {0} to database.".format(name)
+                    print "Adding cube {0} to database.".format(cube["cube_name"])
                     cube_insert["id"] = self.connection_result.execute(CUBELET.insert(), cube_insert)
                 else:
                     cube_insert["id"] = existing_cube["id"]
@@ -135,7 +133,7 @@ class ResultsPopulator:
         RESULT = self.config["database"]["RESULT"]
         cube_id = cube["id"]
 
-        print "Loading results for {0}".format(cube["name"])
+        print "Loading results for {0}. Original cube id: {1}, results cube ID {2}".format(cube["name"], original_cube_id, cube_id)
 
         for result in self.connection.execute(select([RESULT]).where(RESULT.c.cube_id == original_cube_id)):
             # Get the parameters associated with this result
