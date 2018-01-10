@@ -44,7 +44,7 @@ MODULE = "populate_results_mod"
 PARAMETERS = results_db["PARAMETERS"]
 CATEGORY = results_db["CATEGORY"]
 CUBELET = results_db["CUBELET"]
-
+SOURCE = results_db["SOURCE"]
 
 class ResultsPopulator:
     def __init__(self, config, args):
@@ -57,6 +57,18 @@ class ResultsPopulator:
         self.category_id = None
 
         pass
+
+    def _get_result_parameter_id(self, parameter_id):
+        """
+        Convert this parameter ID, from the non-result database, to a parameter ID from the result database.
+        :param parameter_id:
+        :return:
+        """
+        PARAMETER_FILE = self.config["database"]["PARAMETER_FILE"]
+
+        name = self.connection.execute(select([PARAMETER_FILE]).where(PARAMETER_FILE.c.parameter_id == parameter_id)).first()["parameter_file_name"]
+        return self.connection_result.execute(select([PARAMETERS]).where(PARAMETERS.c.name == name)).first()["id"]
+
 
     def _load_parameter_files(self):
         """
@@ -90,23 +102,63 @@ class ResultsPopulator:
 
         print "Loading cubes"
 
-        for r in self.run_ids:
-            print "Run ID: {0}".format(r)
+        for run_id in self.run_ids:
+            print "Run ID: {0}".format(run_id)
 
-            for c in self.connection.execute(select([CUBE]).where(CUBE.c.run_id == r and CUBE.c.progress == 2)):
+            for cube in self.connection.execute(select([CUBE]).where(CUBE.c.run_id == run_id and CUBE.c.progress == 2)):
                 # These are all cubes that are within the specified run IDs and have been completed
-                name = c["cube_name"]
+                name = cube["cube_name"]
 
-                if self.connection_result.execute(select([CUBELET]).where(CUBELET.c.name == name)).fetchone() is None:
+                cube_insert = {
+                    "name": name,
+                    "category_id": self.category_id,
+                    "ra": cube["ra"],
+                    "dec": cube["declin"],
+                    "freq": cube["freq"]
+                }
+
+                existing_cube = self.connection_result.execute(select([CUBELET]).where(CUBELET.c.name == name)).fetchone()
+
+                if existing_cube is None:
                     print "Adding cube {0} to database.".format(name)
-                    self.connection_result.execute(CUBELET.insert(), name=name, category_id=self.category_id, ra=c["ra"], dec=c["declin"], freq=c["freq"])
+                    cube_insert["id"] = self.connection_result.execute(CUBELET.insert(), cube_insert)
+                else:
+                    cube_insert["id"] = existing_cube["id"]
 
-    def _load_results(self):
+                self._load_results(cube_insert)
+
+    def _load_results(self, cube):
         """
         Get all results for cubes in the specified runs that have a progress of 2. (Results for cubes).
         Load each in to the results database.
         """
-        pass
+        RESULT = self.config["database"]["RESULT"]
+        cube_id = cube["id"]
+
+        for result in self.connection.execute(select([RESULT]).where(RESULT.c.cube_id == cube_id)):
+            # Get the parameters associated with this result
+            try:
+                result_parameter_id = self._get_result_parameter_id(result["parameter_id"])
+
+                if self.connection_result.execute(select([SOURCE]).where(SOURCE.c.original_id == result["result_id"])) is None:
+                    self.connection_result.execute(SOURCE.insert(),
+                                                   cubelet_id=cube_id,
+                                                   parameters_id=result_parameter_id,
+                                                   original_id=result["result_id"],
+                                                   ra=result["RA"],
+                                                   dec=result["DEC"],
+                                                   freq=result["freq"],
+                                                   w_20=result["w_20"],
+                                                   w_50=result["w_50"],
+                                                   w_freq=result["w_FREQ"],
+                                                   f_int=result["F_int"],
+                                                   f_tot=result["F_tot"],
+                                                   f_peak=result["F_peak"],
+                                                   n_voxel=result["Nvoxel"],
+                                                   n_chan=result["Nchan"],
+                                                   n_spatpix=result["Nspatpix"])
+            except Exception as e:
+                print "Error loading result {0}: {1}".format(result["result_id"], e.message)
 
     def __call__(self):
 
@@ -126,7 +178,6 @@ class ResultsPopulator:
 
         self._load_parameter_files()
         self._load_cubes()
-        self._load_results()
 
 
 
