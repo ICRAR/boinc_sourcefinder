@@ -121,6 +121,7 @@ class ResultsPopulator:
                     print "Adding cube {0} to database.".format(cube["cube_name"])
                     cube_insert["id"] = self.connection_result.execute(CUBELET.insert(), cube_insert)
                 else:
+                    print "Cube {0} already exists. ID: {1}".format(cube["cube_name"], cube["cube_id"])
                     cube_insert["id"] = existing_cube["id"]
 
                 self._load_results(cube["cube_id"], cube_insert)
