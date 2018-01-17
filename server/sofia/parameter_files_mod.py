@@ -31,7 +31,7 @@ from . import PARAMETERS_STRING, form_parameter_file_name
 LOG = config_logger(__name__)
 
 INPUT_FILE = "/root/shared/input.fits"
-OUTPUT_DIR = "/root/shared/output/"
+OUTPUT_DIR = "/root/shared/outputs/"
 
 
 class ConfigItem:
