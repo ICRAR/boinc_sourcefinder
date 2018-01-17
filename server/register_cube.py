@@ -27,6 +27,7 @@ Register all cubes in the cubes directory in the database
 """
 import os
 import argparse
+import glob
 
 from config import get_config
 from utils.logger import config_logger
@@ -96,7 +97,7 @@ class CubeRegister:
         finally:
             connection.close()
 
-    def __call__(self, run_id):
+    def __call__(self, run_id, glob):
         self.run_id = run_id
         cube_dir = self.config["DIR_CUBE"]
 
@@ -107,11 +108,14 @@ class CubeRegister:
         os.system('gzip {0}/*'.format(cube_dir))
 
         # get a list of the cubes to be registered
-        cubes = os.listdir(cube_dir)  # list of cubes in the current run
-        cubes.sort()
+        if glob is not None:
+            cubes = glob.iglob(cube_dir + glob)
+        else:
+            cubes = os.listdir(cube_dir)
 
         try:
-            for cube in cubes:
+            for cube in sorted(cubes):
+                cube = os.path.basename(cube)
                 # check if it is actually one of the cubes
                 if "askap" in cube and cube.endswith('.fits.gz'):  # Must have askap in the filename and end with .fits.gz
                     cube_path = os.path.join(cube_dir, cube)
@@ -127,6 +131,7 @@ class CubeRegister:
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--app', type=str, required=True, help='The name of the app to use.')
+    parser.add_argument('--glob', type=str, required=False, default=None, help='A glob string to use to specify which cubes to process.')
     parser.add_argument('run_id', type=int, help='The run ID to register to.')
     args = vars(parser.parse_args())
 
@@ -138,4 +143,4 @@ if __name__ == '__main__':
 
     cube_register = CubeRegister(get_config(app_name))
 
-    exit(cube_register(arguments['run_id']))
+    exit(cube_register(arguments['run_id'], arguments['glob']))
