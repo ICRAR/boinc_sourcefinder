@@ -129,6 +129,7 @@ def get_config(app=None):
     config["database_boinc"] = boinc_database_def
     config["database_sourcefinder"] = duchamp_database_def
     config["database_sourcefinder_sofia"] = sofia_database_def
+    config["DB_NAME"] = ""
 
     if app is not None:
         # Load app specific settings
