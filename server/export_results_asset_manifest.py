@@ -120,7 +120,7 @@ def parse_args():
     :return: The arguments for the program.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('out', type=str, required=True, help='The file to write output to.')
+    parser.add_argument('out', type=str, help='The file to write output to.')
     parser.add_argument('--category', type=str, help='The category to build a manifest for.')
 
     return vars(parser.parse_args())
