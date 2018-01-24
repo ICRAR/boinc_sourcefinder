@@ -110,7 +110,7 @@ class AssetManifestExporter:
         """
         with open(filename, 'w') as f:
             for asset in self.assets:
-                f.write("{0}, {1}, {2}".format(asset.category, asset.cubename, asset.frequency))
+                f.write("{0}, {1}, {2}\n".format(asset.category, asset.cubename, asset.frequency))
 
 
 
