@@ -97,7 +97,7 @@ class CubeRegister:
         finally:
             connection.close()
 
-    def __call__(self, run_id, glob):
+    def __call__(self, run_id, glob_str):
         self.run_id = run_id
         cube_dir = self.config["DIR_CUBE"]
 
@@ -108,8 +108,8 @@ class CubeRegister:
         os.system('gzip {0}/*'.format(cube_dir))
 
         # get a list of the cubes to be registered
-        if glob is not None:
-            cubes = glob.iglob(cube_dir + glob)
+        if glob_str is not None:
+            cubes = glob.iglob(cube_dir + glob_str)
         else:
             cubes = os.listdir(cube_dir)
 
