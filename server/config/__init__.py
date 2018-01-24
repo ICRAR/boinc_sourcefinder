@@ -50,7 +50,13 @@ class ConfigPath:
         self.format_args = args
 
     def get_path(self, d):
-        actual_args = [d[a] for a in self.format_args]  # Look up the args in the given dictionary
+        def get_value(value):
+            if value in d:
+                return d[value]
+
+            return ""
+
+        actual_args = [get_value(a) for a in self.format_args]  # Look up the args in the given dictionary
         return self.path_format.format(*actual_args)
 
 config_entries = [
