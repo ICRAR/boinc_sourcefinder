@@ -183,7 +183,6 @@ class ResultsPopulator:
         self._load_cubes()
 
 
-
 def parse_args():
     """
     Parse arguments for the program.

@@ -24,10 +24,9 @@
 # Manifest format:
 # category, cube_file_name, frequency
 
-import os
 import argparse
 from config import get_config
-from sqlalchemy import create_engine, select, distinct, and_
+from sqlalchemy import create_engine, select
 from config.database_results import result_database_def as results_db
 
 PARAMETERS = results_db["PARAMETERS"]
@@ -36,25 +35,26 @@ CUBELET = results_db["CUBELET"]
 SOURCE = results_db["SOURCE"]
 
 
+class Asset:
+    """
+
+    """
+    def __init__(self, category, cubename, frequency):
+        """
+
+        :param category:
+        :param filename:
+        :param frequency:
+        """
+        self.category = category
+        self.cubename = cubename
+        self.frequency = frequency
+
+
 class AssetManifestExporter:
     """
 
     """
-    class Asset:
-        """
-
-        """
-        def __init__(self, category, cubename, frequency):
-            """
-
-            :param category:
-            :param filename:
-            :param frequency:
-            """
-            self.category = category
-            self.cubename = cubename
-            self.frequency = frequency
-
     def __init__(self, config):
         """
 
