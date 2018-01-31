@@ -31,6 +31,7 @@ from utils.logger import config_logger
 from database_boinc import boinc_database_def
 from database_duchamp import duchamp_database_def
 from database_sofia import sofia_database_def
+from database_sofiabeta import sofiabeta_database_def
 
 LOG = config_logger(__name__)
 
@@ -135,6 +136,7 @@ def get_config(app=None):
     config["database_boinc"] = boinc_database_def
     config["database_sourcefinder"] = duchamp_database_def
     config["database_sourcefinder_sofia"] = sofia_database_def
+    config["database_sourcefinder_sofiabeta"] = sofiabeta_database_def
     config["DB_NAME"] = ""
 
     if app is not None:
