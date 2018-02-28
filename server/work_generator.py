@@ -180,7 +180,7 @@ class WorkGenerator:
                 opaque=0,
                 rsc_fpops_est=1e12,
                 rsc_fpops_bound=1e14,
-                rsc_memory_bound=1e8,
+                rsc_memory_bound=4e9,
                 rsc_disk_bound=2684354560,  # 2.5GB. Decent amount of space needed for the VM image.
                 additional_xml=additional_xml,
                 list_input_files=wu_file_list)
