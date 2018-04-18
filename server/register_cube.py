@@ -51,7 +51,7 @@ class CubeRegister:
         :return data_list:
         """
         LOG.info('Getting cube data for {0}'.format(cube_file))
-        hdulist = fits.open(cube_file)
+        hdulist = fits.open(cube_file, memmap=True)
         LOG.debug(hdulist[0].header[20])
         LOG.debug(hdulist[0].header[21])
         LOG.debug(hdulist[0].header[17])
