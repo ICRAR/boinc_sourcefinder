@@ -50,7 +50,7 @@ class CubeRegister:
         :param cube_file:
         :return data_list:
         """
-
+        LOG.info('Getting cube data for {0}'.format(cube_file))
         hdulist = fits.open(cube_file)
         LOG.debug(hdulist[0].header[20])
         LOG.debug(hdulist[0].header[21])
