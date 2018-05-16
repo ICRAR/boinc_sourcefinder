@@ -31,7 +31,7 @@ loop:
 4.  Wait 24 hours, continue until all items are downloaded
 """
 
-# Note: this script is designed to be stand along, and will only import from external libraries.
+# Note: this script is designed to be stand alone, and will only import from external libraries.
 
 import boto3
 import pickle
@@ -39,7 +39,6 @@ import argparse
 import logging
 import os
 import errno
-from collections import namedtuple
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 LOG = logging.getLogger(__name__)
@@ -84,6 +83,7 @@ def command_download_objects(args):
         s3_objects = pickle.load(f)
 
     try:
+        i = 0
         while True:
             try:
                 s3_object = s3_objects.pop()
@@ -103,6 +103,11 @@ def command_download_objects(args):
             LOG.info("Downloading: {0}. {1} remaining".format(s3_object, len(s3_objects)))
             s3.download_file(s3_object, os.path.join(directory, os.path.basename(s3_object)))
 
+            if i % 100 == 0:
+                LOG.info("Saving progress. {0} remaining".format(len(s3_objects)))
+                with open(in_progress_file, 'w') as f:
+                    pickle.dump(s3_objects, f, pickle.HIGHEST_PROTOCOL)
+            i += 1
     except:
         with open(in_progress_file, 'w') as f:
             pickle.dump(s3_objects, f, pickle.HIGHEST_PROTOCOL)
