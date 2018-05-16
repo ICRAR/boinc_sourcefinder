@@ -52,7 +52,7 @@ class S3Helper:
     def get_object_list(self):
         s3_objects = []
         ignored = 0
-        itr = self.bucket.objects.all()
+        itr = iter(self.bucket.objects.all())
         index = 0
         while True:
             try:
