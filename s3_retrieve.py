@@ -66,9 +66,10 @@ class S3Helper:
                     LOG.info("Objects Collected: {0}, Ignored: {1}".format(index, ignored))
                 index += 1
             except StopIteration:
-                break # finished iterating
-            except:
-                continue # try again forever
+                break  # finished iterating
+            except Exception as e:
+                LOG.exception(e)
+                continue  # try again forever
 
         return s3_objects
 
