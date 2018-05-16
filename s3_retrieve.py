@@ -32,7 +32,7 @@ loop:
 """
 
 # Note: this script is designed to be stand alone, and will only import from external libraries.
-
+from botocore.client import Config
 import boto3
 import pickle
 import argparse
@@ -46,20 +46,30 @@ LOG = logging.getLogger(__name__)
 
 class S3Helper:
     def __init__(self, bucket_name):
-        self.s3 = boto3.resource('s3')
+        self.s3 = boto3.resource('s3', config=Config(connect_timeout=99999, read_timeout=99999))
         self.bucket = self.s3.Bucket(bucket_name)
 
     def get_object_list(self):
         s3_objects = []
         ignored = 0
-        for index, s3_object in enumerate(self.bucket.objects.all()):
-            key = s3_object.key
-            if key.endswith(".md5") or key.endswith(".err") or key.endswith(".out"):
-                ignored += 1
-                continue
-            s3_objects.append(s3_object.key)
-            if index % 100 == 0:
-                LOG.info("Objects Collected: {0}, Ignored: {1}".format(index, ignored))
+        itr = self.bucket.objects.all()
+        index = 0
+        while True:
+            try:
+                s3_object = next(itr)
+                key = s3_object.key
+                if key.endswith(".md5") or key.endswith(".err") or key.endswith(".out"):
+                    ignored += 1
+                    continue
+                s3_objects.append(s3_object.key)
+                if index % 100 == 0:
+                    LOG.info("Objects Collected: {0}, Ignored: {1}".format(index, ignored))
+                index += 1
+            except StopIteration:
+                break # finished iterating
+            except:
+                continue # try again forever
+
         return s3_objects
 
     def download_file(self, key, path):
